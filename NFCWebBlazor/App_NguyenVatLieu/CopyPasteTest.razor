@@ -1,0 +1,53 @@
+﻿@using ClipLazor.Components;
+@using ClipLazor.Enums;
+
+@inject IClipLazor Clipboard;
+
+<DxButton Text="Paste" Click="@PasteTxt"></DxButton>
+
+<h3>CopyPasteTest</h3>
+<p>@text</p>
+
+@code {
+    string text{ get; set; }
+    bool isSupported{ get; set; }
+    bool isWritePermitted { get; set; }
+    bool isReadPermitted { get; set; }
+  
+    protected override async Task OnInitializedAsync()
+    {
+        isSupported = await Clipboard.IsClipboardSupported();
+        isWritePermitted = await Clipboard.IsPermitted(PermissionCommand.Write);
+        isReadPermitted = await Clipboard.IsPermitted(PermissionCommand.Read);
+        //return base.OnInitializedAsync();
+    }
+    private async Task ReadFromClipboard()
+    {
+        // try
+        // {
+        //     text = await ClipboardService.ReadTextAsync();
+        // }
+        // catch
+        // {
+        //     Console.WriteLine("Không thể đọc từ clipboard");
+        // }
+    }
+    async void PasteTxt()
+    {
+        if (isSupported && isWritePermitted)
+        {
+            var pastedText = await Clipboard.ReadTextAsync();
+            if (pastedText is not null)
+            {
+               // msg = "Text Pasted";
+                text = pastedText;
+            }
+            else
+            {
+                text = "Couldn't paste the text!.";
+            }
+        }
+
+        StateHasChanged();
+    }
+}

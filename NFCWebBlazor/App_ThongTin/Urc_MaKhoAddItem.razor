@@ -1,0 +1,38 @@
+﻿@using BlazorBootstrap
+@using NFCWebBlazor.Model
+@using Newtonsoft.Json
+
+<EditForm Model=@nvlMaKhopara Context="formuser" onkeydown="return handleF11Submit(event)">
+    <DxFormLayout CssClass="w-100" @onkeydown=@Onkeydown>
+        <DxFormLayoutItem ColSpanMd="12" Caption="Mã kho">
+            <Template>
+                <DxTextBox @ref=txtName BindValueMode=BindValueMode.OnInput @bind-Text="@nvlMaKhopara.MaKho" />
+                <div class="text-danger">
+                    @namecheck
+                </div>
+            </Template>
+
+        </DxFormLayoutItem>
+        <DxFormLayoutItem ColSpanMd="12" Caption="Tên Kho">
+            <Template>
+                <DxTextBox @ref=txtFullName BindValueMode=BindValueMode.OnInput @bind-Text="@nvlMaKhopara.TenKho" />
+                <div class="text-danger">
+                    @fullnamecheck
+                </div>
+            </Template>
+        </DxFormLayoutItem>
+       
+
+        <DxFormLayoutItem ColSpanMd="12">
+            <Template>
+                <div class="d-flex justify-content-center mt-2">
+                    <DxButton RenderStyle="ButtonRenderStyle.Primary" IconCssClass="bi bi-floppy" Text="Lưu" Visible=@(!visibleedit) Click="@(()=>saveAsync(nvlMaKhopara))" />
+                    <DxButton RenderStyle="ButtonRenderStyle.Info" IconCssClass="bi bi-pencil" CssClass="ms-2" Text="Sửa" Visible=@visibleedit Click="@updateAsync" />
+                </div>
+            </Template>
+        </DxFormLayoutItem>
+    </DxFormLayout>
+</EditForm>
+@code {
+   
+}

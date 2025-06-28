@@ -1,0 +1,568 @@
+﻿@using BlazorBootstrap
+@using DevExpress.Blazor;
+@using NFCWebBlazor.App_ClassDefine;
+@using System.Data
+@inject Model.ThemeColor themcolor;
+<style>
+    .my-grid {
+        height: @heightgrid;
+    }
+
+    .highRed {
+        color: red;
+        font-weight: bold
+    }
+
+    .highGreen {
+        color: Green;
+        font-weight: bold
+    }
+
+    .gridcss {
+        max-height: @heightgrid;
+    }
+
+
+
+
+    #griddetailnhapkhoms .dxbl-grid-header-row {
+        /*  display: contents; */
+    }
+
+    #customGridnotheader .dxbl-grid-header-row {
+        display: none;
+    }
+
+    #griddetailnhapkho .dxbl-grid-header-row {
+        /*    display: contents;
+            color: green; */
+    }
+
+
+
+
+
+
+
+
+    .popup-container {
+        position: fixed; /* Cố định popup trên toàn màn hình */
+        top: 50%; /* Canh giữa theo chiều dọc */
+        left: 50%; /* Canh giữa theo chiều ngang */
+        transform: translate(-50%, -50%); /* Dịch chuyển popup vào giữa */
+        width: 600px; /* Đặt chiều rộng */
+        max-height: 90vh; /* Đặt chiều cao tối đa */
+        background: white;
+        border: 1px solid #ccc;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        z-index: 1000; /* Đảm bảo hiển thị trên các thành phần khác */
+        overflow: hidden; /* Ẩn nội dung tràn ra ngoài */
+    }
+
+    .popup-header {
+        position: sticky; /* Cố định header */
+        top: 0;
+        background: white;
+        padding: 0px;
+        z-index: 1001;
+        border-bottom: 1px solid #ccc;
+    }
+
+    .popup-body {
+        overflow-y: auto; /* Chỉ cuộn nội dung */
+        max-height: calc(90vh - 50px); /* Tính toán chiều cao nội dung */
+        padding: 0px;
+        padding-top: 10px;
+    }
+
+</style>
+
+<NFCWebBlazor.App_Admin.DialogMsg @ref="@dialogMsg"></NFCWebBlazor.App_Admin.DialogMsg>
+
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopupDetail>
+    <BodyContentTemplate>
+        @renderFragmentdetail
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+
+<DxFlyout @ref=dxFlyoutchucnang
+          PositionTarget="@idflychucnang"
+          @bind-IsOpen=IsOpenfly
+          RestrictionTarget="#Navigation-Flyout-Customization"
+          AnimationType=FlyoutAnimationType.Fade
+          PreventCloseOnPositionTargetClick="true"
+          Width="320px"
+          Position=@(FlyoutPosition.BottomStart | FlyoutPosition.TopStart)>
+    <BodyTextTemplate>
+
+        <div class="container">
+            <div class="row gap-1">
+
+                <DxButton Visible="@CheckQuyen" IconCssClass="bi bi-plus-circle" RenderStyle="ButtonRenderStyle.Primary" Text=@(CheckChungTuNhap(nvlNhapXuatKhoShowcrr)?"Nhập hàng":"Xuất hàng") RenderStyleMode="ButtonRenderStyleMode.Outline" Click="@ShowNhapXuatItemAdd">
+                </DxButton>
+
+                <div class="d-flex p-0">
+                    <DxButton IconCssClass="bi bi-printer" Text=@(CheckChungTuNhap(nvlNhapXuatKhoShowcrr)?"In phiếu nhập":"In phiếu xuất") RenderStyle="ButtonRenderStyle.Success" RenderStyleMode="ButtonRenderStyleMode.Outline" Click="@(() =>PrintPhieuAsyncNew(CheckGia))">
+                    </DxButton>
+                    <DxCheckBox CheckType="CheckType.Switch" Checked="@CheckGia"
+                                CheckedChanged="@((bool value) => CheckedGiaChanged(value))">@showtittle(nvlNhapXuatKhoShowcrr)</DxCheckBox>
+                </div>
+                <DxButton Visible="@CheckQuyen" Text="Chỉnh sửa" IconCssClass="bi bi-pencil" RenderStyle="ButtonRenderStyle.Warning" RenderStyleMode="ButtonRenderStyleMode.Outline" Click="@ShowMasterEdit">
+                </DxButton>
+                <DxButton Visible="@CheckQuyen" Text="Xóa" IconCssClass="oi oi-x" RenderStyle="ButtonRenderStyle.Danger" RenderStyleMode="ButtonRenderStyleMode.Outline" Click="@NhapXuatMasterDeleteAsync">
+                </DxButton>
+                <DxButton Visible="@CheckQuyen" Text="Thêm vào tem có sẵn" IconCssClass="bi bi-plus-circle" RenderStyle="ButtonRenderStyle.Primary" RenderStyleMode="ButtonRenderStyleMode.Outline" Click="@ShowNhapXuatItemAddDuplicate">
+                </DxButton>
+            </div>
+
+
+        </div>
+    </BodyTextTemplate>
+
+</DxFlyout>
+<DxGridLayout CssClass="w-100 ch-480">
+
+    <Rows>
+        <DxGridLayoutRow Height="Auto" />
+        <DxGridLayoutRow />
+    </Rows>
+
+    <Items>
+
+        <DxGridLayoutItem Row="0">
+            <Template>
+
+                <div id="@randomdivhide" class="bg-white border  rounded-2 rounded-top-0 collapse show p-2 mb-3">
+
+                    <DxFormLayout CssClass="w-100 mt-3" CaptionPosition="CaptionPosition.Vertical">
+                        <DxFormLayoutItem Caption="Chọn kho" ColSpanXs="6" ColSpanSm="6" ColSpanMd="6" ColSpanLg="6">
+                            <DxComboBox Data=@lstkhonvl
+                                        SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                        ListRenderMode=ListRenderMode.Virtual
+                                        SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                        SearchMode="ListSearchMode.AutoSearch"
+                                        ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto
+                                        TextFieldName="@nameof(DataDropDownList.FullName)"
+                                        @bind-Value="@khonvlselected" />
+                        </DxFormLayoutItem>
+
+                        <DxFormLayoutItem Caption="Nơi giao nhận" ColSpanXs="12" ColSpanSm="6" ColSpanMd="6" ColSpanLg="6">
+                            <DxComboBox CssClass="cw-480"
+                                        SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                        ListRenderMode=ListRenderMode.Virtual
+                                        SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                        SearchMode="ListSearchMode.AutoSearch"
+                                        TextFieldName="@nameof(DataDropDownList.FullName)"
+                                        ValueFieldName="@nameof(DataDropDownList.Name)"
+                                        Data="@lstnoigiaonhan"
+                                        ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                        @bind-Value="@noigiaonhan" />
+
+                        </DxFormLayoutItem>
+                        <DxFormLayoutItem Caption="Người nhập" ColSpanXs="6" ColSpanSm="6" ColSpanMd="6" ColSpanLg="6">
+                            <DxComboBox Data=@lstuser
+                                        SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                        ListRenderMode=ListRenderMode.Virtual
+                                        SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                        SearchMode="ListSearchMode.AutoSearch"
+                                        TextFieldName="@nameof(Users.TenUser)"
+                                        ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto
+                                        @bind-Value="@userselect"
+                                        CssClass="cw-480" />
+
+                        </DxFormLayoutItem>
+
+                        <DxFormLayoutItem Caption="Serial chứng từ" ColSpanXs="6" ColSpanSm="6" ColSpanMd="6" ColSpanLg="6">
+
+                            <DxSpinEdit @bind-Value=@sochungtu ShowSpinButtons="false" />
+
+                        </DxFormLayoutItem>
+                        <DxFormLayoutItem Caption="Lý Do" ColSpanXs="6" ColSpanSm="6" ColSpanMd="6" ColSpanLg="6">
+                            <DxComboBox Data="@lstlydo" SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                        ListRenderMode=ListRenderMode.Virtual
+                                        SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                        SearchMode="ListSearchMode.AutoSearch"
+                                        ValueFieldName="@nameof(DataDropDownList.Name)"
+                                        ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto
+                                        TextFieldName="@nameof(DataDropDownList.FullName)"
+                                        @bind-Value="@lydoselected"
+                                        CssClass="cw-480" />
+
+                        </DxFormLayoutItem>
+                        <DxFormLayoutItem Caption="Chọn mã hàng" ColSpanXs="12" ColSpanSm="12" ColSpanMd="6" ColSpanLg="6">
+                            <ComboboxMaHang TextFieldName="@nameof(NvlHangHoaDropDown.TenHang)"
+                                            ValueFieldName="@nameof(NvlHangHoaDropDown.MaHang)"
+                                            SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                            ListRenderMode=ListRenderMode.Virtual
+                                            SearchMode="ListSearchMode.AutoSearch"
+                                            @bind-Value=@MaHangSearch
+                                            ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto />
+                        </DxFormLayoutItem>
+                        <DxFormLayoutItem Caption="Từ ngày" BeginRow="true" ColSpanXs="6" ColSpanSm="6" ColSpanMd="6" ColSpanLg="6">
+
+                            <DxDateEdit @bind-Date="@dtpbegin" Mask="@DateTimeMask.ShortDate" DisplayFormat="dd-MM-yy" />
+
+                        </DxFormLayoutItem>
+                        <DxFormLayoutItem Caption="Đến" ColSpanXs="6" ColSpanSm="6" ColSpanMd="6" ColSpanLg="6">
+
+                            <DxDateEdit @bind-Date="@dtpend" Mask="@DateTimeMask.ShortDate" DisplayFormat="dd-MM-yy" />
+
+                        </DxFormLayoutItem>
+
+
+                    </DxFormLayout>
+
+                </div>
+            </Template>
+        </DxGridLayoutItem>
+
+        <DxGridLayoutItem Row="1">
+            <Template>
+                <div style="position: relative;justify-content: center; align-items: center;">
+                    <div style="position: absolute;display: flex;width: 100%;">
+                        <DxGrid @ref=dxGrid
+                                TextWrapEnabled="false"
+                                ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+                                AutoCollapseDetailRow="true"
+                                CssClass="my-grid"
+                                VirtualScrollingEnabled=true
+                                id="@idgrid"
+                                FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                                Data=@lstNhapXuatKhoSearchShow
+                                AutoExpandAllGroupRows=@showallgroup>
+                            <ToolbarTemplate>
+                                <DxToolbar Id="toolbarnx" AdaptivityMinRootItemCount="2" AdaptivityAutoHideRootItems="false" AdaptivityAutoCollapseItemsToIcons="false"
+                                           ItemRenderStyleMode="ToolbarRenderStyleMode.Plain" SizeMode="SizeMode.Small">
+                                    <DxToolbarItem Text="TÌM KIẾM" IconCssClass="bi bi-menu-button-wide" RenderStyle="ButtonRenderStyle.Danger" Click="@(()=>JSRuntime.InvokeVoidAsync(CallNameJson.toggleCollapse.ToString(),string.Format("#{0}",randomdivhide)))">
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="XEM" IconCssClass="bi bi-search" RenderStyle="ButtonRenderStyle.Primary" Click="@search">
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Visible=@VisibleThemChungTu Text="THÊM CHỨNG TỪ" BeginGroup="true" IconCssClass="bi bi-plus-circle" RenderStyle="ButtonRenderStyle.Primary" Click="@ShowMasterAdd">
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="TẠO TEM" BeginGroup="true" IconCssClass="bi bi-upc-scan" RenderStyle="ButtonRenderStyle.Success" Click="@ShowInTemMasterAdd">
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Visible="@VisibleHangNo" Text="XEM HÀNG NỢ" BeginGroup="true" IconCssClass="bi bi-archive" RenderStyle="ButtonRenderStyle.Danger" Click="@ShowHangNoAdd">
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="VỊ TRÍ" BeginGroup="true" IconCssClass="bi bi-pin-map" RenderStyle="ButtonRenderStyle.Danger" Click="@ShowInTemViTri">
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="BẢNG KÊ" IconCssClass="bi bi-list-stars" RenderStyle="ButtonRenderStyle.Success" Click="@ShowBangke">
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="IN BẢNG KÊ" Click="@(()=>InBangKeAsync())" IconCssClass="bi bi-list-ol" />
+                                    <DxToolbarItem Text="TRA CỨU" BeginGroup="true" IconCssClass="bi bi-google" RenderStyle="ButtonRenderStyle.Secondary" Click="@ShowTRACUU">
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="CONNECT" Visible="false" BeginGroup="true" IconCssClass="svg-barcode" RenderStyle="ButtonRenderStyle.Success" Click="@ShowSignalR">
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="Xuất excel" Visible="@(!Ismobile)" BeginGroup="true" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=>dxGrid.ExportToXlsxAsync("ExporChungTu"))">
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="Chọn cột" BeginGroup="true" Visible="@(!Ismobile)" Click="@(()=>dxGrid.ShowColumnChooser())" IconCssClass="bi bi-layout-text-window-reverse" />
+                                    <DxToolbarItem Text="Xuất kiểm kê" BeginGroup="true" Visible="@(IsKiemKem)" Click="@(()=>ExportKiemKeAsync())" IconCssClass="bi bi-card-list" />
+
+                                </DxToolbar>
+                            </ToolbarTemplate>
+                            <Columns>
+                                @if (!Ismobile)
+                                {
+                                    if (loaiNhapXuat != null)
+                                    {
+                                        @if (loaiNhapXuat == "ChuyenKho" || loaiNhapXuat == "NhapGiaCong")
+                                        {
+                                            <DxGridDataColumn FieldName="flag" Caption="Nhóm" GroupIndex="0" Width="110">
+                                                <GroupRowTemplate>
+                                                    <div><span>@((loaiNhapXuat == "ChuyenKho") ? "Nhóm chuyển " : "Nhóm nhập ") @context.GroupValue</span></div>
+                                                </GroupRowTemplate>
+                                            </DxGridDataColumn>
+                                            <DxGridDataColumn FieldName="TenKho" Caption="Kho" Width="110" />
+                                        }
+                                        else
+                                        {
+                                            <DxGridDataColumn FieldName="TenKho" Caption="Kho" GroupIndex="0" Width="110" />
+
+                                        }
+                                    }
+                                    <DxGridDataColumn FieldName="Serial" DisplayFormat="#" Caption=" " Width="110">
+                                        <CellDisplayTemplate>
+                                            @if (context != null)
+                                            {
+                                                NvlNhapXuatKhoShow nvlnhapxuatitem = (NvlNhapXuatKhoShow)context.DataItem;
+
+                                                <span>
+                                                    <a href="#" class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"
+                                                       id=@idelement(nvlnhapxuatitem) @onclick="@(()=>ShowFlyout(nvlnhapxuatitem))"><i class="bi bi-list-stars me-1"></i>Chức năng</a>
+                                                </span>
+                                            }
+                                        </CellDisplayTemplate>
+                                    </DxGridDataColumn>
+                                    <DxGridDataColumn FieldName="Serial" DisplayFormat="#" Caption="Serial" Width="120">
+                                        <CellDisplayTemplate>
+                                            @{
+                                                NvlNhapXuatKhoShow nvlnhapxuatitem = (NvlNhapXuatKhoShow)context.DataItem;
+                                            }
+                                            @if (nvlnhapxuatitem != null)
+                                            {
+                                                <div>
+                                                    @if (nvlnhapxuatitem.VisibleHoadon)
+                                                    {
+                                                        <img src="@nvlnhapxuatitem.PathFileHoaDon" style="margin-right:10px;width: auto; height: 24px;">
+                                                    }
+
+                                                    <span>@nvlnhapxuatitem.Serial</span>
+                                                </div>
+
+                                            }
+
+                                        </CellDisplayTemplate>
+                                    </DxGridDataColumn>
+
+                                    <DxGridDataColumn FieldName="TinhTrang" Caption="Kiểm hàng" Width="120" Visible=visiblenhapmuahang>
+                                        <CellDisplayTemplate>
+                                            @{
+                                                NvlNhapXuatKhoShow nvlnhapxuatitem = (NvlNhapXuatKhoShow)context.DataItem;
+                                            }
+                                            @if (nvlnhapxuatitem != null)
+                                            {
+                                                <div>
+                                                    <img src="@nvlnhapxuatitem.PathImgTinhTrang" style="width: auto; height: 18px;margin-right:10px">
+                                                    <span class="text-primary" style="font-size:0.7rem;">@nvlnhapxuatitem.TinhTrang</span>
+                                                </div>
+                                            }
+                                        </CellDisplayTemplate>
+                                    </DxGridDataColumn>
+                                    <DxGridDataColumn FieldName="MaCT" Caption="Chứng từ" Width="120">
+                                    </DxGridDataColumn>
+                                    <DxGridDataColumn FieldName="MaKho" Caption="Mã kho" Width="100" Visible="false" />
+
+
+                                    <DxGridDataColumn FieldName="TenGN" Caption=@tengiaonhanheader Width="200" />
+                                    <DxGridDataColumn FieldName="LyDo" Caption="Lý do" Width="170" />
+                                    <DxGridDataColumn FieldName="ThanhTien" Caption="Thành tiền" Width="120" />
+                                    <DxGridDataColumn FieldName="ChatLuong" Caption="Chất lượng" Width="170" />
+                                    <DxGridDataColumn FieldName="PONumber" Caption="PO Number" Width="120" Visible="false" />
+                                    <DxGridDataColumn FieldName="GhiChu" Caption="Ghi chú" Width="170" />
+
+                                    <DxGridDataColumn FieldName="DienGiai" Caption="Diễn giải" Width="170" />
+                                    <DxGridDataColumn FieldName="Ngay" Caption="Ngày" DisplayFormat="dd/MM/yy" Width="100" />
+                                    <DxGridDataColumn FieldName="NgayInsert" Caption="Ngày Insert" DisplayFormat="dd/MM/yy HH:mm" Width="120" />
+                                    <DxGridDataColumn FieldName="NhaMay" Caption="Nhà máy" Width="120" Visible="false" />
+                                    <DxGridDataColumn FieldName="UserInsert" Caption=" UserInsert" Width="120" />
+
+                                }
+                                @if (Ismobile)
+                                {
+                                    <DxGridDataColumn FieldName="MaCT" Caption="">
+                                        <CellDisplayTemplate>
+                                            @{
+                                                NvlNhapXuatKhoShow nvlnhapxuatitem;
+                                                if (context.DataItem != null)
+                                                    nvlnhapxuatitem = (NvlNhapXuatKhoShow)context.DataItem;
+                                                else
+                                                    nvlnhapxuatitem = new NvlNhapXuatKhoShow();
+                                                int index = (context.VisibleIndex);
+                                            }
+                                            <div class="p-1" style="color:black">
+                                                <div onclick="@(()=>expandorcollapse(index))">
+                                                    <div class="row d-flex text-primary">
+                                                        <div class="col flex-grow-1">
+                                                            <span style="font-weight:bold;">@nvlnhapxuatitem.TenGN</span>
+                                                        </div>
+                                                        <div class="col flex-grow-0">
+                                                            <img src="@nvlnhapxuatitem.PathImgTinhTrang" style="width: auto; height: 18px;margin-right:10px">
+                                                        </div>
+
+
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-6">
+                                                            <span>Serial:</span>
+                                                            <span style="font-weight: bold;color:orangered">@nvlnhapxuatitem.Serial</span>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <span>Lý do:</span>
+                                                            <span style="font-weight: bold;color:orangered">@nvlnhapxuatitem.LyDo</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-6">
+                                                            <span>Kho:</span>
+                                                            <span style="font-weight: bold">@nvlnhapxuatitem.TenKho</span>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <span>Ngày:</span>
+                                                            <span style="font-weight: bold">@nvlnhapxuatitem.NgayInsert.ToString("dd-MM-yy HH:mm")</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-6">
+                                                            <span>UserInsert:</span>
+                                                            <span style="font-weight: bold">@nvlnhapxuatitem.UserInsert</span>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <span>Diễn giải:</span>
+                                                            <span style="font-weight: bold">@nvlnhapxuatitem.DienGiai</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex text-center gap-1">
+                                                    <div class="col">
+                                                        <DxButton Context="contextbutton" RenderStyle="ButtonRenderStyle.Secondary" RenderStyleMode="ButtonRenderStyleMode.Outline"
+                                                                  id=@idelement(nvlnhapxuatitem) @onclick="@(()=>ShowFlyout(nvlnhapxuatitem))"><i class="bi bi-list-stars me-1"></i>Chức năng</DxButton>
+                                                    </div>
+                                                    <div class="col">
+                                                        <DxButton Context="contextbuttonadd" RenderStyle="ButtonRenderStyle.Primary" RenderStyleMode="ButtonRenderStyleMode.Outline"
+                                                                  @onclick="@(()=>ShowNhapXuatItemAddAsync(nvlnhapxuatitem))"><i class="bi bi-upc-scan me-1"></i>QUÉT TEM</DxButton>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+
+                                        </CellDisplayTemplate>
+                                    </DxGridDataColumn>
+
+                                }
+                            </Columns>
+                            <GroupSummary>
+                                <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+                                                   FieldName="ThanhTien"
+                                                   Name="ThanhTien"
+                                                   DisplayText="{0}"
+                                                   FooterColumnName="ThanhTien" />
+                            </GroupSummary>
+                            <TotalSummary>
+                                <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+                                                   FieldName="ThanhTien"
+                                                   Name="ThanhTien"
+                                                   DisplayText="{0}"
+                                                   FooterColumnName="ThanhTien" />
+
+                            </TotalSummary>
+                            <DetailRowTemplate>
+                                <DxTabs>
+                                    <DxTabPage Text="Chi tiết" TabIconCssClass="bi bi-list-ol">
+                                        @{
+                                            NvlNhapXuatKhoShow nvlNhapXuatKhoShow = (NvlNhapXuatKhoShow)context.DataItem;
+                                        }
+                                        <View_NhapXuatItemDetail nvlNhapXuatKhoShowcrr="@nvlNhapXuatKhoShow" MaHang="@MaHangSearch" showpopup="@ShowPopupinDetail"></View_NhapXuatItemDetail>
+                                    </DxTabPage>
+                                    <DxTabPage Text="File hồ sơ" TabIconCssClass="bi bi-file-earmark-code">
+                                        @{
+                                            NvlNhapXuatKhoShow nvlNhapXuatKhoShow = (NvlNhapXuatKhoShow)context.DataItem;
+                                        }
+                                        <NFCWebBlazor.App_Admin.Urc_FileHoSoGroup serialLink="@nvlNhapXuatKhoShow.Serial" tableName="NvlNhapXuat" lstdata="@nvlNhapXuatKhoShow.lstfilehoso" GotoMainForm="@nvlNhapXuatKhoShow.setlstfilehoso"></NFCWebBlazor.App_Admin.Urc_FileHoSoGroup>
+
+                                    </DxTabPage>
+
+                                </DxTabs>
+
+                            </DetailRowTemplate>
+                        </DxGrid>
+                    </div>
+                    <div style="position: absolute;display:@(PanelVisible ? "flex" : "none");width:100%;height:@heightgrid;background-color: rgba(0, 0, 0, 0.3);justify-content: center; align-items: center;">
+                        <CascadingValue Name="visibleTimer" Value="@PanelVisible">
+                            <LoadingPanel></LoadingPanel>
+                        </CascadingValue>
+                    </div>
+                </div>
+
+            </Template>
+        </DxGridLayoutItem>
+
+    </Items>
+</DxGridLayout>
+@code {
+
+
+    [Inject] IJSRuntime JSRuntime { get; set; }
+    [Inject] BrowserService browserService { get; set; }
+    NvlNhapXuatKhoShow nvlNhapXuatKhoShowcrr { get; set; }
+    DialogWindow dxPopup;
+    RenderFragment renderFragment;
+    RenderFragment renderFragmentdetail { get; set; }
+    DialogMsg dialogMsg;
+    int? sochungtu { get; set; }
+    List<DataDropDownList> lstnoigiaonhan { get; set; }
+    DialogWindow dxPopupDetail { get; set; }
+    private string randomdivhide { get; set; } = string.Format("id{0}", StaticClass.Randomstring(10));//ID của CSS nên bắt đầu bằng chữ, vì nếu bat đầu bằng số dễ bị hẹo lắm
+    string noigiaonhan { get; set; }
+    string MaHangSearch { get; set; } = "";
+    string idgrid = "griddetailnhapkhoms";
+    bool showallgroup { get; set; } = false;
+    bool IsOpenfly = false;
+    List<Users> lstuser { get; set; }
+    Users? userselect { get; set; }
+    bool IsKiemKem { get; set; } = false;
+    //bool IsOpenfly = true;
+    DxFlyout dxFlyoutchucnang { get; set; }
+    public string idflychucnang { get; set; }
+    public string random { get; set; }
+    string heightgrid = "500px";
+    DateTime? dtpbegin { get; set; } = DateTime.Now;
+    DateTime? dtpend { get; set; } = DateTime.Now;
+    string tengiaonhanheader = "Tên giao nhận";
+    bool isclick = false;
+    bool PanelVisible { get; set; } = false;
+    bool VisibleThemChungTu { get; set; } = true;
+    bool VisibleHangNo { get; set; } = false;
+    ComboboxFilteredTable txtnhamay { get; set; }
+    DataDropDownList nhamayselected { get; set; }
+    List<DataDropDownList> lstlydo { get; set; }
+    DataDropDownList lydoselected { get; set; }
+    List<DataDropDownList> lstkhonvl { get; set; }
+    DataDropDownList khonvlselected { get; set; }
+    public DxGrid dxGrid { get; set; }
+
+    public async void ClosePopupWhenBack()
+    {
+        await JSRuntime.InvokeVoidAsync("PopupHelper.unregisterBackEvent");
+        await dxPopup.CloseAsync();
+    }
+
+    List<InitDxGridDataColumn> lstcolumn = new List<InitDxGridDataColumn>();
+
+
+    private bool CheckChungTuNhap(NvlNhapXuatKhoShow nvlNhapXuatKhoShow)
+    {
+        if (nvlNhapXuatKhoShow.STTCT >= 0)
+        {
+            return true;
+        }
+
+        return false;
+    }
+    public string idelement(NvlNhapXuatKhoShow nvlNhapXuatKhoShow)
+    {
+        if (nvlNhapXuatKhoShow == null)
+            return "";
+        int serial = nvlNhapXuatKhoShow.Serial;
+        if (nvlNhapXuatKhoShow == null)
+            string.Format("flychucnang_{0}_{1}", random, serial);
+        if (serial == null)
+            string.Format("flychucnang_{0}_{1}", random, serial);
+        if (random == null)
+        {
+            random = prs.RandomString(9);
+        }
+        return string.Format("flychucnang_{0}_{1}", random, serial);
+    }
+    // Hàm xử lý sự kiện click của nút
+
+
+    private string showdate(DateTime? dt)
+    {
+        if (dt == null)
+            return "";
+        return dt.Value.ToString("dd-MM-yy");
+    }
+    private void expandorcollapse(int i)
+    {
+        if (dxGrid.IsDetailRowExpanded(i))
+            dxGrid.CollapseDetailRow(i);
+        else
+            dxGrid.ExpandDetailRow(i);
+    }
+
+}

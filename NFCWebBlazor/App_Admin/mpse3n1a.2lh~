@@ -1,0 +1,58 @@
+﻿using BlazorBootstrap;
+using Microsoft.AspNetCore.Components;
+using Newtonsoft.Json;
+using NFCWebBlazor.App_ModelClass;
+using NFCWebBlazor.Model;
+
+namespace NFCWebBlazor.App_Admin
+{
+    public partial class MsgChat
+    {
+        [Inject ] ToastService toastService { get; set; }
+        private async Task saveAsync()
+        {
+            string sql = "NVLDB.dbo.NvlMsg_Insert";
+            List<ParameterDefine> lstpara = new List<ParameterDefine>();
+            lstpara.Add(new ParameterDefine("@Serial", nvlMsg.Serial));
+            lstpara.Add(new ParameterDefine("@Msg", nvlMsg.Msg));
+            lstpara.Add(new ParameterDefine("@MsgParent", nvlMsg.MsgParent));
+            lstpara.Add(new ParameterDefine("@SerialLink", nvlMsg.SerialLink));
+            lstpara.Add(new ParameterDefine("@TableName", nvlMsg.TableName));
+            lstpara.Add(new ParameterDefine("@UserInsert", nvlMsg.UserInsert));
+
+            CallAPI callAPI = new CallAPI();
+          
+          
+            string json = await callAPI.ProcedureEncryptAsync(sql, lstpara);
+            if (json != "")
+            {
+                var query = JsonConvert.DeserializeObject<List<Ketqua>>(json);
+                if (query[0].ketqua == "OK")
+                {
+                    //toastService.Notify(new ToastMessage(ToastType.Success, "LƯU THÀNH CÔNG"));
+                    SendMessage();
+                    nvlMsg.Msg = "";
+                }
+                else
+                {
+                    toastService.Notify(new ToastMessage(ToastType.Success, string.Format("Lỗi:{0}, {1} ", query[0].ketqua, query[0].ketquaexception)));
+                    //reset();
+                    // msgBox.Show(string.Format("Lỗi:{0}, {1} " + query[0].ketqua, query[0].ketquaexception), IconMsg.iconssuccess);
+
+                }
+                //Grid.Data = lstDonDatHangSearchShow;
+            }
+        }
+        private void SendMessage()
+        {
+            if (!string.IsNullOrWhiteSpace(nvlMsg.Msg))
+            {
+                Messages.Add(nvlMsg.CopyClass());
+                // Simulate a reply
+                StateHasChanged();
+                ScrollToBottom();
+            }
+            //ScrollToBottom();
+        }
+    }
+}

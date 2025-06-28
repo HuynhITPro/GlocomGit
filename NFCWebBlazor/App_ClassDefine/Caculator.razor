@@ -1,0 +1,158 @@
+﻿@using System.Data
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        background-color: #f0f0f0;
+    }
+
+    .calculator {
+        width: 300px;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        padding: 20px;
+    }
+
+        .calculator .display {
+            width: 100%;
+            height: 60px;
+            border: none;
+            background: #f9f9f9;
+            text-align: right;
+            font-size: 2rem;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        .calculator .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .calculator button {
+            height: 60px;
+            font-size: 1.2rem;
+            border: none;
+            background: #007bff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+            .calculator button:hover {
+                background: #0056b3;
+            }
+
+            .calculator button.operator {
+                background: #ffc107;
+            }
+
+                .calculator button.operator:hover {
+                    background: #e0a800;
+                }
+
+            .calculator button.clear {
+                background: #dc3545;
+            }
+
+                .calculator button.clear:hover {
+                    background: #b21f2d;
+                }
+
+    .complete {
+        grid-column: span 2; /* Mở rộng qua 2 cột */
+        background: #28a745; /* Màu nền xanh lá */
+        color: white;
+        font-size: 1.2rem;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+
+        .complete:hover {
+            background: #218838; /* Màu đậm hơn khi hover */
+        }
+   
+</style>
+<div class="calculator">
+    <input type="text" @bind="DisplayValue" class="display" readonly />
+
+    <div class="buttons">
+        @foreach (var button in Buttons)
+        {
+            <button @onclick="(() => AppendValue(button))">@button</button>
+        }
+        <button class="operator" @onclick="Backspace">←</button>
+        <button class="clear" @onclick="ClearDisplay">C</button>
+        <button class="operator" @onclick="Calculate">=</button>
+        <button class="complete" @onclick="finish">Hoàn tất</button>
+    </div>
+   
+</div>
+
+
+@code {
+    [Parameter]
+    public EventCallback<double?> AfterCompute { get; set; }
+    [Parameter]
+    public string DisplayValue { get; set; } = string.Empty;
+    private double? Result { get; set; }
+    //private readonly string[] Buttons = { "7", "8", "9", "/", "4", "5", "6", "*", "1", "2", "3", "-", "0", ".", "+" };
+    private readonly string[] Buttons = { "7", "8", "9", "+", "4", "5", "6", "-", "1", "2", "3", "*", "0", ".", "/" };
+    // Append value to the display
+    private void AppendValue(string value)
+    {
+        DisplayValue += value;
+    }
+
+    // Clear the display
+    private void ClearDisplay()
+    {
+        DisplayValue = string.Empty;
+        Result = 0;
+    }
+
+    // Backspace: Remove the last character
+    private void Backspace()
+    {
+        if (!string.IsNullOrEmpty(DisplayValue))
+        {
+            DisplayValue = DisplayValue[..^1];
+        }
+    }
+
+    // Calculate the result
+    private void Calculate()
+    {
+        try
+        {
+
+            Result = Convert.ToDouble(new DataTable().Compute(DisplayValue, null));
+            DisplayValue = Result.Value.ToString();
+        }
+        catch
+        {
+            DisplayValue = "";
+            Result = null;
+        }
+    }
+    private async void finish()
+    {
+        if (AfterCompute.HasDelegate)
+        {
+            Calculate();
+            await AfterCompute.InvokeAsync(Result);
+        }
+
+    }
+}

@@ -1,0 +1,246 @@
+﻿@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+@using BlazorBootstrap
+<style>
+
+    .dxbl-modal > .dxbl-modal-root {
+        padding: 0px;
+    }
+
+    .dx-popup-content {
+        width: auto !important;
+        height: auto !important;
+        max-width: 100%; /* Adjust this based on your layout */
+        max-height: 100%; /* Adjust this based on your layout */
+        overflow: auto; /* Add scrolling if the content is too large */
+    }
+
+    .popupcss {
+        width: auto !important;
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+        max-width: 100%; /* Adjust this based on your layout */
+        height: 100%; /* Adjust this based on your layout */
+        overflow: auto; /* Add scrolling if the content is too large */
+    }
+
+    .popuppdfcss {
+        width: 900px;
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+        max-width: 95%; /* Adjust this based on your layout */
+        height: 95vh; /* Adjust this based on your layout */
+        overflow: auto; /* Add scrolling if the content is too large */
+    }
+
+    .dxbrv-wrapper {
+        height: 100% !important;
+    }
+
+    .my-background {
+        background-image: url('images/NFCSoft.png');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        /* Other styling properties (e.g., width, height) can be added here */
+    }
+
+    /* Thiết kế 2 thẻ div chồng lên nhau */
+
+    /* Class này dùng để điều khiển scrollbar */
+
+
+</style>
+<Toasts class="p-3" AutoHide="true" Delay="4000" Placement="ToastsPlacement.TopRight" />
+<DxLayoutBreakpoint MaxWidth="768"
+                    @bind-IsActive="@IsMobileLayout" />
+
+<div class="page">
+    <DxGridLayout CssClass="page-layout">
+        <Rows>
+            @if (IsMobileLayout)
+            {
+
+                <DxGridLayoutRow Areas="header" Height="auto"></DxGridLayoutRow>
+                <DxGridLayoutRow Areas="sidebar" Height="auto"></DxGridLayoutRow>
+                <DxGridLayoutRow Areas="content" />
+            }
+            else
+            {
+
+                <DxGridLayoutRow Areas="header header" Height="auto" />
+                <DxGridLayoutRow Areas="@(IsSidebarExpanded ? "sidebar content" : "content content")" />
+            }
+        </Rows>
+        <Columns>
+            @if (!IsMobileLayout)
+            {
+                <DxGridLayoutColumn Width="auto" />
+                <DxGridLayoutColumn />
+            }
+        </Columns>
+        <Items>
+            <DxGridLayoutItem Area="header" CssClass="layout-item">
+                <Template>
+                    <Header @bind-ToggleOn="@IsSidebarExpanded" @ref=header UsersLogin="@((userGlobal==null)?null:userGlobal.users)" />
+                </Template>
+            </DxGridLayoutItem>
+            <DxGridLayoutItem Area="sidebar" CssClass="layout-item" Visible=@IsMenuShow>
+                <Template>
+                    <CascadingValue Name="checkmobile" Value="@IsMobileLayout">
+                        <MenuMain @ref=menuMain StateCssClass="@NavMenuCssClass" menuItems="@lstmenuitems" GotoMainForm=@AddTab parentID="@Model.ModelAdmin.users.TypeApp"></MenuMain>
+                    </CascadingValue>
+                </Template>
+            </DxGridLayoutItem>
+            <DxGridLayoutItem Area="content" CssClass="content px-1 layout-item">
+                <Template>
+                    @if (!IsMenuShow)
+                    {
+
+                        <NFCWebBlazor.App_Admin.Blz_DangNhap mainLayout="this" GotoMainForm="@GotoMainForm"></NFCWebBlazor.App_Admin.Blz_DangNhap>
+                    }
+                    else
+                    {
+                        if (lstmenuitems == null)//Xu ly khi form bị back trở lại
+                        {
+
+                            checkloadmenuagain();
+                        }
+                       
+                        <div class="container-fluid ps-1 pe-1" id="scrollContainer" style="height: 100%; overflow: auto;">
+                            <div class="row w-100 m-0">
+                                @if (lsttab.Count == 0)
+                                {
+                                    @*  <div>
+                            <img src="images/NFCSoft.png" alt="" class="d-block" style="width:100%;border-radius: 15px;">
+                            </div> *@
+                                }
+                                else
+                                {
+
+                                    <DxTabs RenderMode="TabsRenderMode.OnDemand" @bind-ActiveTabIndex="@ActiveTabIndex">
+
+                                        @foreach (ItemFragment tab in lsttab)
+                                        {
+
+                                            <DxTabPage @key="@tab.keytab">
+                                                <TextTemplate>
+                                                    <div class="container">
+                                                        <div class="row d-flex flex-nowrap">
+                                                            <div class="col-auto p-0">
+                                                                <i class="@tab.IconCss" style="font-size:1rem;"></i>
+                                                                <label> @tab.NameTab</label>
+                                                                <DxButton IconCssClass="bi bi-x-circle"
+                                                                          RenderStyle="ButtonRenderStyle.Link"
+                                                                          RenderStyleMode="ButtonRenderStyleMode.Text"
+                                                                          CssClass="shadow-none remove-padding"
+                                                                          Click="() => RemoveTab(tab.keytab)" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </TextTemplate>
+                                                <ChildContent>
+                                                  
+                                                        @tab.renderFragment
+                                                   
+                                                </ChildContent>
+                                            </DxTabPage>
+
+                                        }
+
+                                    </DxTabs>
+                                }
+                            </div>
+                        </div>
+                        @* @Body *@
+                    }
+
+                </Template>
+            </DxGridLayoutItem>
+        </Items>
+    </DxGridLayout>
+</div>
+<DxPopup CssClass="popupcss"
+         @bind-Visible="@windowVisible"
+         ShowFooter="true"
+         CloseOnEscape="true"
+         @ref=windowRef
+         Width="auto"
+         ShowHeader=true
+         CloseOnOutsideClick="false"
+         ShowCloseButton="true">
+    <BodyContentTemplate>
+        <NFCWebBlazor.App_Admin.ReportShow @ref=reportShow IsMobile="@IsMobileLayout" report="@xtraReport"></NFCWebBlazor.App_Admin.ReportShow>
+    </BodyContentTemplate>
+
+    <FooterContentTemplate>
+        @*   <DxButton CssClass="popup-button my-1 ms-2" RenderStyle="ButtonRenderStyle.Primary" Text="OK" Click="@context.CloseCallback" /> *@
+        <DxButton CssClass="popup-button my-1 ms-2" RenderStyle="ButtonRenderStyle.Primary" Text="Đóng" Click="@context.CloseCallback" />
+    </FooterContentTemplate>
+</DxPopup>
+<NFCWebBlazor.App_ClassDefine.DialogWindow Width="auto" CssClass="popuppdfcss" @ref=@dxPopuppdf>
+    <BodyContentTemplate>
+        @renderFragmentpdf
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+
+<Preload />
+@code {
+    string? NavMenuCssClass { get; set; }
+    bool _isMobileLayout = false;
+    DialogWindow dxPopuppdf { get; set; }
+    RenderFragment renderFragmentpdf { get; set; }
+    bool IsMobileLayout
+    {
+        get => _isMobileLayout;
+        set
+        {
+            _isMobileLayout = value;
+            IsSidebarExpanded = !_isMobileLayout;
+        }
+    }
+    public MenuMain menuMain { get; set; }
+    // NavMenu navMenu { get; set; }
+    int ActiveTabIndex { get; set; }
+    bool _isSidebarExpanded = true;
+    bool windowVisible = false;
+    bool uploadfilevisible = false;
+    DxTabs dxTabs;
+    public DxPopup windowRef { get; set; }
+
+    NFCWebBlazor.App_Admin.ReportShow reportShow { get; set; }
+    public DevExpress.XtraReports.UI.XtraReport xtraReport { get; set; }
+    public FileHoSoAPI fileHoSoAPI { get; set; }
+    public string Pathdirectory { get; set; }
+    Header header { get; set; }
+    bool IsSidebarExpanded
+    {
+        get => _isSidebarExpanded;
+        set
+        {
+            if (_isSidebarExpanded != value)
+            {
+                NavMenuCssClass = value ? "expand" : "collapse";
+                _isSidebarExpanded = value;
+            }
+        }
+    }
+
+
+    async void OnLocationChanged(object? sender, LocationChangedEventArgs args)
+    {
+        if (IsMobileLayout)
+        {
+            IsSidebarExpanded = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+
+
+
+}

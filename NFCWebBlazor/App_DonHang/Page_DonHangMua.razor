@@ -1,0 +1,355 @@
+﻿@using BlazorBootstrap
+@using DevExpress.Blazor;
+@using NFCWebBlazor.App_ClassDefine;
+@using System.Data
+<style>
+    .my-grid {
+        height: @heightgrid;
+    }
+
+    .highRed {
+        color: red;
+        font-weight: bold
+    }
+
+    .highGreen {
+        color: Green;
+        font-weight: bold
+    }
+
+    .highlighted-item > td {
+        background-color: lightgray;
+        color: #0070ff;
+        font-weight: bold;
+    }
+
+</style>
+<DxGridLayout CssClass="w-100 ch-480">
+
+    <Rows>
+        <DxGridLayoutRow Height="Auto" />
+        <DxGridLayoutRow Height="Auto" />
+        <DxGridLayoutRow />
+    </Rows>
+
+    <Items>
+
+        <DxGridLayoutItem Row="0">
+            <Template>
+                <div class="p-2 pt-0 mb-2 bg-white border rounded-bottom-2">
+                    <div>
+
+                        <DxFormLayout CssClass="w-100 mt-3">
+
+                            <DxFormLayoutItem Caption="Khách hàng" ColSpanLg="6" ColSpanMd="6">
+                                <DxComboBox Data=@lstkhachhang ListRenderMode="ListRenderMode.Virtual"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            SelectedItemChanged="@((NvlKhachHang nvlkh)=>txtkhachhangselected(nvlkh))"
+                                            ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                            TextFieldName="@nameof(NvlKhachHang.TenKh)"
+                                            @bind-Value="@khachhangselected"
+                                            CssClass="cw-480" />
+
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem Caption="Loại báo cáo" ColSpanLg="6" ColSpanMd="6">
+                                <DxTagBox Data="@lstloaibaocao"
+                                          TextFieldName="@nameof(DataDropDownList.FullName)"
+                                          @bind-Values="@baocaoselected"
+                                          CssClass="cw-480"
+                                          InputId="tbOverview">
+                                </DxTagBox>
+
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem>
+                                <DxRadioGroup Items="@radioList"
+                                              @bind-Value="@SelectedChecked"
+                                              Layout="RadioGroupLayout.Horizontal" />
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem ColSpanMd="12">
+                                <Template>
+                                    <div class="d-flex justify-content-center m-2">
+
+                                        <DxButton RenderStyle="ButtonRenderStyle.Primary" CssClass="bi bi-search m-1" Click=@search
+                                                  RenderStyleMode="ButtonRenderStyleMode.Outline" Text="XEM">
+
+
+                                        </DxButton>
+
+                                    </div>
+
+                                </Template>
+                            </DxFormLayoutItem>
+                        </DxFormLayout>
+
+                    </div>
+                </div>
+
+            </Template>
+        </DxGridLayoutItem>
+        <DxGridLayoutItem Row="1">
+            <Template>
+                @if (lstthanhtien.Count > 0)
+                {
+
+                    <div class="row">
+                        <div class="d-flex justify-content-center">
+                            <div class="row justify-content-center align-items-center" style="margin-right:20px;">TOTAL USD $</div>
+                            <div class="progress-stacked" style=" height:20px;width:80%;margin:10px;">
+                                <div class="progress" role="progressbar" aria-valuenow=@getdoubleofobject(wtotaldaxuat) aria-valuemin="0" aria-valuemax="100" style="width:@getdoubleofobject(wtotaldaxuat)%;height: 20px">
+                                    <div class="progress-bar bg-primary" style="font-size:11px;">
+                                    @getdoubleofobject(totaldaxuat).ToString("#,#")
+                                    </div>
+                                </div>
+                                <div class="progress" role="progressbar" aria-valuenow="@getdoubleofobject(wtotaltonkho)" aria-valuemin="0" aria-valuemax="100" style="width:@getdoubleofobject(wtotaltonkho)%;height: 20px">
+                                    <div class="progress-bar bg-success" style="font-size:11px;">
+                                    @getdoubleofobject(totaltonkho).ToString("#,#")
+                                    </div>
+                                </div>
+                                <div class="progress" role="progressbar" aria-valuenow="@getdoubleofobject(wtotalphailam)" aria-valuemin="0" aria-valuemax="100" style="width:@getdoubleofobject(wtotalphailam)%;height: 20px">
+                                    <div class="progress-bar bg-danger" style="font-size:11px;">
+                                    @getdoubleofobject(totalphailam).ToString("#,#")
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </Template>
+        </DxGridLayoutItem>
+        <DxGridLayoutItem Row="2">
+            <Template>
+                <DxGrid @ref=dxGrid
+                        CssClass="my-grid"
+                        ShowFilterRow="true"
+                        AllowSelectRowByClick="true"
+                        CustomizeElement="OnCustomizeElement"
+                        ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+                        PageSize="20"
+                        
+                        EditMode="GridEditMode.PopupEditForm"
+                        PopupEditFormHeaderText="Chỉnh sửa"
+                        PagerNavigationMode="PagerNavigationMode.InputBox"
+                        PageSizeSelectorVisible="true"
+                       
+                        PageSizeSelectorAllRowsItemVisible="true"
+                        PageSizeSelectorItems="@(new int[] { 20,30,50 })"
+                        EditFormButtonsVisible="false"
+                        VirtualScrollingEnabled="true"
+                        FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                        Data=@dtresultfinal
+                        AutoExpandAllGroupRows="true">
+                    <ToolbarTemplate>
+                        <DxToolbar ItemRenderStyleMode="ToolbarRenderStyleMode.Plain">
+                            <DxToolbarItem Text="Xuất excel" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=>dxGrid.ExportToXlsxAsync("ExporDonHang"))">
+                            </DxToolbarItem>
+                            <DxToolbarItem Text="Chọn cột" BeginGroup="true" Click="@(()=>dxGrid.ShowColumnChooser())" IconCssClass="bi bi-layout-text-window-reverse" />
+                          
+                        </DxToolbar>
+                    </ToolbarTemplate>
+                    <Columns>
+                      
+                        <DxGridDataColumn FieldName="TyLe" Caption="Tỷ lệ" Width="150">
+                            <CellDisplayTemplate>
+                                @{
+                                    var row = (DataRowView)context.DataItem;
+                                    double tyle = 0;
+                                    if (row["TyLe"] != null && row["TyLe"] != DBNull.Value)
+                                    {
+                                        tyle = double.Parse(row["TyLe"].ToString());
+                                    }
+                                }
+                                @if (tyle > 0)
+                                {
+                                    <ProgressBarDf value=@tyle></ProgressBarDf>
+                                }
+                            </CellDisplayTemplate>
+                        </DxGridDataColumn>
+
+                        <DxGridDataColumn FieldName="wTyLe" Caption="Tỷ lệ" Width="260">
+                            <HeaderCaptionTemplate>
+                                <div class="row">
+                                    <div style="width: 300px">
+                                        <div class="progress-stacked">
+                                            <div class="progress" role="progressbar" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100" style="width:30%;">
+                                                <div class="progress-bar bg-primary" style="font-size:9px;">
+                                                    Đã xuất
+                                                </div>
+                                            </div>
+                                            <div class="progress" role="progressbar" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100" style="width:30%;">
+                                                <div class="progress-bar bg-success" style="font-size:9px;">
+                                                    Tồn kho
+                                                </div>
+                                            </div>
+                                            <div class="progress" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:40%;">
+                                                <div class="progress-bar bg-danger" style="font-size:9px;">
+                                                    Phải làm
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </HeaderCaptionTemplate>
+                            <CellDisplayTemplate>
+                                @{
+                                    var row = (DataRowView)context.DataItem;
+
+                                }
+                                @if (row != null)
+                                {
+                                    <div class="row">
+                                        <div style="width: 300px">
+                                            <div class="progress-stacked">
+                                                <div class="progress" role="progressbar" aria-valuenow=@getdoubleofobject(row["wSLDaXuat"]) aria-valuemin="0" aria-valuemax="100" style="width:@getdoubleofobject(row["wSLDaXuat"])%;">
+                                                    <div class="progress-bar bg-primary" style="font-size:11px;">
+                                                        @getdoubleofobject(row["SLDaXuat"]).ToString("#,#")
+                                                    </div>
+                                                </div>
+                                                <div class="progress" role="progressbar" aria-valuenow="@getdoubleofobject(row["wSLTonKho"])" aria-valuemin="0" aria-valuemax="100" style="width:@getdoubleofobject(row["wSLTonKho"])%;">
+                                                    <div class="progress-bar bg-success" style="font-size:11px;">
+                                                        @getdoubleofobject(row["SLTonKho"]).ToString("#,#")
+                                                    </div>
+                                                </div>
+                                                <div class="progress" role="progressbar" aria-valuenow="@getdoubleofobject(row["wSLPhaiNhapTongDH"])" aria-valuemin="0" aria-valuemax="100" style="width:@getdoubleofobject(row["wSLPhaiNhapTongDH"])%;">
+                                                    <div class="progress-bar bg-danger" style="font-size:11px;">
+                                                        @getdoubleofobject(row["SLPhaiNhapTongDH"]).ToString("#,#")
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </CellDisplayTemplate>
+                        </DxGridDataColumn>
+                        <DxGridDataColumn FieldName="TenSP" Caption="Tên SP" MinWidth="100" />
+                        <DxGridDataColumn FieldName="TenMau" Caption="Tên màu" Width="120" Visible=@showart>
+                           
+                        </DxGridDataColumn>
+                        
+                        <DxGridDataColumn FieldName="MaHDGroup" GroupIndex="0" Caption="Đơn hàng" Width="120" />
+                        <DxGridDataColumn FieldName="MaHD" Caption="Đơn hàng" Visible="false" />
+                        <DxGridDataColumn FieldName="MaSP" Caption="Mã SP" Width="100" Visible=false />
+                        <DxGridDataColumn FieldName="ArticleNumber" Caption="ArticleNumber" Width="120"  Visible=false />
+                        <DxGridDataColumn FieldName="TongDH" Caption="Tổng ĐH" Width="115" DisplayFormat="#,#" />
+                        <DxGridDataColumn FieldName="SLDonHangNhan" Caption="Thực nhận" Width="100" DisplayFormat="#,#" Visible=false />
+
+                        <DxGridDataColumn FieldName="SLDaXuat" Caption="Đã xuất" Width="100" DisplayFormat="#,#" Visible=false />
+                        <DxGridDataColumn FieldName="SLPhaiXuat" Caption="Phải xuất" Width="100" DisplayFormat="#,#" Visible=false />
+                        <DxGridDataColumn FieldName="SLTonKho" Caption="Tồn kho" Width="100" DisplayFormat="#,#" />
+                        <DxGridDataColumn FieldName="SLPhaiNhap" Caption="Phải nhập (thực nhận)" Width="120" DisplayFormat="#,#" />
+
+                        <DxGridDataColumn FieldName="SLPhaiNhapTongDH" Caption="Phải Nhập (Tổng ĐH)" Width="130" DisplayFormat="#,#" />
+
+                      
+
+                    </Columns>
+                  
+
+
+                </DxGrid>
+            </Template>
+        </DxGridLayoutItem>
+
+    </Items>
+</DxGridLayout>
+@code {
+    [Inject] PreloadService PreloadService { get; set; }
+    [Inject] IJSRuntime JS { get; set; }
+    string heightgrid = "500px";
+    string divClass = "expandable-content";
+    bool visiblechart = false;
+    IEnumerable<string> radioList = new[] { "Gộp theo sản phẩm", "Gộp theo màu" };
+   
+    string SelectedChecked { get; set; } = "Gộp theo sản phẩm";
+    public int widthtotal = 250;
+    bool showart = false;
+    string titlechart = "Đơn hàng chưa xuất";
+    List<NvlKhachHang> lstkhachhang { get; set; }
+    NvlKhachHang khachhangselected { get; set; }
+    List<DataDropDownList> lstloaibaocao { get; set; } = new List<DataDropDownList>();
+
+    IEnumerable<DataDropDownList> baocaoselected { get; set; }
+   
+
+
+    public DxGrid dxGrid { get; set; }
+
+    DataTable dtresultfinal = new DataTable();
+
+
+    List<InitDxGridDataColumn> lstcolumn = new List<InitDxGridDataColumn>();
+    async Task ExportXlsx_Click()
+    {
+        await dxGrid.ExportToXlsxAsync("ExportResult");
+    }
+    async Task ExportCsv_Click()
+    {
+        await dxGrid.ExportToCsvAsync("ExportResult");
+    }
+    void OnCustomizeElement(GridCustomizeElementEventArgs e)
+    {
+        if (e.ElementType == GridElementType.DataRow && (string)e.Grid.GetRowValue(e.VisibleIndex, "MaHD") == "Break")
+        {
+            e.CssClass = "highlighted-item";
+        }
+        if (e.ElementType == GridElementType.DataCell)
+        {
+            var dataColumn = (IGridDataColumn)e.Column;
+            switch (dataColumn.FieldName)
+            {
+
+                case "TenMau":
+                    if (e.Grid.GetRowValue(e.VisibleIndex, "TenMau") != null)
+                    {
+                        var colorhex = e.Grid.GetRowValue(e.VisibleIndex, "ColorHex");
+                        if (colorhex != null)
+                        {
+                            e.Style = string.Format("background-color:{0}", colorhex.ToString());
+                        }
+                    }
+                    break;
+                case "SLTonKho":
+                    
+                   
+                    e.CssClass = "highGreen";
+                    break;
+                case "SLPhaiNhapTongDH":
+                   
+                    e.CssClass = "highRed";
+                    break;
+
+            }
+        }
+    }
+
+    private bool isExpanded = false;
+
+    // Hàm xử lý sự kiện click của nút
+    private void hidedivsearch()
+    {
+        isExpanded = false;
+        divClass = "expandable-content";
+    }
+    private void Showdivsearch()
+    {
+        isExpanded = !isExpanded;
+
+        if (isExpanded)
+        {
+
+            divClass = "expandable-content show";
+        }
+        else
+        {
+
+            divClass = "expandable-content";
+        }
+    }
+    public double getdoubleofobject(object ob)
+    {
+        if (ob == null || ob == DBNull.Value)
+            return 0;
+        return double.Parse(ob.ToString());
+    }
+
+}

@@ -1,0 +1,139 @@
+﻿@using BlazorBootstrap
+@using NFCWebBlazor.Model
+@using Newtonsoft.Json
+<style>
+    .rounded-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+</style>
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+
+<div>
+
+
+    <DxButton RenderStyle="ButtonRenderStyle.Primary" RenderStyleMode=ButtonRenderStyleMode.Text CssClass="bi bi-paperclip m-1"
+    Text=@showtext Click="@(()=>btuploadfile(fileHoSoGroup))">
+    </DxButton>
+</div>
+@if (!string.IsNullOrEmpty(ImageUrl))
+{
+    <div>
+
+
+        <img src="@ImageUrl" class="rounded-image" alt="Hình ảnh từ URL" />
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string MaHang { get; set; }
+    [Inject]
+    ToastService toastService { get; set; }
+    DialogWindow? dxPopup { get; set; }
+    string tableName { get; set; }
+    RenderFragment? renderFragment { get; set; }
+    private string ImageUrl { get; set; } = "";
+    NvlHangHoa nvlHangHoacrr { get; set; }
+    FileHoSoGroup fileHoSoGroup { get; set; } = new FileHoSoGroup();
+    string showtext { get; set; } = "Thêm ảnh";
+    protected override async Task OnInitializedAsync()
+    {
+        loadMaHang();
+        // return base.OnInitializedAsync();
+    }
+    private async void loadMaHang()
+    {
+        CallAPI callAPI = new CallAPI();
+        string sql = string.Format(@"use NVLDB
+                            declare @MaHang nvarchar(100)='{0}'
+                            select qry.*,hs.UrlFile as PathImg from (SELECT  [Serial],[MaHang],[TenHang]
+
+                             FROM [dbo].[NvlHangHoa] where MaHang=@MaHang) as qry
+                             left join DBMaster.dbo.[NvlFile_AttachGroup] fileattch
+                             on (qry.Serial=fileattch.SerialLink and fileattch.TableName='NvlHangHoa' and NoiDung=N'Hình ảnh')
+                             left join DBMaster.dbo.[FileHoSo] hs on fileattch.Serial=hs.SerialLink and hs.TableName='NvlFile_AttachGroup'", MaHang);
+        tableName = "NvlHangHoa";
+        fileHoSoGroup.NoiDung = "Hình ảnh";
+        string json = await callAPI.ExcuteQueryEncryptAsync(sql, new List<ParameterDefine>());
+        if (json != "")
+        {
+
+            var query = JsonConvert.DeserializeObject<List<NvlHangHoa>>(json);
+
+            if (query.Any())
+            {
+                
+                foreach (var it in query)
+                {
+                    if (!string.IsNullOrEmpty(it.PathImg))
+                    {
+                        showtext = "Đã có ảnh nhận diện rồi";
+                        //ImageUrl=Path.Combine(ModelAdmin.pathurlimgpublic,Path.GetFileName(it.PathImg));
+                        
+                        break;
+                    }
+                }
+              
+                nvlHangHoacrr = query.LastOrDefault();
+                if(!string.IsNullOrEmpty(nvlHangHoacrr.PathImg))
+                {
+                    ImageUrl = Path.Combine(ModelAdmin.pathurlimgpublic, Path.GetFileName(nvlHangHoacrr.PathImg));
+                }
+            }
+            StateHasChanged();
+            //Console.WriteLine(query.Count);
+            //await InvokeAsync(StateHasChanged);
+        }
+    }
+    private async void btuploadfile(FileHoSoGroup fileHoSoGroup)
+    {
+        if (nvlHangHoacrr != null)
+        {
+            FileHoSoAPI fileHoSo = new FileHoSoAPI();
+            fileHoSo.TableName = "NvlFile_AttachGroup";
+            fileHoSo.SerialLink = 0;//Không cần thiết. vì trong procedure của API sẽ xử lý để lấy ra SerialLink của bảng NvlFile_AttachGroup
+            fileHoSo.UserInsert = Model.ModelAdmin.users.UsersName;
+            fileHoSo.Serial = 0;
+
+            //3 biến này là bắt buộc, vì để procedure kiểm tra và xử lý để lấy SerialLink
+            fileHoSo.SerialRoot = nvlHangHoacrr.Serial;
+            fileHoSo.TableNameRoot = tableName;
+            fileHoSo.NoiDungRoot = "Hình ảnh";
+
+            NvlFile_AttachGroup nvlFile_AttachGroup = new NvlFile_AttachGroup();
+            nvlFile_AttachGroup.Serial = fileHoSoGroup.Serial;
+            //3 biến SerialLink,TableName,NoiDung dùng để procedure kiểm tra xem có data ở bảng NvlFile_AttachGroup hay chưa, nếu chưa có sẽ tạo mới dòng
+            nvlFile_AttachGroup.SerialLink = nvlHangHoacrr.Serial;//Dùng để liên kết với ID parametter của chứng từ gốc
+            nvlFile_AttachGroup.TableName = tableName;//TableName là table gốc của chứng từ
+            nvlFile_AttachGroup.NoiDung = fileHoSoGroup.NoiDung;//Dùng để truyền vào parametter của proceducer để kiểm tra xem có tạo SerialLink này ở bảng NvlFile_AttachGroup này ở database hay chưa
+
+            //fileHoSoAPI.SerialLink=
+            renderFragment = builder =>
+            {
+                builder.OpenComponent<UploadDocument>(0);
+                builder.AddAttribute(1, "fileHoSo", fileHoSo);
+                builder.AddAttribute(2, "nvlFile_AttachGroup", nvlFile_AttachGroup);
+                builder.AddAttribute(2, "folderName", tableName);
+                //builder.AddAttribute(3, "GotoMainForm", EventCallback.Factory.Create(this, refreshdata));
+                //builder.OpenComponent(0, componentType);
+                builder.CloseComponent();
+            };
+            dxPopup.showAsync("Thêm file");
+
+            await dxPopup.ShowAsync();
+        }
+        else
+        {
+            toastService.Notify(new ToastMessage(ToastType.Warning, "Chưa có mã hàng"));
+
+        }
+
+    }
+}

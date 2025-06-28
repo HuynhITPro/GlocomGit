@@ -1,0 +1,154 @@
+﻿@using NFCWebBlazor.Model
+
+
+<NFCWebBlazor.App_Admin.DialogMsg @ref="@dialogMsg"></NFCWebBlazor.App_Admin.DialogMsg>
+<DxGrid @ref="Grid" Data="@lstdata"
+        AutoExpandAllGroupRows="true"
+        TextWrapEnabled="true"
+        ShowAllRows=true
+       
+        EditModelSaving="OnEditModelSaving"
+        AllowSort=false
+        AllowColumnReorder="false"
+        EditMode="GridEditMode.EditCell"
+     
+        CustomizeEditModel="Grid_CustomizeEditModel"
+        ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+        VirtualScrollingEnabled=true
+        CustomizeSummaryDisplayText="Grid_CustomizeSummaryDisplayText"
+        ShowFilterRow=true>
+    <ToolbarTemplate>
+        <DxToolbar ItemRenderStyleMode="ToolbarRenderStyleMode.Plain">
+
+            <DxToolbarItem Text="Xuất excel" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=>Grid.ExportToXlsxAsync("ExporHanMuc"))">
+            </DxToolbarItem>
+
+            <DxToolbarItem Text="LƯU" IconCssClass="bi bi-floppy" RenderStyle="ButtonRenderStyle.Primary" Click="@saveAsynAsync">
+            </DxToolbarItem>
+        </DxToolbar>
+    </ToolbarTemplate>
+    <Columns>
+        <DxGridDataColumn Width="90" DataRowEditorVisible="false" ShowInColumnChooser=false Visible=@PhanQuyenCheck>
+           
+            <CellDisplayTemplate>
+                @{
+                    NvlKyDuyetHanMucShow nvlKeHoachMuaHangItem = (NvlKyDuyetHanMucShow)context.DataItem;
+                }
+
+                <a class="oi oi-x" @onclick="@(() => DeleteItemAsync(nvlKeHoachMuaHangItem))" style="text-decoration: none;margin-left:10px;color:red" href="javascript:void(0);"></a>
+            </CellDisplayTemplate>
+        </DxGridDataColumn>
+        <DxGridDataColumn DataRowEditorVisible="false" Caption="STT" Width="50">
+            <CellDisplayTemplate>@(context.VisibleIndex + 1)</CellDisplayTemplate>
+        </DxGridDataColumn>
+     
+
+        <DxGridDataColumn DataRowEditorVisible="false" FieldName="Serial" Caption="" Width="300">
+            <CellDisplayTemplate>
+                @{
+
+                    NvlKyDuyetHanMucShow nvlduyethanmuc = (NvlKyDuyetHanMucShow)context.DataItem;
+                   
+
+                }
+                <div class="col d-flex">
+                    <img style="width:30px;height:30px;" class="rounded-circle shadow-4-strong" src=@nvlduyethanmuc.PathImg>
+                    <div class="ms-1" style="text-align:left">
+                        <span style="color:orangered">@nvlduyethanmuc.TenUser</span>
+                        <br/>
+                        <span style="font-size:10px;color:forestgreen">@string.Format("Hạn mức: {0}",(nvlduyethanmuc.HanMucCu==null)?"Không giới hạn":nvlduyethanmuc.HanMucCu.Value.ToString("#,#"))</span>
+                      
+                    </div>
+                </div>
+            </CellDisplayTemplate>
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="HanMuc" Caption="Hạn mức mới" Width="100">
+            <CellEditTemplate>
+                @{
+                    NvlKyDuyetHanMucShow nvlduyethanmuc = (NvlKyDuyetHanMucShow)context.EditModel;
+                }
+                <DxSpinEdit Increment="0" @bind-Value=@nvlduyethanmuc.HanMuc MinValue="0"></DxSpinEdit>
+            </CellEditTemplate>
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="GhiChu" Caption="Ghi chú">
+           
+               
+          
+        </DxGridDataColumn>
+    </Columns>
+</DxGrid>
+
+@code {
+
+
+    [Parameter]
+    public NvlKyDuyetHanMucShow nvlKyDuyetHanMucShowcrr { get; set; }
+
+
+
+    List<NvlKyDuyetHanMucShow> lstdata { get; set; } = new List<NvlKyDuyetHanMucShow>();
+
+
+    bool checkAddItem = true;
+    bool PanelVisible { get; set; }
+    bool VisibleKeHoachMuaHang = false;
+    IGrid? Grid { get; set; }
+
+    bool PopupVisible { get; set; } = false;
+    DialogWindow? dxPopup { get; set; }
+    RenderFragment? renderFragment { get; set; }
+    DialogMsg? dialogMsg { get; set; }
+    public string? random { get; set; }
+
+    void Grid_CustomizeSummaryDisplayText(GridCustomizeSummaryDisplayTextEventArgs e)
+    {
+
+    }
+
+    App_ClassDefine.ClassProcess prs = new ClassProcess();
+    bool PhanQuyenCheck = false;
+    
+   
+    private async Task loadAsync()
+    {
+
+
+
+
+    }
+    void Grid_CustomizeEditModel(GridCustomizeEditModelEventArgs e)
+    {
+        var dataItem = (NvlKyDuyetHanMucShow)e.DataItem;
+        if (dataItem == null)
+            e.EditModel = new NvlKyDuyetHanMucShow { };
+        else
+        {
+            e.EditModel = dataItem.CopyClass();
+        }
+    }
+    async Task OnEditModelSaving(GridEditModelSavingEventArgs e)
+    {
+        var editModel = (NvlKyDuyetHanMucShow)e.EditModel;
+        // Assign changes from the edit model to the data item.
+        if (e.IsNew)
+        {
+            // DataRow rownew = lstdata.NewRow();
+            // lstdata.Rows.Add(rownew);
+        }
+        else
+        {
+            // Console.WriteLine(((DonHangItem)e.DataItem).SLDatHang);
+            e.CopyChangesToDataItem();
+            // Post changes to the database.
+
+        }
+
+    }
+    void Grid_CustomizeElement(GridCustomizeElementEventArgs e)
+    {
+      
+
+    }
+
+
+}

@@ -1,0 +1,96 @@
+﻿<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        <div class="cw-320">
+            <fieldset>
+                @if (lstdata != null)
+                {
+                    @if (lstdata.Count > 0)
+                    {
+                        <DxCheckBox @bind-Checked="@SelectAllState"
+                                    CssClass="dx-demo-select-all-checkbox">
+                            Chọn tất cả
+                        </DxCheckBox>
+                        <div class="dx-demo-price-list-content">
+                            @foreach (var item in lstdata)
+                            {
+                                <div class="dx-demo-row">
+                                    <DxCheckBox @bind-Checked="@item.Checked">
+                                        @item.FullName
+                                    </DxCheckBox>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                }
+            </fieldset>
+            <div class="row text-center">
+                <DxButton Text="Xác nhận" Click="GetStringCommit"></DxButton>
+            </div>
+        </div>
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+
+<DxTextBox @bind-Text="@StrText" ReadOnly="!IsEdit">
+    <Buttons>
+        <DxEditorButton Position=EditorButtonPosition.Left IconCssClass="svg-barcode" Click="ShowSelectItem" />
+    </Buttons>
+</DxTextBox>
+
+@code {
+    [Parameter] public List<DataDropDownListWithChecked> lstdata { get; set; }
+    [Parameter] public string StrText { get; set; }
+    [Parameter] public EventCallback<string> GetStrValue { get; set; }
+    [Parameter] public bool IsEdit { get; set; } = false;
+
+    DialogWindow dxPopup { get; set; }
+
+    // private int videowidth = 350;
+
+
+    bool _state = false;
+    public bool SelectAllState
+    {
+        get
+        {
+
+            return _state;
+        }
+        set
+        {
+            _state = value;
+            foreach (var item in lstdata)
+            {
+                item.Checked = _state;
+            }
+
+        }
+    }
+    private void OnCheckedChanged(DataDropDownListWithChecked dataDropDownListWithChecked)
+    {
+
+    }
+    private async void ShowSelectItem()
+    {
+        await  dxPopup.showAsync("Vui lòng chọn");
+        await dxPopup.ShowAsync();
+    }
+    private void GetStringCommit()
+    {
+        dxPopup.CloseAsync();
+
+        StrText = string.Join(", ", lstdata.Where(s => !string.IsNullOrEmpty(s.FullName)));
+
+        if(GetStrValue.HasDelegate)
+        {
+            GetStrValue.InvokeAsync(StrText);
+        }
+
+    }
+    public string GetValue()
+    {
+        return StrText;
+    }
+
+
+}

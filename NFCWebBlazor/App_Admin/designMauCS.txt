@@ -1,0 +1,52 @@
+﻿ [Inject] UserGlobal userGlobal { get; set; }
+        [Inject] PreloadService PreloadService { get; set; }
+        [Inject] IModalService modal { get; set; }
+        [Inject] NavigationManager Navigation { get; set; }
+        [Inject] IJSRuntime JS { get; set; }
+        [Inject] ToastService ToastService { get; set; } = default!;
+        App_ClassDefine.ClassProcess prs = new App_ClassDefine.ClassProcess();
+        PhanQuyenAccess phanQuyenAccess { get; set; } = new PhanQuyenAccess();
+        //[CascadingParameter] IModalService Modal { get; set; } = default!;
+       string heightgrid = "500px";
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (firstRender)
+            {
+                try
+                {
+                    load();
+                    var dimension = await browserService.GetDimensions();
+                    // var heighrow = await browserService.GetHeighWithID("divcontainer");
+                    int height = dimension.Height - 70;
+                    //if (heighrow!=null)
+                    //{
+                    //    height = dimension.Height - heighrow;
+                    //}
+
+                    heightgrid = string.Format("{0}px", height);
+                    //base.OnAfterRender(firstRender);
+
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message.ToString());
+                }
+            }
+            //return base.OnAfterRenderAsync(firstRender);
+        }
+        public void AddItem()
+        {
+
+        }
+        public void EditItem()
+        {
+
+        }
+        public void PrintItem()
+        {
+
+        }
+        public void DeleteItem()
+        {
+
+        }

@@ -1,0 +1,119 @@
+﻿@using BlazorBootstrap
+@using DevExpress.Blazor;
+@using NFCWebBlazor.App_ClassDefine;
+@using System.Data
+@using System.Collections.ObjectModel
+
+<style>
+    .my-grid {
+        height: @heightgrid;
+    }
+
+</style>
+@inject Model.ThemeColor themcolor;
+<NFCWebBlazor.App_Admin.DialogMsg @ref="@dialogMsg"></NFCWebBlazor.App_Admin.DialogMsg>
+<DxPopup @bind-Visible="@PopupVisible"
+         CloseOnEscape="false"
+         CloseOnOutsideClick="false"
+         HeaderText="@headerform">
+    <BodyContentTemplate>
+        <Urc_DataDropDownList dataDropDownList="@dataDropDownListshow" lsttype="@lsttype"></Urc_DataDropDownList>
+    </BodyContentTemplate>
+
+</DxPopup>
+<DxGridLayout CssClass="w-100 ch-480">
+
+    <Rows>
+
+        <DxGridLayoutRow Height="auto" />
+        <DxGridLayoutRow />
+    </Rows>
+    <Items>
+        <DxGridLayoutItem Row="1">
+            <Template>
+                <div>
+                    <DxLoadingPanel @bind-Visible="@PanelVisible"
+                                    IsContentBlocked="true"
+                                    ApplyBackgroundShading="true"
+                                    IndicatorAreaVisible="false"
+                                    Text="Đang xử lý...">
+                        <DxGrid @ref="Grid" Data="@lstdata" VirtualScrollingEnabled=true
+                                id="customGrid" CssClass="my-grid"
+                                FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                                ShowFilterRow=true>
+                            <ToolbarTemplate>
+                                <DxToolbar ItemRenderStyleMode="ToolbarRenderStyleMode.Plain">
+                                    <DxToolbarItem Text="Xem" IconCssClass="bi bi-search" RenderStyle="ButtonRenderStyle.Primary" Click="@searchAsync">
+
+                                    </DxToolbarItem>
+
+                                    <DxToolbarItem Text="Thêm mới" IconCssClass="bi bi-plus-circle" RenderStyle="ButtonRenderStyle.Success" Click="@saveAsync">
+
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="Xuất Excel" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=> Grid.ExportToXlsxAsync("ExportNhaCungCap"))">
+
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="Chọn cột" Click="@(()=>Grid.ShowColumnChooser())" IconCssClass="bi bi-layout-text-window-reverse" />
+                                </DxToolbar>
+                            </ToolbarTemplate>
+                            <Columns>
+                                <DxGridDataColumn FieldName="Name" Width="200" Caption="ID" />
+                                <DxGridDataColumn FieldName="FullName" Width="240" Caption="Diễn giải" />
+                                <DxGridDataColumn FieldName="TypeName" Width="200" Caption="TypeName">
+                                </DxGridDataColumn>
+                                <DxGridDataColumn FieldName="Serial" Width="90" Caption=" ">
+                                    <CellDisplayTemplate>
+                                        @{
+                                            DataDropDownList dataDropDownList = (DataDropDownList)context.DataItem;
+                                        }
+                                        <DxButton Text="XÓA" IconCssClass="bi bi-trash3-fill" RenderStyle="ButtonRenderStyle.Danger" Click="@(()=>deleteAsync(dataDropDownList))" RenderStyleMode="ButtonRenderStyleMode.Text">
+                                        </DxButton>
+                                    </CellDisplayTemplate>
+                                </DxGridDataColumn>
+                            </Columns>
+
+                        </DxGrid>
+                    </DxLoadingPanel>
+                </div>
+
+
+            </Template>
+        </DxGridLayoutItem>
+
+
+    </Items>
+</DxGridLayout>
+@code {
+    [Inject] BrowserService browserService { get; set; }
+    bool PopupVisible { get; set; } = false;
+
+    //bool IsOpenfly = true;
+    DialogMsg dialogMsg { get; set; }
+    public string random { get; set; }
+    string heightgrid = "500px";
+    string headerform = "";
+    DataDropDownList dataDropDownListshow { get; set; }
+    List<DataDropDownList> lstdata { get; set; }
+    DataDropDownList? dataDropDownListsselect { get; set; }
+    List<DataDropDownList> lsttype { get; set; }
+    IGrid? Grid { get; set; }
+
+    bool PanelVisible { get; set; } = false;
+    protected override async Task OnInitializedAsync()
+    {
+        await loadAsync();
+        // return base.OnInitializedAsync();
+    }
+    private async Task loadAsync()
+    {
+
+        var dimension = await browserService.GetDimensions();
+        // var heighrow = await browserService.GetHeighWithID("divcontainer");
+        int height = dimension.Height - 90;
+        heightgrid = string.Format("{0}px", height);
+        await loaddatadropdownAsync();
+        // var query=ModelData.L
+    }
+
+
+}

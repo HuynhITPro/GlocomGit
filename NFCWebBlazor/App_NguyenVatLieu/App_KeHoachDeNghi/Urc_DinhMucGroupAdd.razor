@@ -1,0 +1,50 @@
+﻿@using NFCWebBlazor.Model
+@using static NFCWebBlazor.App_ThongTin.Page_DinhMucHangHoaMaster
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12 col-md-5">
+            <DxGrid Data="@lstdata"
+                    AutoExpandAllGroupRows="false" Context="itemrow">
+                <Columns>
+                    <DxGridDataColumn Width="140" FieldName="@nameof(DataDropDownList.Name)" Caption=" ">
+                        <CellDisplayTemplate>
+                            @{
+                                DataDropDownList dataDropDownList;
+                                if (context.DataItem != null)
+                                {
+                                    dataDropDownList = (DataDropDownList)context.DataItem;
+
+                                }
+                                else
+                                    dataDropDownList = new DataDropDownList();
+                            }
+                            <span>
+                                <a href="#" class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"><i class="bi bi-plus-circle"></i>Thêm mã hàng vào sản phẩm</a>
+                            </span>
+                        </CellDisplayTemplate>
+                    </DxGridDataColumn>
+                    <DxGridDataColumn Width="200" FieldName="@nameof(DataDropDownList.FullName)" Caption="Khu vực">
+                    </DxGridDataColumn>
+                </Columns>
+            </DxGrid>
+        </div>
+        <div class="col-sm-12 col-md-7">
+            
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public SanPhamShow sanPhamShowcrr { get; set; }
+    List<DataDropDownList> lstdata { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        await loadAsync();
+        // return base.OnInitializedAsync();
+    }
+    private async Task loadAsync()
+    {
+        lstdata = await ModelData.GetDataDropDownListsAsync("TypeKhuVucDinhMuc");
+    }
+}

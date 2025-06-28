@@ -1,0 +1,255 @@
+﻿@using BlazorBootstrap
+@using NFCWebBlazor.Model
+@using Newtonsoft.Json
+@using static NFCWebBlazor.App_Bom.Page_DuyetDinhMuc
+<style>
+    .highlighted-item > td {
+        background-color: yellow;
+        color: #0070ff;
+        font-weight: bold;
+    }
+</style>
+<DxGrid @ref=dxGrid
+
+        ShowFilterRow="true"
+        ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+        PageSize="100"
+
+        EditMode="GridEditMode.PopupEditForm"
+        CustomizeElement="OnCustomizeElement"
+        PopupEditFormHeaderText="Chỉnh sửa"
+        EditFormButtonsVisible="false"
+        VirtualScrollingEnabled="false"
+        FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+        Data=@dinhMuc_Show.lstPhanHeShow
+        AutoExpandAllGroupRows="true">
+    <Columns>
+
+        <DxGridDataColumn FieldName="STTLevel" Caption="STT" Width="70" />
+        <DxGridDataColumn FieldName="MaChiTiet" Caption="Mã chi tiết" Width="120" />
+        <DxGridDataColumn FieldName="TenChiTiet" Caption="Tên chi tiết" Width="200" />
+          <DxGridDataColumn FieldName="LoaiGo" Caption="Loại gỗ" Width="90" />
+        <DxGridDataColumn FieldName="LoaiGhep" Caption="Loại ghép" Width="110" />
+
+        <DxGridDataColumn FieldName="SLTGshow" Caption="SLTG" Width="80" DisplayFormat="#,#.#"/>
+        <DxGridDataColumn FieldName="SLCTshow" Caption="SLCT/SP" Width="80" DisplayFormat="#,#.#" />
+       
+        <DxGridDataColumn FieldName="ChieuDaiTC" DisplayFormat="#,#.#" Caption="Dài TC" Width="90" />
+        <DxGridDataColumn FieldName="ChieuRongTC" DisplayFormat="#,#.#" Caption="Rộng TC" Width="90" />
+        <DxGridDataColumn FieldName="ChieuDayTC" DisplayFormat="#,#.#" Caption="Dày TC" Width="90" />
+        <DxGridDataColumn FieldName="SoKhoiTC" DisplayFormat="#,0.####" Caption="Khối TC" Width="80" />
+
+        <DxGridDataColumn FieldName="ChieuDaiSC" DisplayFormat="#,#.#" Caption="Dài SC" Width="90" />
+        <DxGridDataColumn FieldName="ChieuRongSC" DisplayFormat="#,#.#" Caption="Rộng SC" Width="90" />
+        <DxGridDataColumn FieldName="ChieuDaySC" DisplayFormat="#,#.#" Caption="Dày SC" Width="90" />
+        <DxGridDataColumn FieldName="SoKhoiSC" DisplayFormat="#,0.####" Caption="Khối SC" Width="80" />
+
+        <DxGridDataColumn FieldName="ChatLuong"  Caption="Chất lượng" Width="90" Visible=false />
+
+        <DxGridDataColumn FieldName="SXquanhTC" DisplayFormat="#,0.####" Caption="DT bề mặt" Width="100" />
+        <DxGridDataColumn FieldName="STraiKeo" DisplayFormat="#,0.####" Caption="DT trải keo" Width="100" />
+
+    </Columns>
+    <ToolbarTemplate>
+        <DxToolbar>
+            <DxToolbarItem Text="Xuất file Excel" Click="ExportXlsx_Click" />
+
+        </DxToolbar>
+    </ToolbarTemplate>
+    <TotalSummary>
+        <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+                           FieldName="SoKhoiTC"
+                           Name="SoKhoiTC"
+                           DisplayText="{0}"
+                           ValueDisplayFormat="#,0.####"
+                           FooterColumnName="SoKhoiTC" />
+        <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+                           FieldName="SoKhoiSC"
+                           Name="SoKhoiSC"
+                           DisplayText="{0}"
+                           ValueDisplayFormat="#,0.####"
+                           FooterColumnName="SoKhoiSC" />
+        <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+                           FieldName="SXquanhTC"
+                           Name="SXquanhTC"
+                           DisplayText="{0}"
+                           ValueDisplayFormat="#,0.####"
+                           FooterColumnName="SXquanhTC" />
+        <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+                           FieldName="STraiKeo"
+                           Name="STraiKeo"
+                           DisplayText="{0}"
+                           ValueDisplayFormat="#,0.####"
+                           FooterColumnName="STraiKeo" />
+    </TotalSummary>
+
+</DxGrid>
+
+@code {
+
+    [Parameter]
+    public DinhMuc_Show dinhMuc_Show { get; set; }
+    [Parameter]
+    public EventCallback GotoMainForm { get; set; }
+    [Inject] PreloadService PreloadService { get; set; }
+    [Inject] ToastService ToastService { get; set; } = default!;
+
+    public DxGrid dxGrid { get; set; }
+    List<ChiTiet_PhanHeShow> lsttemp = new List<ChiTiet_PhanHeShow>();
+    List<ChiTiet_PhanHeShow> lstquery = new List<ChiTiet_PhanHeShow>();
+    private async Task<List<ChiTiet_PhanHeShow>> loaddinhmucchitietAsync()
+    {
+        PreloadService.Show(SpinnerColor.Success, "Vui lòng đợi...");
+        try
+        {
+            if (dinhMuc_Show.lstPhanHeShow == null)
+            {
+                dinhMuc_Show.lstPhanHeShow = new List<ChiTiet_PhanHeShow>();
+
+                string sql = string.Format(@"
+
+                    SELECT STT, ctdm.MaSP, TenSP, ctdm.MaChiTiet, MaChiTietParent, TenChiTiet, SoLuongCT as SLCT, LoaiGo, LoaiGhep,
+                                    case when Nhom=N'Vế' or Nhom=N'Cụm' then '0' else CDaySCShow end as ChieuDaySC, case when Nhom=N'Vế' or Nhom=N'Cụm' then '0' else CRongSCShow end as ChieuRongSC,
+                                        case when Nhom=N'Vế' or Nhom=N'Cụm' then '0' else CDaiSCShow end as ChieuDaiSC,
+                                    case when Nhom=N'Vế' or Nhom=N'Cụm' then '0' else  CDayTCShow end as ChieuDayTC,case when Nhom=N'Vế' or Nhom=N'Cụm' then '0' else CRongTCShow end as ChieuRongTC,
+                                    case when Nhom=N'Vế' or Nhom=N'Cụm' then '0' else CDaiTCShow end as ChieuDaiTC,
+                                    SoKhoiSC*SignKhoiSC*SoLuongCT as SoKhoiSC, SoKhoiTC*SignKhoiTC*SoLuongCT as SoKhoiTC, ChatLuong, SXquanhTC*SoLuongCT as SXquanhTC, STraiKeo*SoLuongCT as STraiKeo, Nhom as NhomChiTiet,SignKhoiTC,SignKhoiSC,isnull('{0}'+img.PathImg,'') as PathImg
+                                                                FROM (select * from [ChiTietDinhMuc] where MaSP=@MaSP and LanSuaDoi=@Version) ctdm inner join
+																(select * from [ChiTietSP_SuaDoi] where MaSP=@MaSP and [Version]=@Version) ctsd
+							                                    on ctdm.MaSP=ctsd.MaSP
+																left join
+																(SELECT [MaChiTiet],[PathImg] FROM [QuyTrinh_BanVe] where MaSP=@MaSP
+																 and Serial in (select max(Serial) from QuyTrinh_BanVe where MaSP=@MaSP group by MaChiTiet)) as img
+																 on ctdm.MaChiTiet=img.MaChiTiet
+
+					", Model.ModelAdmin.pathurlfilepublic);
+                List<ParameterDefine> lstpara = new List<ParameterDefine>();
+
+                lstpara.Add(new ParameterDefine("@MaSP", dinhMuc_Show.MaSP));
+                lstpara.Add(new ParameterDefine("@Version", dinhMuc_Show.Version));
+                CallAPI callAPI = new CallAPI();
+                string json = await callAPI.ExcuteQueryEncryptAsync(sql, lstpara);
+                if (json != "")
+                {
+                    lstquery = JsonConvert.DeserializeObject<List<ChiTiet_PhanHeShow>>(json);
+                    foreach(var it in lstquery)
+                    {
+                        if (it.STraiKeo == 0)
+                            it.STraiKeo = null;
+                        if (it.SXquanhTC == 0)
+                            it.SXquanhTC = null;
+                        if (it.SoKhoiSC == 0)
+                            it.SoKhoiSC = null;
+                        if (it.SoKhoiTC == 0)
+                            it.SoKhoiTC = null;
+
+                    }
+                    lsttemp = new List<ChiTiet_PhanHeShow>();
+                    setIndex(dinhMuc_Show.MaSP);
+                    dinhMuc_Show.lstPhanHeShow = lsttemp;
+
+                    lstquery.Clear();
+                    await GotoMainForm.InvokeAsync();
+
+                }
+
+            }
+        }
+        catch(Exception ex)
+        {
+            ToastService.Notify(new ToastMessage(ToastType.Success, $"Lỗi: "+ex.Message));
+        }
+        finally
+        {
+            PreloadService.Hide();
+        }
+        return dinhMuc_Show.lstPhanHeShow;
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(firstRender)
+        {
+            await loaddinhmucchitietAsync();
+        }
+        Console.WriteLine("Nó render item");
+
+    }
+    private void setIndex(string MaSP)
+    {
+
+        var query = lstquery.Where(p => p.MaChiTietParent.Equals(MaSP)).ToList();
+        for (int i = 0; i < query.Count; i++)
+        {
+            query[i].STTLevel = (i + 1).ToString() + ".";
+            lsttemp.Add(query[i]);
+
+            setIndexChild(query[i].MaChiTiet, (i + 1).ToString() + ".");
+        }
+    }
+    private void setIndexChild(string machitietparent, string sTT)
+    {
+        var query = lstquery.Where(p => p.MaChiTietParent.Equals(machitietparent)).ToList();
+        if (query.Count == 0)
+            return;
+        for (int i = 0; i < query.Count; i++)
+        {
+            query[i].STTLevel = sTT + (i + 1).ToString() + ".";
+            lsttemp.Add(query[i]);
+            setIndexChild(query[i].MaChiTiet, sTT + (i + 1).ToString() + ".");
+        }
+    }
+    async Task ExportXlsx_Click()
+    {
+        await dxGrid.ExportToXlsxAsync("ExportResult");
+    }
+    void OnCustomizeElement(GridCustomizeElementEventArgs e)
+    {
+        if (e.ElementType == GridElementType.DataRow)
+        {
+            string s = (string)e.Grid.GetRowValue(e.VisibleIndex, "NhomChiTiet");
+            if (s == "Vế" || s == "Cụm")
+            {
+                e.CssClass = "highlighted-item";
+
+            }
+
+        }
+        if (e.ElementType == GridElementType.DataCell)
+        {
+            var dataColumn = (IGridDataColumn)e.Column;
+            string s = dataColumn.FieldName;
+            if(s.EndsWith("TC"))
+            {
+                e.CssClass = "highRed";
+            }
+            if(s.EndsWith("SC"))
+            {
+                e.CssClass = "highGreen";
+            }
+
+        }
+    }
+    private string showtextdouble(double? d)
+    {
+        if (d == null)
+            return "";
+        if (d == 0)
+            return "";
+            return d.Value.ToString("#,0.####");
+    }
+    void Grid_CustomSummary(GridCustomSummaryEventArgs e)
+    {
+        // switch (e.SummaryStage)
+        // {
+        //     case GridCustomSummaryStage.Start:
+        //         e.TotalValue = 0m;
+        //         break;
+        //     case GridCustomSummaryStage.Calculate:
+        //         if (e.Grid.IsDataItemSelected(e.DataItem))
+        //             e.TotalValue = (decimal)e.TotalValue + (decimal)e.GetRowValue("Total");
+        //         break;
+        // }
+    }
+
+}
+

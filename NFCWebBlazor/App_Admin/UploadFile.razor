@@ -1,0 +1,98 @@
+﻿
+<style>
+    .col-flex-1 {
+        flex: 1;
+    }
+
+    .col-auto {
+        flex: 0 0 auto;
+    }
+
+    #customGrid .dxbl-grid-header-row {
+        display: none;
+    }
+</style>
+<div>
+    <DxMemo @bind-Text="@diengiai" />
+</div>
+<div class="container-fluid">
+    <div class="row">
+
+        <div class="upload-container">
+            <div style="@(SelectedFilesCount > 0 ? "display: none" : string.Empty)">
+                <span class="drop-file-icon mb-3"></span>
+                <span class="mb-3">Click nút Select Files để chọn file</span>
+            </div>
+            <DxFileInput @ref=dxFileInput
+                         AllowMultiFileUpload="true"
+                         MaxFileSize="50000000"
+                         SelectButtonText="Chọn file"
+                         UploadMode="@UploadMode.OnButtonClick"
+                         AllowCancel=true
+                         SelectedFilesChanged="@SelectedFilesChanged"
+                         FilesUploading="OnFilesUploading">
+            </DxFileInput>
+
+        </div>
+    </div>
+    <div class="row mt-2">
+        <DxGrid @ref="Grid" Data="@lstdata" VirtualScrollingEnabled=true
+                id="customGrid" CssClass="my-grid"
+                ColumnResizeMode="GridColumnResizeMode.ColumnsContainer">
+
+            <Columns>
+                <DxGridDataColumn FieldName="@nameof(UploadFileInfoExtend.Status)" Caption=" " Width="*">
+                    <CellDisplayTemplate>
+                        @{
+                            UploadFileInfoExtend uploadFileInfoExtend = (UploadFileInfoExtend)context.DataItem;
+                        }
+                        <div class="container ">
+                            <div class="row d-flex">
+                                <!-- Cột thứ nhất, chiếm phần còn lại của màn hình -->
+                                <div class="col-flex-1 p-1">
+                                    <img src="@(getIconImg(uploadFileInfoExtend.uploadFileInfo.Name))" style="width:40px;border-radius: 8px;">
+                                    <div>
+
+                                        <span class="file-name">@uploadFileInfoExtend.uploadFileInfo.Name</span>
+                                        <span style="color:gray">@getSize((double)uploadFileInfoExtend.uploadFileInfo.Size)</span>
+                                        <div class="@uploadFileInfoExtend.TextcolorStatus">@uploadFileInfoExtend.Status</div>
+                                    </div>
+                                </div>
+                                <!-- Cột thứ hai, có chiều rộng tự động -->
+                                <div class="col-auto d-flex gap-1 p-1 justify-content-end" style="height:2.5rem;">
+                                    
+                                        <DxButton RenderStyle="ButtonRenderStyle.Secondary" Context="aaa" RenderStyleMode="ButtonRenderStyleMode.Text" IconCssClass="bi bi-upload" Visible=@showUpload(uploadFileInfoExtend.UploadStatus) Click="@(()=>onUploadButtonClickAsync(uploadFileInfoExtend))">
+                                        </DxButton>
+                                        <DxButton RenderStyle="ButtonRenderStyle.Secondary" RenderStyleMode="ButtonRenderStyleMode.Text" IconCssClass="bi bi-x-lg" Visible=@showDelete(uploadFileInfoExtend.UploadStatus) Click="@(()=>onRemoveButtonClick(uploadFileInfoExtend))"></DxButton>
+                                  
+                                        <DxProgressBar Value="1"
+                                                       Type="ProgressBarType.Circular"
+                                                       Size="40px"
+                                                       ShowLabel=false
+                                                       
+                                                       Indeterminate="true" Visible=@uploadFileInfoExtend.ShowProgress/>
+                                  
+                                    @*  <DxButton RenderStyle="ButtonRenderStyle.Secondary" RenderStyleMode="ButtonRenderStyleMode.Text" IconCssClass="bi bi-arrow-clockwise" Visible=@showReload(uploadFileInfoExtend.UploadStatus)></DxButton> *@
+                                </div>
+                            </div>
+                        </div>
+
+
+                    </CellDisplayTemplate>
+                </DxGridDataColumn>
+
+            </Columns>
+
+        </DxGrid>
+    </div>
+   
+</div>
+
+@code {
+
+    private void clickcancel()
+    {
+
+        dxFileInput.ReloadFile(ListFileinfo.First());
+    }
+}

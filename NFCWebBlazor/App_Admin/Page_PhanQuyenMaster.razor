@@ -1,0 +1,195 @@
+﻿@using BlazorBootstrap
+@using DevExpress.Blazor;
+@using NFCWebBlazor.App_ClassDefine;
+@using System.Data
+@using System.Collections.ObjectModel
+
+<style>
+    .my-grid {
+        height: @heightgrid;
+    }
+
+</style>
+@inject Model.ThemeColor themcolor;
+
+<DxPopup @bind-Visible="@PopupVisible"
+         CloseOnEscape="false"
+         CloseOnOutsideClick="false"
+         HeaderText="Danh sách user">
+    <BodyContentTemplate>
+        <Urc_UserPermission lstdata="@lstuserpermission" user_PhanQuyenShow="@user_PhanQuyenShowcrr"></Urc_UserPermission>
+    </BodyContentTemplate>
+   
+</DxPopup>
+<DxGridLayout CssClass="w-100 ch-480">
+
+    <Rows>
+
+        <DxGridLayoutRow Height="auto" />
+        <DxGridLayoutRow />
+    </Rows>
+    <Columns>
+        <DxGridLayoutColumn Width="auto" />
+
+        <DxGridLayoutColumn />
+    </Columns>
+    <Items>
+
+        <DxGridLayoutItem Row="0" ColumnSpan="2">
+            <Template>
+                <div class="p-2 pt-0 mb-2 bg-white border rounded-bottom-2">
+
+                    <div>
+
+                        <DxFormLayout CssClass="w-100 mt-3">
+
+                            <DxFormLayoutItem ColSpanSm="12" ColSpanMd="8" ColSpanLg="8" CaptionPosition="CaptionPosition.Vertical">
+                                <CaptionTemplate>
+                                    Chọn user<span class="text-danger">*</span>
+                                </CaptionTemplate>
+                                <Template>
+
+                                    <DxTagBoxDefine @ref=dxtaguser TextFieldName="@nameof(DataDropDownList.FullName)"
+                                                    ValueFieldName="@nameof(DataDropDownList.Name)"
+                                                    CssClass="cw-480"
+                                                    ListRenderMode="ListRenderMode.Virtual"
+                                                    Data="@lstuser"
+                                                    DropDownCssClass="dropdownheight"
+                                                    @bind-Values="@userselected"
+                                                    ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto" />
+
+                                </Template>
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem ColSpanSm="12" ColSpanMd="4" ColSpanLg="4" CaptionPosition="CaptionPosition.Vertical">
+                                <CaptionTemplate>
+                                    Chọn theo nhóm phòng ban
+                                </CaptionTemplate>
+                                <Template>
+                                    <ComboboxFilteredTable TextFieldName="@nameof(DataDropDownList.FullName)"
+                                                           ValueFieldName="@nameof(DataDropDownList.Name)"
+                                                           CssClass="cw-480"
+                                                           TypeName="User_KhuVuc"
+                                                           ValueChanged="@((DataDropDownList datadropdown)=>selectednhom(datadropdown))"
+                                                           ListRenderMode="ListRenderMode.Virtual"
+                                                           @bind-Values="@khuvucselected"
+                                                           ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto" />
+
+                                </Template>
+
+                            </DxFormLayoutItem>
+
+                        </DxFormLayout>
+
+                    </div>
+
+                </div>
+
+            </Template>
+        </DxGridLayoutItem>
+
+        <DxGridLayoutItem Row="1" Column="0">
+            <Template>
+                <Page_PhanQuyenMenu @ref=menuMain menuItems="@lstmenuitems" parentID="@Model.ModelAdmin.users.TypeApp" GotoMainForm="@additem"></Page_PhanQuyenMenu>
+            </Template>
+        </DxGridLayoutItem>
+
+        <DxGridLayoutItem Row="1" Column="1">
+            <Template>
+                <div class="ms-1">
+
+                    <DxLoadingPanel @bind-Visible="PanelVisible"
+                                    IsContentBlocked="true"
+                                    ApplyBackgroundShading="true"
+                                    IndicatorAreaVisible="false"
+                                    Text="Đang xử lý...">
+                        <DxGrid @ref="Grid" Data="@lstdata" VirtualScrollingEnabled=true
+                                id="customGrid" CssClass="my-grid"
+                                EditModelSaving="OnEditModelSaving"
+                                EditMode="GridEditMode.EditCell"
+                                FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always" AutoCollapseDetailRow="true">
+                            <ToolbarTemplate>
+                                <DxToolbar ItemRenderStyleMode="ToolbarRenderStyleMode.Plain">
+                                    <DxToolbarItem Text="Xem" IconCssClass="bi bi-search" RenderStyle="ButtonRenderStyle.Primary" Click="@searchAsync">
+
+                                    </DxToolbarItem>
+
+                                    <DxToolbarItem Text="Lưu" IconCssClass="bi bi-floppy m-1" RenderStyle="ButtonRenderStyle.Success" Click="@saveAsync">
+
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="Làm lại" IconCssClass="bi bi-file-earmark m-1" RenderStyle="ButtonRenderStyle.Secondary" Click="@reset" />
+                                </DxToolbar>
+                            </ToolbarTemplate>
+                            <Columns>
+                                <DxGridDataColumn FieldName="TableName" Width="200" Visible=false Caption="Tên bảng" />
+                                <DxGridDataColumn FieldName="TableID" Width="160" Caption="ID quyền" ReadOnly=true />
+                                <DxGridDataColumn FieldName="ChkWrite" Width="120" Caption="Ghi">
+
+                                </DxGridDataColumn>
+                                <DxGridDataColumn FieldName="TableID" Width="90" Caption=" " ReadOnly=true>
+                                    <CellDisplayTemplate>
+                                        @{
+                                            var phanquyen = (User_PhanQuyenShow)context.DataItem;
+                                        }
+                                        <div>
+                                            <DxButton IconCssClass="bi bi-list-task"
+                                                      RenderStyle="ButtonRenderStyle.Primary"
+                                                      RenderStyleMode="ButtonRenderStyleMode.Text"
+                                                      Click="@(()=>userpermissionAsync(phanquyen))"
+                                                     
+                                                      CssClass="shadow-none remove-padding" Text="Xem">
+                                               
+                                            </DxButton>
+                                        </div>
+                                    </CellDisplayTemplate>
+                                </DxGridDataColumn>
+
+                                <DxGridDataColumn FieldName="UserCapQuyen" Caption="Người cấp" Width="140" ReadOnly=true />
+                            </Columns>
+
+                        </DxGrid>
+                    </DxLoadingPanel>
+                </div>
+
+
+            </Template>
+        </DxGridLayoutItem>
+
+
+    </Items>
+</DxGridLayout>
+@code {
+    [Inject] BrowserService browserService { get; set; }
+
+    
+    Page_PhanQuyenMenu menuMain { get; set; }
+    bool PopupVisible { get; set; } = false;
+  
+    //bool IsOpenfly = true;
+    User_PhanQuyenShow user_PhanQuyenShowcrr{ get; set; }
+    public string random { get; set; }
+    List<User_PhanQuyenShow> lstdata { get; set; } = new List<User_PhanQuyenShow>();
+    List<DataDropDownList> lstuser { get; set; } = new List<DataDropDownList>();
+    List<Users> lstuserpermission { get; set; } = new List<Users>();
+    DxTagBoxDefine? dxtaguser { get; set; }
+
+    IEnumerable<DataDropDownList>? userselected { get; set; }
+    DataDropDownList? khuvucselected { get; set; }
+
+    IGrid? Grid { get; set; }
+
+    bool PanelVisible{ get; set; } = false;
+    async Task OnEditModelSaving(GridEditModelSavingEventArgs e)
+    {
+        var editModel = (User_PhanQuyenShow)e.EditModel;
+       
+        // Assign changes from the edit model to the data item.
+        if (e.IsNew)
+            lstdata.Add(editModel);
+        else
+            e.CopyChangesToDataItem();
+        await Grid.SaveChangesAsync();
+
+    }
+
+
+}

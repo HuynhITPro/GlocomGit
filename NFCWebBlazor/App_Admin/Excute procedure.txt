@@ -1,0 +1,35 @@
+﻿ CallAPI callAPI = new CallAPI();
+                string sql = "NFCNVL.dbo.NvlKehoachMuaHang_Insert";
+                List<ParameterDefine> lstpara = new List<ParameterDefine>();
+                lstpara.Add(new ParameterDefine("@Serial", "0"));
+               
+                lstpara.Add(new ParameterDefine("@NhaMay", nvlKehoachMuaHang.NhaMay));
+                if (nvlKehoachMuaHang.NgayMax == null)
+                    lstpara.Add(new ParameterDefine("@NgayMax", null));
+                else
+                    lstpara.Add(new ParameterDefine("@NgayMax", nvlKehoachMuaHang.NgayMax.Value.ToString("MM/dd/yyyy")));
+
+                lstpara.Add(new ParameterDefine("@NoiDung", nvlKehoachMuaHang.NoiDung));
+              
+                string json = await callAPI.ProcedureEncryptAsync(sql, lstpara);
+                if (json != "")
+                {
+                    var query = JsonConvert.DeserializeObject<List<Ketqua>>(json);
+                    if (query[0].ketqua == "OK")
+                    {
+                         ToastService.Notify(new ToastMessage(ToastType.Success, $"Lưu thành công"));
+                        reset();
+                    }
+                    else
+                    {
+                     ToastService.Notify(new ToastMessage(ToastType.Warning, "Lỗi: " + query[0].ketqua));
+                       
+
+                    }
+                    //Grid.Data = lstDonDatHangSearchShow;
+                }
+            }
+            catch (Exception ex)
+            {
+                ToastService.Notify(new ToastMessage(ToastType.Warning, "Lỗi: " + query[0].ketqua));
+            }

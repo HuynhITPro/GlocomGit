@@ -1,0 +1,137 @@
+﻿using DevExpress.XtraReports.UI;
+
+using DevExpress.XtraRichEdit.API.Native;
+using System;
+using System.Collections;
+using System.ComponentModel;
+using System.Drawing;
+using System.Globalization;
+
+namespace NFCWebBlazor.App_NguyenVatLieu.Report
+{
+    public partial class XtraRp_DuTruVatTu : DevExpress.XtraReports.UI.XtraReport
+    {
+        public XtraRp_DuTruVatTu()
+        {
+            InitializeComponent();
+            this.RequestParameters = false;
+        }
+        private void ReportHeader_BeforePrint(object sender, System.Drawing.Printing.PrintEventArgs e)
+        {
+            rowcount = 0;
+
+        }
+
+      
+      
+        private void xrLabel11_BeforePrint(object sender, System.Drawing.Printing.PrintEventArgs e)
+        {
+
+
+        }
+        public float Heightdetail = 70;
+
+        int rowcount = 0;
+        private void xrRichText1_BeforePrint(object sender, System.Drawing.Printing.PrintEventArgs e)
+        {
+            //XRRichText richText = sender as XRRichText;
+
+            //RichEditDocumentServer docServer = new RichEditDocumentServer();
+            //docServer.Text = richText.Text;
+
+            //Font font = new Font("Times New Roman", 12, FontStyle.Regular);
+            ////CharacterProperties props = docServer.Document.BeginUpdateCharacters(docServer.Document.Range);
+            ////props.FontName = font.FontFamily.Name;
+            ////props.FontSize = font.Size;
+            ////props.Bold = font.Bold;
+            //// props.Italic = font.Italic;
+            //docServer.Document.DefaultParagraphProperties.LineSpacingType = ParagraphLineSpacing.Multiple;
+            //docServer.Document.DefaultParagraphProperties.LineSpacingMultiplier = 1.4F;
+            ////docServer.Document.EndUpdateCharacters(props);
+
+
+            //richText.Text = docServer.RtfText;
+            //richText.Font = font;
+        }
+
+       
+        public void setMaDeNghi(string MaDN)
+        {
+            lbMaDeNghi.Text = string.Format("Đề nghị số: {0}", MaDN);
+        }
+        public bool checkHideHeader = true;
+     
+
+
+        public void setNoidung(string noidung)
+        {
+            xrNoiDung.Text = noidung;
+            DateTime dti = DateTime.Now;
+            string text = "";
+            text = string.Format("Đồng Nai, ngày {0} tháng {1} năm {2}", dti.Day, dti.Month, dti.Year);
+            this.Parameters["NgayThangNam"].Value = text;
+        }
+        public void setTotal(double SoLuong, double ThanhTien)
+        {
+            xrTotalSL.Value = SoLuong;
+            xrToTalTT.Value = ThanhTien;
+        }
+        public void setNguoiDuyet(string phongban, string LoaiKeHoach, string nguoilap, string nguoikiem, string nguoiduyet, string DaDuyet, string NoiDungDeNghi)
+        {
+            if (string.IsNullOrEmpty(NoiDungDeNghi))
+            {
+                if (LoaiKeHoach == "DeNghiMuaHang")
+                    this.Parameters["NoiDungDeNghi"].Value = string.Format("{0} đề nghị BGĐ duyệt cho mua vật tư phục vụ cho sản xuất như sau:", phongban);
+                if (LoaiKeHoach == "DeNghiXuatHang")
+                    this.Parameters["NoiDungDeNghi"].Value = string.Format("{0} đề nghị BGĐ duyệt cho xuất vật tư phục vụ cho sản xuất như sau:", phongban);
+            }
+            else
+                this.Parameters["NoiDungDeNghi"].Value = NoiDungDeNghi;
+            xrPhongBanDeNghi.Text = string.Format("Bộ phận/ khu vực sản xuất: {0}", phongban);
+            xrNguoiLap.Text = nguoilap;
+            if (!string.IsNullOrEmpty(nguoiduyet))
+            {
+                xrPictureBox1.Visible = true;
+            }
+            else
+                xrPictureBox1.Visible = false;
+          
+            xrNguoiDuyet.Text = nguoiduyet;
+            this.Watermark.Text = "";
+            //if (DaDuyet == null || DaDuyet == "")
+            //{
+
+
+            //}
+            //else
+            //{
+            //    if (DaDuyet.Replace(" ", "") != "")
+            //    {
+            //        this.Watermark.Text = "ĐÃ DUYỆT";
+
+            //    }
+            //}
+        }
+
+        private void Detail_BeforePrint(object sender, System.Drawing.Printing.PrintEventArgs e)
+        {
+
+
+            // this.Detail.HeightF = Heightdetail;
+        }
+
+        private void PageHeader_BeforePrint(object sender, CancelEventArgs e)
+        {
+            if ((rowcount >= this.RowCount && this.RowCount > 1))
+            {
+                e.Cancel = checkHideHeader;
+
+            }
+        }
+
+        private void Detail_AfterPrint(object sender, CancelEventArgs e)
+        {
+            rowcount++;
+        }
+    }
+}

@@ -1,0 +1,114 @@
+﻿@using DevExpress.Blazor
+@using NFCWebBlazor.App_ClassDefine
+
+<style>
+
+</style>
+
+
+<EditForm EditContext="@editContext"  Context="EditFormContext" style="max-width:700px;" onkeydown="return handleF11Submit(event)">
+    <DataAnnotationsValidator />
+    <div class="d-flex justify-content-center">
+        <DxFormLayout CssClass="sizelayout" @onkeydown=@Onkeydown>
+            <DxFormLayoutItem Caption="Chọn tháng" ColSpanSm="12" ColSpanMd="4" ColSpanLg="4" CaptionPosition="CaptionPosition.Vertical">
+                <Template>
+                   <DxTagBox @ref=txtMakehoachthang TextFieldName="@nameof(GetThang.Name)"
+                  
+                                CssClass="cw-480"
+                                Data="@lstthang"
+                                DropDownCssClass="dropdownheight"
+                                ListRenderMode="ListRenderMode.Virtual"
+                                
+                                @bind-Values="@makehoachselected"
+                                SelectedItemsChanged="@((IEnumerable<GetThang> e)=>Selectedmakehoachchanged(e))"
+                                ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto" />
+
+                    <div class="text-danger">
+                        <ValidationMessage For="@(() => keHoachSP_Showcrr.MaKHThang)" />
+                    </div>
+                </Template>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Tên kế hoạch" ColSpanSm="6" ColSpanMd="4" ColSpanLg="4" CaptionPosition="CaptionPosition.Vertical">
+                <Template>
+                    <DxTextBox @bind-Text=@keHoachSP_Showcrr.TenKHThang></DxTextBox>
+                    <div class="text-danger">
+                        <ValidationMessage For="@(() => keHoachSP_Showcrr.TenKHThang)" />
+                    </div>
+                </Template>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Nhà máy" ColSpanSm="6" ColSpanMd="4" ColSpanLg="4" CaptionPosition="CaptionPosition.Vertical">
+
+                <NFCWebBlazor.App_ClassDefine.ComboboxFilteredString SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                                                     ListRenderMode=ListRenderMode.Virtual
+                                                                     TypeName="NhaMay_NVL"
+                                                                     SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                                                     ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                                                     SearchMode="ListSearchMode.AutoSearch"
+                                                                     TextFieldName="@nameof(DataDropDownList.FullName)"
+                                                                     ValueFieldName="@nameof(DataDropDownList.Name)"
+                                                                     @bind-Value="@keHoachSP_Showcrr.NhaMay"
+                                                                     CssClass="cw-480" />
+                <div class="text-danger">
+                    <ValidationMessage For="@(() => keHoachSP_Showcrr.NhaMay)" />
+                </div>
+            </DxFormLayoutItem>
+         
+           
+          
+            <DxFormLayoutItem Caption="Áp dụng từ ngày" ColSpanSm="6" ColSpanMd="4" ColSpanLg="4" CaptionPosition="CaptionPosition.Vertical">
+
+                <DxDateEdit @bind-Date="@keHoachSP_Showcrr.ThangMin" Mask="@DateTimeMask.ShortDate" DisplayFormat="dd-MM-yy" />
+                <div class="text-danger">
+                    <ValidationMessage For="@(() => keHoachSP_Showcrr.ThangMin)" />
+                </div>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Đến ngày" ColSpanSm="6" ColSpanMd="4" ColSpanLg="4" CaptionPosition="CaptionPosition.Vertical">
+                <DxDateEdit @bind-Date="@keHoachSP_Showcrr.ThangMax" Mask="@DateTimeMask.ShortDate" DisplayFormat="dd-MM-yy" />
+                <div class="text-danger">
+                    <ValidationMessage For="@(() => keHoachSP_Showcrr.ThangMax)" />
+                </div>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Ghi chú" ColSpanSm="12" ColSpanMd="12" ColSpanLg="12" CaptionPosition="CaptionPosition.Vertical">
+                <DxMemo id="textarea" Rows="4" @bind-Text=@keHoachSP_Showcrr.GhiChu NullText="Ghi chú"></DxMemo>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanSm="12" ColSpanMd="12">
+                <div class="d-flex justify-content-center mt-2 gap-2">
+                    <DxButton RenderStyle="ButtonRenderStyle.Primary" IconCssClass="bi bi-floppy" Text="Lưu" Visible=@(!EnableEdit) Click="@saveAsync" />
+                    <DxButton RenderStyle="ButtonRenderStyle.Success" IconCssClass="bi bi-file-earmark m-1" Text="Làm lại" Visible=@(!EnableEdit) Click="@reset" />
+                    <DxButton RenderStyle="ButtonRenderStyle.Info" IconCssClass="bi bi-pencil" CssClass="ms-2" Text="Sửa" Visible=@EnableEdit Click="@updateAsync" />
+                </div>
+
+            </DxFormLayoutItem>
+
+        </DxFormLayout>
+    </div>
+</EditForm>
+
+@code {
+
+    [Inject]
+    PhanQuyenAccess phanQuyenAccess{ get; set; }
+    private EditContext? editContext;
+    DxTagBox<GetThang,GetThang> txtMakehoachthang { get; set; }
+    IEnumerable<GetThang> makehoachselected { get; set; }
+  
+
+    bool IsOpenfly;
+    string GhiChu { get; set; } = "";
+
+    bool checkvat = true;
+  
+    bool EnableEdit { get; set; } = false;
+
+    DxFlyout dxFlyoutchucnang { get; set; }
+
+    private async void Onkeydown(KeyboardEventArgs e)
+    {
+        if (e.Key == "F11")
+        {
+            if (!EnableEdit)
+                await saveAsync();
+        }
+    }
+
+}

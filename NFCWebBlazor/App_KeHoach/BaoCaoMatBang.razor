@@ -1,0 +1,96 @@
+﻿@using ClosedXML.Excel
+@using System.IO
+@inject NavigationManager NavigationManager
+<DxButton Click="@CreateExcelFile">Create and Download Excel File</DxButton>
+@code {
+    private async Task CreateExcelFile()
+    {
+        using (var workbook = new XLWorkbook())
+        {
+            var worksheet = workbook.AddWorksheet("Sheet1");
+
+            // Thiết lập tiêu đề cho các cột
+            worksheet.Cell(1, 1).Value = "Category";
+            worksheet.Cell(1, 2).Value = "Item";
+            worksheet.Cell(1, 3).Value = "Quantity";
+
+            // Dữ liệu mẫu để điền vào tệp Excel
+            var data = new List<(string Category, string Item, int Quantity)>
+            {
+                ("Fruits", "Apple", 10),
+                ("Fruits", "Banana", 15),
+                ("Fruits", "Orange", 8),
+                ("Vegetables", "Carrot", 12),
+                ("Vegetables", "Broccoli", 5),
+                ("Vegetables", "Potato", 20),
+                ("Dairy", "Milk", 10),
+                ("Dairy", "Cheese", 6),
+                ("Dairy", "Yogurt", 12)
+            };
+
+            // Điền dữ liệu vào bảng
+            int rowIndex = 2;
+            foreach (var item in data)
+            {
+                worksheet.Cell(rowIndex, 1).Value = item.Category;
+                worksheet.Cell(rowIndex, 2).Value = item.Item;
+                worksheet.Cell(rowIndex, 3).Value = item.Quantity;
+                rowIndex++;
+            }
+
+            // Nhóm các hàng theo cột "Category"
+            // Sử dụng Linq để nhóm dữ liệu theo "Category"
+            var groupedData = data.GroupBy(x => x.Category).ToList();
+
+            int startRow = 2;
+            bool check = false;
+            worksheet.Outline.SummaryVLocation = XLOutlineSummaryVLocation.Top;
+            foreach (var group in groupedData)
+            {
+                // Thêm nhóm tiêu đề
+                var categoryRow = worksheet.Row(startRow);
+
+                categoryRow.Cell(1).Value = group.Key;
+                categoryRow.Cell(1).Style.Font.Bold = true;
+                categoryRow.Cell(1).Style.Fill.BackgroundColor = XLColor.LightGray;
+                worksheet.Row(startRow).Height = 20;
+
+                // Nhóm hàng theo tiêu đề
+                var groupRows = worksheet.Rows(startRow + 1, startRow + group.Count() - 1);
+                groupRows.Group();
+                //worksheet.Range(startRow, 1, startRow + group.Count() - 1, 3).Row.Group();
+
+                //     worksheet.Rows(startRow, startRow + group.Count() - 1).Group();
+                // Console.WriteLine($"{startRow}, {startRow + group.Count() - 1}");
+
+                startRow += group.Count();
+
+            }
+
+            // worksheet.Rows(2, 4).Group(1,collapse:false);
+
+            // worksheet.Rows(5, 7).Group(1, collapse: false);
+
+            // worksheet.Rows(8, 10).Group(1, collapse: false);
+            worksheet.CollapseRows(1);
+            // worksheet.Row(8).Group();
+            // Lưu tệp Excel vào bộ nhớ
+            using (var outputStream = new MemoryStream())
+            {
+                workbook.SaveAs(outputStream);
+                outputStream.Position = 0; // Đặt lại vị trí của stream để đọc từ đầu
+
+                // Trả về tệp Excel để người dùng tải xuống
+                var fileContent = outputStream.ToArray();
+                var fileName = "Tonmatbang.xlsx";
+                await File.WriteAllBytesAsync(fileName, fileContent);
+
+                // Cung cấp tệp cho người dùng tải xuống
+                var downloadLink = $"data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{Convert.ToBase64String(fileContent)};download={fileName}";
+
+                NavigationManager.NavigateTo(downloadLink, true);
+            }
+        }
+    }
+}
+}

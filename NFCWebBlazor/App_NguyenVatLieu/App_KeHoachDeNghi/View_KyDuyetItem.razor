@@ -1,0 +1,247 @@
+﻿@using static NFCWebBlazor.App_NguyenVatLieu.App_DuyetGia.Page_DuyetGiaMaster
+@using static NFCWebBlazor.App_NguyenVatLieu.App_DonDatHang.Page_DonDatHang_Master
+@using static NFCWebBlazor.App_NguyenVatLieu.App_KeHoachDeNghi.Page_KeHoachMuaHangMaster
+<style>
+    .background-image {
+    display: inline-block;
+    width: 32px; /* Kích thước rộng của span */
+    height: 32px; /* Kích thước cao của span */
+
+    background-size: contain; /* Chế độ scale: hiển thị đầy đủ hình ảnh */
+    background-repeat: no-repeat; /* Không lặp lại hình nền */
+    background-position: center; /* Căn giữa hình nền */
+    color: black; /* Màu chữ */
+    text-align: center; /* Canh giữa chữ */
+    line-height: 100px; /* Canh giữa chữ theo chiều dọc */
+    border: 1px solid #ddd; /* Đường viền cho dễ nhìn */
+    }
+</style>
+@if (lstkyduyetitem != null)
+{
+    int i = 0;
+
+    <div id="@RandomString(9)" class="row bs-stepper w-100 me-2" >
+        <div class="bs-stepper-header" role="tablist">
+            @foreach (var it in lstkyduyetitem)
+            {
+                if (i > 0)
+                {
+                    <div class="bs-stepper-line"></div>
+                }
+                if (it.LoaiDuyet != "Duyệt")
+                {
+
+                    <div class="step" data-target="#@string.Format("{0}-{1}",it.Serial,it.UserDuyet)">
+                        <button type="button"  class="step-trigger" role="tab" id="stepper1trigger1" aria-controls="@string.Format("{0}-{1}",it.Serial,it.UserDuyet)">
+                            <div class="row justify-content-center">
+                                <span class="bs-stepper-circle background-image" style="background-image: url('@it.PathImg')"></span>
+                                <span class="bs-stepper-label text-primary" style="font-size:10px;">@it.UserDuyet
+                                    <img src=@((it.countItemDuyet>0)?IconImg.CheckMark:IconImg.NotCheck) style="width:12px;height:auto;margin-left:5px;" />
+                                </span>
+                            </div>
+                        </button>
+                    </div>
+
+                }
+                else
+                {
+                    if (keHoachMuaHang_Showcrr != null)
+                        countcheck = countduyet(keHoachMuaHang_Showcrr.CountTong, keHoachMuaHang_Showcrr.CountDuyet);
+                    if (nVLDonDatHangShowcrr != null)
+                        countcheck = countduyet(nVLDonDatHangShowcrr.CountTong, nVLDonDatHangShowcrr.CountDuyet);
+                    if(nvlDuyetGiaShowcrr!=null)
+                        countcheck = countduyet(nvlDuyetGiaShowcrr.CountTong, nvlDuyetGiaShowcrr.CountDuyet);
+                    <div class="step" data-target="#@string.Format("{0}-{1}",it.Serial,it.UserDuyet)">
+                        <button type="button" class="step-trigger" role="tab" id="stepper1trigger1" aria-controls="@string.Format("{0}-{1}",it.Serial,it.UserDuyet)">
+                            <div class="row justify-content-center p-0">
+                                <span class="bs-stepper-circle background-image" style="background-image: url('@it.PathImg')">
+                                </span>
+                                <span class="bs-stepper-label text-primary" style="font-size:10px;">@it.UserDuyet
+                                    <span style="color:red;">@showtexttyle</span>
+                                </span>
+                                @if (checkfinish)
+                                {
+                                    <div class="btn-group" style="height:7px;" role="group">
+                                        <div class="btn btn-primary p-0"></div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="btn-group" style="height:7px;" role="group">
+                                        <div class="btn btn-primary p-0" style="width:@countcheck%"></div>
+                                        <div class="btn btn-danger p-0" style="width:@(100-countcheck)%"></div>
+                                    </div>
+                                }
+                            </div>
+                        </button>
+                    </div>
+                }
+                i++;
+            }
+        </div>
+    </div>
+    if(!string.IsNullOrEmpty(KhongDuyet))
+    {
+        <div class="row text-danger">
+            <span>
+                <i class="bi bi-x-circle-fill"></i>
+                <span> @KhongDuyet</span>
+            </span>
+
+        </div>
+    }
+
+}
+@code {
+    [Parameter]
+    public KeHoachMuaHang_Show keHoachMuaHang_Showcrr { get; set; }
+    [Parameter]
+    public NVLDonDatHangShow nVLDonDatHangShowcrr { get; set; }
+    [Parameter]
+    public NvlDuyetGiaShow nvlDuyetGiaShowcrr { get; set; }
+    [Parameter]
+    public List<NvlKyDuyetShow> lstkyduyetitem { get; set; }
+    [Parameter]
+    public List<NvlKyDuyetShow> lstkyduyetall { get; set; }
+    [Parameter]
+    public List<Users> lstuser { get; set; }
+
+    string KhongDuyet = "";
+    private string showtexttyle = "";
+    private string pathimg = "";
+    bool checkfinish = false;
+    int countcheck = 0;
+    public int countduyet(int? counttotal, int? countduyet)
+    {
+        if (counttotal == null || countduyet == null)
+        {
+            return 0;
+        }
+        if (counttotal.Value <= 0)
+            return 0;
+        showtexttyle = string.Format("Duyệt :{0}/{1}", countduyet.Value, counttotal);
+        if (counttotal - countduyet <= 0)
+        {
+            checkfinish = true;
+            pathimg = IconMsg.CheckMark;
+        }
+        else
+            pathimg = IconMsg.NotCheck;
+        //Console.WriteLine((int)Math.Round(countduyet.Value * 0.1 / (counttotal.Value * 0.1) * 100,0));
+        return (int)Math.Round(countduyet.Value * 0.1 / (counttotal.Value * 0.1) * 100, 0);
+
+    }
+
+    public string RandomString(int length)
+    {
+
+        Random random = new Random();
+        const string pool = "abcdefghijklmnopqrstuvwxyz0123456789";
+        var chars = Enumerable.Range(0, length)
+            .Select(x => pool[random.Next(0, pool.Length)]);
+        return new string(chars.ToArray());
+    }
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+
+        //Console.WriteLine(keHoachMuaHang_Showcrr.Serial);
+        if (lstkyduyetitem==null)
+        {
+
+            if (keHoachMuaHang_Showcrr != null)
+            {
+                int serial = keHoachMuaHang_Showcrr.Serial;
+                lstkyduyetitem = lstkyduyetall.Where(p => p.SerialLink.Value == serial).OrderByDescending(p=>p.LoaiDuyet).ToList();
+                foreach (var it in lstkyduyetitem)
+                {
+                    foreach (var usr in lstuser)
+                    {
+                        if (it.UserDuyet == usr.UsersName)
+                        {
+                            it.PathImg = usr.PathImg;
+                            it.TenUserDuyet = usr.TenUser;
+                            break;
+                        }
+                    }
+
+                }
+                keHoachMuaHang_Showcrr.lstkyduyet = lstkyduyetitem;
+                var querykhongduyet = lstkyduyetitem.Where(p => !string.IsNullOrEmpty(p.KhongDuyet)).FirstOrDefault();
+                if (querykhongduyet != null)
+                {
+                    KhongDuyet = querykhongduyet.GhiChu;
+
+                }
+            }
+            if (nVLDonDatHangShowcrr != null)
+            {
+                int serial = nVLDonDatHangShowcrr.Serial;
+                lstkyduyetitem = lstkyduyetall.Where(p => p.SerialLink.Value == serial).OrderByDescending(p=>p.LoaiDuyet).ToList();
+                foreach (var it in lstkyduyetitem)
+                {
+                    foreach (var usr in lstuser)
+                    {
+                        if (it.UserDuyet == usr.UsersName)
+                        {
+                            it.PathImg = usr.PathImg;
+                            it.TenUserDuyet = usr.TenUser;
+                            break;
+                        }
+                    }
+
+                }
+                nVLDonDatHangShowcrr.lstkyduyet = lstkyduyetitem;
+                var querykhongduyet = lstkyduyetitem.Where(p => !string.IsNullOrEmpty(p.KhongDuyet)).FirstOrDefault();
+                if (querykhongduyet != null)
+                {
+                    KhongDuyet = querykhongduyet.GhiChu;
+
+                }
+            }
+            if(nvlDuyetGiaShowcrr!=null)
+            {
+                int serial = nvlDuyetGiaShowcrr.Serial;
+                lstkyduyetitem = lstkyduyetall.Where(p => p.SerialLink.Value == serial).OrderByDescending(p => p.LoaiDuyet).ToList();
+                foreach (var it in lstkyduyetitem)
+                {
+                    foreach (var usr in lstuser)
+                    {
+                        if (it.UserDuyet == usr.UsersName)
+                        {
+                            it.PathImg = usr.PathImg;
+                            it.TenUserDuyet = usr.TenUser;
+                            break;
+                        }
+                    }
+
+                }
+                nvlDuyetGiaShowcrr.lstkyduyet = lstkyduyetitem;
+                
+            }
+            if(lstkyduyetitem!=null)
+            {
+               
+                StateHasChanged();
+            }
+
+        }
+        // else//Không có điều kiện này rất dễ rơi vào đệ quy vô hạn
+        // {
+        //     var querykhongduyet = lstkyduyetitem.Where(p => !string.IsNullOrEmpty(p.KhongDuyet)).FirstOrDefault();
+        //     if (querykhongduyet != null)
+        //     {
+                
+        //             KhongDuyet = querykhongduyet.GhiChu;
+                
+               
+
+        //     }
+           
+        // }
+
+        return base.OnAfterRenderAsync(firstRender);
+    }
+
+
+}

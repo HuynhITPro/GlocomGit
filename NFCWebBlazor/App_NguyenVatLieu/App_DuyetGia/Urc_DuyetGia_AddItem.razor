@@ -1,0 +1,335 @@
+﻿@using System.Collections.ObjectModel
+@using NFCWebBlazor.App_ClassDefine
+@using System.Reflection
+@using NFCWebBlazor.Model
+@using static NFCWebBlazor.App_NguyenVatLieu.App_DuyetGia.Page_DuyetGiaMaster
+
+
+<style>
+    .griddetail {
+        /*  max-height: @heightgrid; */
+    }
+
+    #griddetaikehoach .dxbl-grid-header-row {
+        display: contents !important;
+    }
+
+    .highlighted-item > td {
+        background-color: var(--bs-danger-border-subtle)
+    }
+
+        .highlighted-item > td:first-child {
+            background-color: transparent;
+        }
+</style>
+
+<NFCWebBlazor.App_Admin.DialogMsg @ref="@dialogMsg"></NFCWebBlazor.App_Admin.DialogMsg>
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+
+<div>
+    <DxLoadingPanel @bind-Visible="@PanelVisible"
+                    IsContentBlocked="true"
+                    ApplyBackgroundShading="true"
+                    IndicatorAreaVisible="false"
+                    Text="Đang xử lý...">
+
+        <DxGrid @ref="Grid" Data="@lstdata"
+                AutoExpandAllGroupRows="true"
+                TextWrapEnabled="true"
+                ShowAllRows=true
+                id="gridaddkehoach"
+                EditModelSaving="OnEditModelSaving"
+                AllowSort=false
+                AllowColumnReorder="false"
+                EditMode="GridEditMode.EditCell"
+                CustomizeElement="Grid_CustomizeElement"
+                CustomizeEditModel="Grid_CustomizeEditModel"
+                ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+                VirtualScrollingEnabled=true
+                CustomizeSummaryDisplayText="Grid_CustomizeSummaryDisplayText"
+                ShowFilterRow=true>
+            <ToolbarTemplate>
+                <DxToolbar ItemRenderStyleMode="ToolbarRenderStyleMode.Plain">
+                    @if (nvlDuyetGiaItemShowcrr == null)
+                    {
+                        <DxToolbarItem Text="Thêm dòng" IconCssClass="bi bi-plus-circle" RenderStyle="ButtonRenderStyle.Success" Click="@AddItem">
+                        </DxToolbarItem>
+                    }
+                    <DxToolbarItem Text="Xuất excel" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=>Grid.ExportToXlsxAsync("ExporDeNghi"))">
+                    </DxToolbarItem>
+                    <DxToolbarItem Text="Thêm nhà cung cấp" IconCssClass="bi bi-plus-circle" RenderStyle="ButtonRenderStyle.Primary" Click="@showheadertext">
+                    </DxToolbarItem>
+                    <DxToolbarItem Text="Xóa nhà cung cấp" IconCssClass="oi oi-x" RenderStyle="ButtonRenderStyle.Danger" Click="@hideheadertext">
+                    </DxToolbarItem>
+                    <DxToolbarItem Text="Import Excel" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Warning">
+                    </DxToolbarItem>
+                    <DxToolbarItem Text="LƯU" IconCssClass="bi bi-floppy" RenderStyle="ButtonRenderStyle.Primary" Click="@saveAsyn">
+                    </DxToolbarItem>
+                </DxToolbar>
+            </ToolbarTemplate>
+            <Columns>
+                <DxGridDataColumn DataRowEditorVisible="false" Caption="STT" Width="50">
+                    <CellDisplayTemplate>@(context.VisibleIndex + 1)</CellDisplayTemplate>
+                </DxGridDataColumn>
+                <DxGridDataColumn DataRowEditorVisible="false" FieldName="Serial" Caption="Serial" Visible=false Width="100" />
+
+                <DxGridDataColumn DataRowEditorVisible="false" FieldName="MaHang" Caption="Mã hàng" Width="250">
+                    <CellDisplayTemplate>
+                        @{
+                            NvlDuyetGiaItemShow nvlDuyetGiaItemShow = (NvlDuyetGiaItemShow)context.DataItem;
+                        }
+                        <ComboboxMaHang TextFieldName="@nameof(NvlHangHoaDropDown.TenHang)"
+                                        ValueFieldName="@nameof(NvlHangHoaDropDown.MaHang)"
+                                        CssClass="cw-480"
+                                        SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                        ListRenderMode=ListRenderMode.Virtual
+                                        SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                        SearchMode="ListSearchMode.AutoSearch"
+                                        @bind-Value="@nvlDuyetGiaItemShow.MaHang"
+                                        SelectedItemChanged="@((NvlHangHoaDropDown hanghoa)=>SelectedItemChanged(hanghoa,nvlDuyetGiaItemShow))"
+                                        ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto />
+                    </CellDisplayTemplate>
+                </DxGridDataColumn>
+                <DxGridDataColumn DataRowEditorVisible="false" Visible="false" FieldName="TenHang" Caption="Tên hàng" Width="200" />
+                <DxGridDataColumn DataRowEditorVisible="false" FieldName="DVT" Caption="ĐVT" Width="80" />
+                <DxGridDataColumn FieldName="DonGia" DataRowEditorVisible=false DisplayFormat="#,#.##" Caption="Đơn giá đang mua" Width="110" />
+                <DxGridDataColumn FieldName="XuatXu" Caption="Xuất xứ" Width="120" />
+                <DxGridDataColumn FieldName="DinhMuc" Caption="Định mức" Width="110">
+                    <CellEditTemplate>
+                        @{
+                            NvlDuyetGiaItemShow nvlDuyetGiaItemShow = (NvlDuyetGiaItemShow)context.EditModel;
+                        }
+                        <DxSpinEdit Increment="0" @bind-Value=@nvlDuyetGiaItemShow.DinhMuc MinValue="0"></DxSpinEdit>
+                    </CellEditTemplate>
+                </DxGridDataColumn>
+                <DxGridDataColumn FieldName="SLDuToan" DisplayFormat="#,#.#" Caption="Số lượng dự toán" Width="110">
+                    <CellEditTemplate>
+                        @{
+                            NvlDuyetGiaItemShow nvlDuyetGiaItemShow = (NvlDuyetGiaItemShow)context.EditModel;
+                        }
+                        <DxSpinEdit Increment="0" @bind-Value=@nvlDuyetGiaItemShow.SLDuToan MinValue="0"></DxSpinEdit>
+                    </CellEditTemplate>
+                </DxGridDataColumn>
+                @if (@lstheader.Count > 0)
+                {
+                    
+                    for (int k = 0; k < lstheader.Count; k++)
+                    {
+
+                        var item = lstheader[k]; // Get the item                      // Console.WriteLine(string.Format("{1}:NCC{0}", i, lstheader.Count));
+                        @if (item.Visible)
+                        {
+                            <DxGridDataColumn FieldName="@item.FieldName" Visible="@item.Visible" DisplayFormat="#,#.##" Width="200" Caption="@item.Text">
+                                <HeaderCaptionTemplate>
+                                    <DxComboBox Data=@lstnhacungcap
+                                                AllowUserInput="true"
+                                                SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                                ListRenderMode=ListRenderMode.Virtual
+                                                SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                                SearchMode="ListSearchMode.AutoSearch"
+                                                TextFieldName="@nameof(DataDropDownList.FullName)"
+                                                ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                                @bind-Value="@item.Value"
+                                                @bind-Text="@item.Text"
+                                                CssClass="cw-480"></DxComboBox>
+                                </HeaderCaptionTemplate>
+
+                                <CellEditTemplate>
+                                    @{
+                                        NvlDuyetGiaItemShow nvlDuyetGiaItemShow = (NvlDuyetGiaItemShow)context.EditModel;
+
+
+                                        @switch (item.Index)
+                                        {
+                                            case 0:
+                                                {
+                                                    <DxSpinEdit Increment="0" @bind-Value=@nvlDuyetGiaItemShow.NCC0 MinValue="0"></DxSpinEdit>
+                                                    break;
+                                                }
+                                            case 1:
+                                                {
+                                                    <DxSpinEdit Increment="0" @bind-Value=@nvlDuyetGiaItemShow.NCC1 MinValue="0"></DxSpinEdit>
+                                                    break;
+                                                }
+                                            case 2:
+                                                {
+                                                    <DxSpinEdit Increment="0" @bind-Value=@nvlDuyetGiaItemShow.NCC2 MinValue="0"></DxSpinEdit>
+                                                    break;
+                                                }
+                                            case 3:
+                                                {
+                                                    <DxSpinEdit Increment="0" @bind-Value=@nvlDuyetGiaItemShow.NCC3 MinValue="0"></DxSpinEdit>
+                                                    break;
+                                                }
+                                            case 4:
+                                                {
+                                                    <DxSpinEdit Increment="0" @bind-Value=@nvlDuyetGiaItemShow.NCC4 MinValue="0"></DxSpinEdit>
+                                                    break;
+                                                }
+                                            case 5:
+                                                {
+                                                    <DxSpinEdit Increment="0" @bind-Value=@nvlDuyetGiaItemShow.NCC5 MinValue="0"></DxSpinEdit>
+                                                    break;
+                                                }
+                                            case 6:
+                                                {
+                                                    <DxSpinEdit Increment="0" @bind-Value=@nvlDuyetGiaItemShow.NCC6 MinValue="0"></DxSpinEdit>
+                                                    break;
+                                                }
+                                            case 7:
+                                                {
+                                                    <DxSpinEdit Increment="0" @bind-Value=@nvlDuyetGiaItemShow.NCC7 MinValue="0"></DxSpinEdit>
+                                                    break;
+                                                }
+                                            case 8:
+                                                {
+                                                    <DxSpinEdit Increment="0" @bind-Value=@nvlDuyetGiaItemShow.NCC8 MinValue="0"></DxSpinEdit>
+                                                    break;
+                                                }
+                                            case 9:
+                                                {
+                                                    <DxSpinEdit Increment="0" @bind-Value=@nvlDuyetGiaItemShow.NCC9 MinValue="0"></DxSpinEdit>
+                                                    break;
+                                                }
+                                            default:
+                                                {
+
+                                                    break;
+                                                }
+                                        }
+                                    }
+
+                                </CellEditTemplate>
+
+                            </DxGridDataColumn>
+                        }
+                    }
+
+                   
+                    //checkloadthu();
+                    <DxGridDataColumn FieldName="Err" DataRowEditorVisible="false" ShowInColumnChooser="false" Caption="Err" Width="220" />
+                }
+
+            </Columns>
+
+        </DxGrid>
+
+    </DxLoadingPanel>
+</div>
+@code {
+    [Inject] BrowserService browserService { get; set; }
+
+    [Parameter]
+    public NvlDuyetGiaShow nvlDuyetGiaShowcrr { get; set; }
+
+    [Parameter]
+    public NvlDuyetGiaItemShow nvlDuyetGiaItemShowcrr { get; set; }
+
+    [Parameter]
+    public EventCallback GotoMasterGrid { get; set; }
+
+    List<NvlDuyetGiaItemShow> lstdata { get; set; } = new List<NvlDuyetGiaItemShow>();
+    List<DataDropDownList> lstnhacungcap { get; set; }
+
+    string Value { get; set; }
+    string Text { get; set; }
+    bool checkAddItem = true;
+    bool PanelVisible { get; set; }
+    bool VisibleKeHoachMuaHang = false;
+    IGrid? Grid { get; set; }
+
+    bool PopupVisible { get; set; } = false;
+    DialogWindow? dxPopup { get; set; }
+    RenderFragment? renderFragment { get; set; }
+    DialogMsg? dialogMsg { get; set; }
+    public string? random { get; set; }
+    string heightgrid = "500px";
+    string headerform = "";
+    void Grid_CustomizeSummaryDisplayText(GridCustomizeSummaryDisplayTextEventArgs e)
+    {
+
+    }
+    private string shownguoikiem(string textkiem)
+    {
+        if (textkiem == "")
+        {
+            return "";
+        }
+        return "Kiểm bởi: " + textkiem;
+    }
+    private string shownguoiduyet(string textduyet)
+    {
+        if (textduyet == "")
+        {
+            return "Chưa duyệt";
+        }
+        return "Duyệt bởi: " + textduyet;
+    }
+
+    private string pathimgduyet(string textduyet)
+    {
+        if (textduyet == "")
+        {
+            return IconImg.NotCheck;
+        }
+        return IconImg.CheckMark;
+    }
+   
+    void Grid_CustomizeEditModel(GridCustomizeEditModelEventArgs e)
+    {
+
+
+        var dataItem = (NvlDuyetGiaItemShow)e.DataItem;
+        if (dataItem == null)
+            e.EditModel = new NvlDuyetGiaItemShow { };
+        else
+        {
+            e.EditModel = dataItem.CopyClass();
+        }
+    }
+    async Task OnEditModelSaving(GridEditModelSavingEventArgs e)
+    {
+
+        var editModel = (NvlDuyetGiaItemShow)e.EditModel;
+
+        // Assign changes from the edit model to the data item.
+        if (e.IsNew)
+        {
+            // DataRow rownew = lstdata.NewRow();
+            // lstdata.Rows.Add(rownew);
+        }
+        else
+        {
+            e.CopyChangesToDataItem();
+            // Post changes to the database.
+
+        }
+
+    }
+    void Grid_CustomizeElement(GridCustomizeElementEventArgs e)
+    {
+        if (e.ElementType == GridElementType.DataRow)
+        {
+            if (e.Grid.GetRowValue(e.VisibleIndex, "Err") != null && e.Grid.GetRowValue(e.VisibleIndex, "Err") != DBNull.Value)
+            {
+                //Console.WriteLine(e.Grid.GetRowValue(e.VisibleIndex, "Err").ToString());
+                if (!String.IsNullOrEmpty(e.Grid.GetRowValue(e.VisibleIndex, "Err").ToString()))
+                    e.CssClass = "highlighted-item";
+            }
+
+        }
+
+    }
+    bool expand = true;
+    private void expandall()
+    {
+        Grid.BeginUpdate();
+        Grid.AutoExpandAllGroupRows = expand;
+        Grid.EndUpdate();
+        expand = !expand;
+    }
+}

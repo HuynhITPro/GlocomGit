@@ -1,0 +1,80 @@
+﻿<style>
+    .right-shadow {
+        box-shadow: 5px 0 10px rgba(0, 0, 0, 0.1); /* Border shadow bên phải */
+    }
+
+    /*  .dxbs-tree ul.nav > .nav-item > .nav-link:not(.disabled):not(.active) {
+                cursor: pointer;
+                color: #007bff;
+                position: relative;
+                -webkit-transform: scale(1);
+                -o-transform: scale(1);
+                transform: scale(1);
+            }*/
+    .style-textmenu {
+        margin-left: 10px;
+    }
+
+    .selected-node {
+        color: red; /* Màu bạn muốn thay đổi */
+    }
+</style>
+
+<div class="sidebar @StateCssClass">
+
+    <div class="shadow-sm p-3 mb-5 bg-white rounded" style="margin:3px;">
+
+        <DxTreeView AllowSelectNodes="true"
+                    @ref=treeView
+                    NodeClick=@OnClick
+                  
+                    Data="@menuItems"
+                    NodeExpandCollapseAction="TreeViewNodeExpandCollapseAction.NodeClick"
+                    AnimationType="LayoutAnimationType.Slide">
+            <DataMappings>
+                <DxTreeViewDataMapping Text="TextItem"
+                                       Key="NameItem"
+                                       ParentKey="NodeParent" />
+            </DataMappings>
+            <NodeTextTemplate>
+                @{
+                    var dataItem = (MenuItem)context.DataItem;
+
+                }
+                @if (dataItem.NodeParent != null)
+                {
+                    @if (dataItem.NodeParent == "SP")
+                    {
+                        <div class="centerdf" style="font-weight:bold;color:@themeColor.ColorPrimary;">
+                            <i class="@dataItem.IconCssClass" style="font-size: 20px"></i>
+                            <span class="style-textmenu">@dataItem.TextItem</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="centerdf">
+                            <i class="@dataItem.IconCssClass" style="font-size: 20px;"></i>
+                            <span class="style-textmenu">@dataItem.TextItem</span>
+                        </div>
+                    }
+                }
+
+
+
+
+
+            </NodeTextTemplate>
+        </DxTreeView>
+
+    </div>
+
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback<MenuItem> GotoMainForm { get; set; }
+    [Parameter] public string? StateCssClass { get; set; }
+
+    string SelectedGroup = "none";
+
+}

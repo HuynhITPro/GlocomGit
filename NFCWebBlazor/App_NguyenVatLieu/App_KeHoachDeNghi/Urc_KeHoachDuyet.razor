@@ -1,0 +1,31 @@
+﻿@using BlazorBootstrap
+@using DevExpress.Blazor;
+@using NFCWebBlazor.App_ModelClass;
+@using Blazored.Modal
+@using Blazored.Modal.Services
+ <div class="container">
+        <div class="row m-2">
+            <DxMemo Text="@diengiai"  NullText="Diễn giải"></DxMemo>
+        </div>
+        <div class="row m-2">
+        <DxComboBox Data=@lstnguoiduyet ListRenderMode="ListRenderMode.Virtual"
+                    FilteringMode="DataGridFilteringMode.Contains"
+                    ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                    TextFieldName="@nameof(Users.TenUser)"
+                   
+                    @bind-Value="@nguoiduyet"
+                    CssClass="cw-480" />
+        </div>
+        <div class="row m-2">
+            <div class="d-flex justify-content-center">
+            <DxButton Text="Xác nhận" Click="@xacnhanduyetAsync"></DxButton>
+            </div>
+           
+        </div>
+    </div>
+@code {
+    [Inject] ToastService ToastService { get; set; } = default!;
+    List<Users> lstnguoiduyet = new List<Users>();
+    public Users nguoiduyet{ get; set; }
+    public string diengiai{ get; set; }
+}

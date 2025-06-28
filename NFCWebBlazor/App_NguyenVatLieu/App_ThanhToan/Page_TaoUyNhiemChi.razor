@@ -1,0 +1,257 @@
+﻿
+<style>
+    .csswidth {
+        width: min(95vw, 1100px);
+    }
+</style>
+<EditForm EditContext="@editContext" Context="EditFormContext">
+    <DataAnnotationsValidator />
+    <DxFormLayout CssClass="csswidth">
+        <div class="container m-1">
+            <div class="row">
+                <div class="col-sm-12 col-md-6">
+                    <div class="card m-1">
+                        <div class="card-header bg-primary text-bg-primary">TÀI KHOẢN GHI NỢ</div>
+                        <div class="card-body">
+                            <DxFormLayoutItem ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+                                <CaptionTemplate>
+                                    <span style="color:red">Chọn số tài khoản *</span>
+                                </CaptionTemplate>
+                                <Template>
+                                    <DxComboBox CssClass="cw-480"
+                                                SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                                ListRenderMode=ListRenderMode.Virtual
+                                                SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                                SearchMode="ListSearchMode.AutoSearch"
+                                                TextFieldName="SoTK"
+                                                ValueFieldName="SoTK"
+                                                Data="@lstTaiKhoanNo"
+                                                SelectedItemChanged="((ThongTinTaiKhoan e)=>SelectedTaiKhoanNo(e))"
+                                                @bind-Value="@uyNhiemChi.SoTKNo"
+                                                ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto" />
+                                    <div class="text-danger">
+                                        <ValidationMessage For="@(() => uyNhiemChi.SoTKNo)" />
+                                    </div>
+                                </Template>
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+                                <CaptionTemplate>
+                                    <span>Tên tài khoản *</span>
+                                </CaptionTemplate>
+                                <Template>
+                                    <DxTextBox @bind-Text=uyNhiemChi.TenTKNo></DxTextBox>
+                                    <div class="text-danger">
+                                        <ValidationMessage For="@(() => uyNhiemChi.TenTKNo)" />
+                                    </div>
+                                </Template>
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+                                <CaptionTemplate>
+                                    <span>Địa chỉ *</span>
+                                </CaptionTemplate>
+                                <Template>
+                                    <DxMemo @bind-Text=uyNhiemChi.DiaChiTKNo></DxMemo>
+                                    <div class="text-danger">
+                                        <ValidationMessage For="@(() => uyNhiemChi.DiaChiTKNo)" />
+                                    </div>
+                                </Template>
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+                                <CaptionTemplate>
+                                    <span>Ngân hàng *</span>
+                                </CaptionTemplate>
+                                <Template>
+                                    <DxTextBox @bind-Text=uyNhiemChi.NgangHangTKNo></DxTextBox>
+                                    <div class="text-danger">
+                                        <ValidationMessage For="@(() => uyNhiemChi.NgangHangTKNo)" />
+                                    </div>
+                                </Template>
+                            </DxFormLayoutItem>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-12 col-md-6">
+                    <div class="card m-1">
+                        <div class="card-header  bg-danger text-bg-danger">TÀI KHOẢN GHI CÓ</div>
+                        <div class="card-body">
+                            <DxFormLayoutItem ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+                                <CaptionTemplate>
+                                    <span style="color:red">Chọn số tài khoản *</span>
+                                </CaptionTemplate>
+                                <Template>
+                                    <DxComboBox CssClass="cw-480"
+                                                SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                                ListRenderMode=ListRenderMode.Virtual
+                                                SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                                SearchMode="ListSearchMode.AutoSearch"
+                                                TextFieldName="SoTK"
+                                                ValueFieldName="SoTK"
+                                                Data="@lstTaiKhoanCo"
+                                                SelectedItemChanged="((ThongTinTaiKhoan e)=>SelectedTaiKhoanCo(e))"
+                                                @bind-Value="@uyNhiemChi.SoTKCo"
+                                                ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto" />
+                                    <div class="text-danger">
+                                        <ValidationMessage For="@(() => uyNhiemChi.SoTKCo)" />
+                                    </div>
+                                </Template>
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+                                <CaptionTemplate>
+                                    <span>Tên tài khoản *</span>
+                                </CaptionTemplate>
+                                <Template>
+                                    <DxTextBox ReadOnly="true" @bind-Text=uyNhiemChi.TenTKCo></DxTextBox>
+                                    <div class="text-danger">
+                                        <ValidationMessage For="@(() => uyNhiemChi.TenTKCo)" />
+                                    </div>
+                                </Template>
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+                                <CaptionTemplate>
+                                    <span>Địa chỉ *</span>
+
+                                </CaptionTemplate>
+                                <Template>
+                                    <DxMemo ReadOnly="true" @bind-Text=uyNhiemChi.DiaChiTKCo></DxMemo>
+                                    <div class="text-danger">
+                                        <ValidationMessage For="@(() => uyNhiemChi.DiaChiTKCo)" />
+                                    </div>
+                                </Template>
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+                                <CaptionTemplate>
+                                    <span>Ngân hàng *</span>
+                                </CaptionTemplate>
+                                <Template>
+                                    <DxTextBox ReadOnly="true" @bind-Text=uyNhiemChi.NgangHangTKCo></DxTextBox>
+                                    <div class="text-danger">
+                                        <ValidationMessage For="@(() => uyNhiemChi.NgangHangTKCo)" />
+                                    </div>
+                                </Template>
+                            </DxFormLayoutItem>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="row card m-1">
+                <div class="card-header text-bg-primary">THÔNG TIN CHUNG</div>
+                <div class="card-body">
+                    @if (EnableEdit)
+                    {
+                        <DxFormLayoutItem ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+                            <CaptionTemplate>
+                                <span>Mã ủy nhiệm chi *</span>
+                            </CaptionTemplate>
+                            <Template>
+                                <DxTextBox Enabled="false" @bind-Text=uyNhiemChi.MaUNC></DxTextBox>
+                            </Template>
+                        </DxFormLayoutItem>
+                    }
+
+                    <DxFormLayoutItem Caption="Số lượng nhập" ColSpanXs="6" ColSpanMd="6" ColSpanLg="6" CaptionPosition="CaptionPosition.Vertical">
+                        <CaptionTemplate>
+                            <span>Số tiền *</span>
+
+                        </CaptionTemplate>
+                        <Template>
+                            <div class="row d-flex">
+                                <div class="col-auto">
+                                    <NFCWebBlazor.App_ClassDefine.TextBoxWithCaculator valuenumber="@uyNhiemChi.ThanhTien" ValueNumberChanged="@setSoLuong">
+                                    </NFCWebBlazor.App_ClassDefine.TextBoxWithCaculator>
+                                </div>
+
+                                <div class="col-auto">
+                                    <DxButton RenderStyleMode="ButtonRenderStyleMode.Outline" Text="+ 8%" Click="@(()=>addthue(0.08))"></DxButton>
+                                </div>
+                                <div class="col-auto">
+                                    <DxButton RenderStyleMode="ButtonRenderStyleMode.Outline" Text="+ 10%" Click="@(()=>addthue(0.1))"></DxButton>
+                                </div>
+                            </div>
+                           
+
+
+                            <div class="text-danger">
+                                <ValidationMessage For="@(() => uyNhiemChi.ThanhTien)" />
+                            </div>
+
+
+                        </Template>
+                    </DxFormLayoutItem>
+
+
+                    <DxFormLayoutItem ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+                        <CaptionTemplate>
+                            <span>ĐVT *</span>
+                        </CaptionTemplate>
+                        <Template>
+                            <DxComboBox CssClass="cw-480"
+                                        SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                        ListRenderMode=ListRenderMode.Virtual
+                                        SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                        SearchMode="ListSearchMode.AutoSearch"
+                                        TextFieldName="FullName"
+                                        ValueFieldName="Name"
+                                        Data="@lstDVT"
+                                        @bind-Value="@uyNhiemChi.DVT"
+                                        ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto" />
+                            <div class="text-danger">
+                                <ValidationMessage For="@(() => uyNhiemChi.DVT)" />
+                            </div>
+                        </Template>
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+                        <CaptionTemplate>
+                            <span>Nội dung *</span>
+                        </CaptionTemplate>
+                        <Template>
+                            <DxMemo @bind-Text=uyNhiemChi.NoiDung></DxMemo>
+                            <div class="text-danger">
+                                <ValidationMessage For="@(() => uyNhiemChi.NoiDung)" />
+                            </div>
+                        </Template>
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+                        <CaptionTemplate>
+                            <span>Ngày *</span>
+                        </CaptionTemplate>
+                        <Template>
+                            <DxDateEdit @bind-Date=uyNhiemChi.Ngay></DxDateEdit>
+                            <div class="text-danger">
+                                <ValidationMessage For="@(() => uyNhiemChi.Ngay)" />
+                            </div>
+                        </Template>
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem ColSpanMd="12">
+                        <Template>
+                            <div class="d-flex justify-content-center mt-2 gap-2 mb-2">
+                                <DxButton RenderStyle="ButtonRenderStyle.Primary" IconCssClass="bi bi-floppy" Text="Lưu" Visible=@(!EnableEdit) Click="@saveAsync" />
+                                <DxButton RenderStyle="ButtonRenderStyle.Info" IconCssClass="bi bi-pencil" CssClass="ms-2" Text="Sửa" Visible=@EnableEdit Click="@updateAsync" />
+                                <DxButton Text="XÓA" IconCssClass="oi oi-x" RenderStyle="ButtonRenderStyle.Danger" Click="@(()=>deleteAsync())" RenderStyleMode="ButtonRenderStyleMode.Outline">
+                                </DxButton>
+                            </div>
+                        </Template>
+                    </DxFormLayoutItem>
+
+
+                </div>
+            </div>
+        </div>
+
+    </DxFormLayout>
+</EditForm>
+@code {
+    List<DataDropDownList> dataDropDownLists = new List<DataDropDownList>();
+    Dieukien dieukien = new Dieukien();
+    bool EnableEdit = false;
+    private EditContext? editContext;
+    [Parameter]
+    public EventCallback<UyNhiemChi> GotoMainForm { get; set; }
+    [Parameter]
+    public UyNhiemChi uyNhiemChi { get; set; }
+    public class Dieukien
+    {
+        public string FullName { get; set; }
+    }
+}

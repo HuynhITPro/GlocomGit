@@ -1,0 +1,32 @@
+﻿
+<div class="row justify-content-center m-1">
+    <DxTextBox @bind-Text=@LyDo></DxTextBox>
+    <div style="width:140px;margin:5px;" >
+        <DxButton Text="XÁC NHẬN" Click=@XacNhan></DxButton>
+    </div>
+   
+</div>
+
+@code {
+
+
+    [Parameter]
+    public string LyDo { get; set; }
+    [Parameter]
+    public EventCallback<string> GetLyDo { get; set; }
+
+    
+    protected override Task OnInitializedAsync()
+    {
+        Console.WriteLine("NhapLyDo");
+        return base.OnInitializedAsync();
+    }
+    public void XacNhan()
+    {
+        if(GetLyDo.HasDelegate)
+        {
+            GetLyDo.InvokeAsync(LyDo);
+           
+        }
+    }
+}

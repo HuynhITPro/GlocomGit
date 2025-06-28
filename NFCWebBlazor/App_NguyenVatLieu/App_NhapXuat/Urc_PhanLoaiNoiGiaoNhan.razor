@@ -1,0 +1,56 @@
+﻿@using BlazorBootstrap
+
+<div class="container" style="min-height:500px;">
+
+
+    <div class="row">
+        <NFCWebBlazor.App_ClassDefine.ComboboxFilteredString SearchFilterCondition="ListSearchFilterCondition.Contains"
+        ListRenderMode=ListRenderMode.Virtual
+        SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+        SearchMode="ListSearchMode.AutoSearch"
+        Data="@lstdata"
+        ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+        ValueFieldName="@nameof(DataDropDownList.Name)"
+        TextFieldName="@nameof(DataDropDownList.FullName)"
+
+        @bind-Value="@PhanLoai"
+        CssClass="cw-480" />
+    </div>
+    <div class="row text-center">
+        <div class="col m-2">
+            <DxButton Text="Xác nhận" Click="OnXacNhan"></DxButton>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback GotoMainForm { get; set; }
+    [Inject] ToastService toastService { get; set; }
+    string PhanLoai { get; set; }
+    List<DataDropDownList> lstdata;
+    protected override async Task OnInitializedAsync()
+    {
+        PhanLoai = Model.ModelAdmin.PhanLoaiNoiGN;
+        List<DataDropDownList> lst = await NFCWebBlazor.Model.ModelData.GetDataDropDownListsAsync();
+        var query = lst.Where(x => x.TypeName == "NvlNhomNCC" || x.TypeName == "NvlNhomKho"|| x.TypeName == "NvlNhomKH" || x.TypeName == "NvlNhomNB").ToList();
+        lstdata = query;
+        // return base.OnInitializedAsync();
+    }
+    private async void OnXacNhan()
+    {
+        Model.ModelAdmin.PhanLoaiNoiGN = PhanLoai;
+        if (!string.IsNullOrEmpty(Model.ModelAdmin.PhanLoaiNoiGN))
+        {
+           
+            Model.ModelAdmin.lstnoigiaonhanfilter.Clear();
+            List<DataDropDownList> lst = await Model.ModelData.Getlstnoigiaonhan();
+            Model.ModelAdmin.lstnoigiaonhanfilter.AddRange(lst.Where(x => x.PhanLoai == Model.ModelAdmin.PhanLoaiNoiGN || x.TypeName == Model.ModelAdmin.PhanLoaiNoiGN).ToList());
+            
+        }
+        if (GotoMainForm.HasDelegate)
+        {
+            GotoMainForm.InvokeAsync();
+        }
+    }
+}

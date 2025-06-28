@@ -1,0 +1,331 @@
+﻿@using BlazorBootstrap
+@using DevExpress.Blazor;
+@using NFCWebBlazor.App_ClassDefine;
+@using System.Data
+@using static NFCWebBlazor.App_NguyenVatLieu.App_KeHoachDeNghi.Page_DeNghiTheoDinhMuc
+@using static NFCWebBlazor.App_ThongTin.Page_DinhMucNVLMaster
+@using static NFCWebBlazor.App_NguyenVatLieu.App_KeHoachDeNghi.Page_KeHoachMuaHangMaster
+
+<style>
+    .my-grid {
+    height: @heightgrid;
+    }
+
+    .custom-spin-edit {
+    width: 60px;
+    }
+
+    .highlighted-item > td {
+    background-color: var(--bs-danger-border-subtle)
+    }
+
+    .custom-card {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px;
+    border-radius: 50px; /* Bo tròn cả thẻ a */
+    border: 1px solid #ccc; /* Viền sát thẻ a */
+    text-decoration: none;
+    transition: all 0.3s ease;
+    }
+
+    .custom-card span {
+    font-size: 10px;
+    color: #333;
+    }
+
+    .custom-card:hover {
+    border-color: #007bff;
+    background-color: #f0f8ff;
+    }
+
+</style>
+<DxToastProvider Name="Template"
+MaxToastCount="1"
+Width="400px"
+DisplayTime="@TimeSpan.Zero"
+FreezeOnClick="true" />
+<DxToast @ref=toastTextInput
+Title="Chọn nhà cung cấp"
+ProviderName="Template">
+    <Template>
+        <div class="row justify-content-center">
+            <div class="m-1">
+            </div>
+            <div class="justify-content-center">
+                <DxButton RenderStyle="ButtonRenderStyle.Success" RenderStyleMode="ButtonRenderStyleMode.Outline" Text="Xác nhận"></DxButton>
+            </div>
+        </div>
+    </Template>
+</DxToast>
+<DxGridLayout CssClass="w-100">
+
+    <Rows>
+        <DxGridLayoutRow Height="Auto" />
+        <DxGridLayoutRow />
+    </Rows>
+    <Items>
+        <DxGridLayoutItem Row="0">
+            <Template>
+                <div id=@randomdivhide class="p-2 mb-2 bg-white border  rounded-2 rounded-top-0 collapse show">
+                    <div>
+
+                        <DxFormLayout CssClass="w-100" CaptionPosition="CaptionPosition.Vertical">
+                            <DxFormLayoutItem Caption="Khách hàng" ColSpanXs="6" ColSpanSm="6" ColSpanMd="3" ColSpanLg="3">
+                                <DxComboBox SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                ListRenderMode=ListRenderMode.Virtual
+                                SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                SearchMode="ListSearchMode.AutoSearch"
+                                ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto
+                                ValueFieldName="@nameof(DataDropDownList.Name)"
+                                TextFieldName="@nameof(DataDropDownList.FullName)"
+                                SelectedItemChanged="@((DataDropDownList sp)=>KhachHang_SelectedItemChanged(sp))"
+                                Data="@lstKhachHang"
+                                @bind-Value="@dinhMucVatTuShowcrr.KhachHang"
+                                CssClass="cw-480" />
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem Caption="Sản phẩm" ColSpanXs="12" ColSpanSm="12" ColSpanMd="5" ColSpanLg="5">
+                                <DxComboBox SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                ListRenderMode=ListRenderMode.Virtual
+                                SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                SearchMode="ListSearchMode.AutoSearch"
+                                ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto
+                                ValueFieldName="@nameof(SanPhamDropDown.MaSP)"
+                                TextFieldName="@nameof(SanPhamDropDown.TenSPSearch)"
+                                SelectedItemChanged="@((SanPhamDropDown sp)=>SanPham_SelectedItemChanged(sp))"
+                                Data="@lstsanphamfilter"
+                                @bind-Value="@dinhMucVatTuShowcrr.MaSP"
+                                CssClass="cw-480" />
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem Caption="Chọn kế hoạch" ColSpanXs="12" ColSpanSm="6" ColSpanMd="4" ColSpanLg="4">
+                                <CaptionTemplate>
+                                    <div class="d-flex text-center">
+                                        <DxWaitIndicator Visible="isWait" CssClass="me-1" />
+                                        <span style="margin-right:5px;">Chọn kế hoạch</span><span style="color:forestgreen;">
+                                            <DxCheckBox Checked="@checkkehoachall" CheckedChanged="@((bool e)=>loadcheckallAsync(e))">Tất cả kế hoạch</DxCheckBox>
+                                        </span>
+                                    </div>
+
+                                </CaptionTemplate>
+                                <Template>
+                                    <DxTagBox Data="@lstkehoach"
+                                    CssClass="cw-480"
+                                    ListRenderMode=ListRenderMode.Virtual
+                                    ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto
+                                    @bind-Values="@kehoachselected">
+                                        <TagDisplayTemplate Context="contextdisplay">
+                                            @{
+                                                KeHoachSuDung donHangSelect = (KeHoachSuDung)contextdisplay.DataItem;
+                                            }
+                                            <div class="row ms-1 d-flex align-items-center border rounded-2" style="background-color: @donHangSelect.Colorhex;color:@donHangSelect.Colortext">
+                                                <div class="col">
+                                                    <span>@string.Format("Kế hoạch: {0}", donHangSelect.ID.Substring(0, 5))</span>
+                                                    <p style="font-size:10px;margin:0px;">
+                                                        <span style="margin-right:5px">@string.Format("Khu vực: {0}", showkhuvuc(donHangSelect.KhuVucKH))</span>
+                                                        <span>@string.Format(", Số lượng: {0}", StaticClass.showdouble(donHangSelect.SoLuongSP))</span>
+                                                    </p>
+                                                </div>
+                                                <div class="col">
+                                                    <DxButton Click="@contextdisplay.RemoveTagAction"
+                                                    @onclick:stopPropagation
+                                                    aria-label="Remove Tag"
+                                                    IconCssClass="bi bi-x-circle"
+                                                    RenderStyle="ButtonRenderStyle.None" RenderStyleMode="ButtonRenderStyleMode.Text">
+                                                    </DxButton>
+                                                </div>
+                                            </div>
+
+                                        </TagDisplayTemplate>
+                                        <ItemDisplayTemplate Context="contextitem">
+                                            @{
+                                                KeHoachSuDung donHangSelect = (KeHoachSuDung)contextitem.DataItem;
+                                            }
+                                            <div class="col d-flex align-items-center border rounded-2" style="background-color: @donHangSelect.Colorhex;color:@donHangSelect.Colortext">
+                                                <div class="ms-1">
+                                                    <span>@string.Format("Kế hoạch: {0}", donHangSelect.ID.Substring(0, 5))</span>
+                                                    <p style="font-size:10px;margin:0px;">
+                                                        <span style="margin-right:15px">@string.Format("Khu vực: {0}", showkhuvuc(donHangSelect.KhuVucKH))</span>
+                                                        <span>@string.Format(", Số lượng: {0}", StaticClass.showdouble(donHangSelect.SoLuongSP))</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </ItemDisplayTemplate>
+                                    </DxTagBox>
+                                </Template>
+                            </DxFormLayoutItem>
+                        </DxFormLayout>
+
+                    </div>
+                </div>
+
+            </Template>
+        </DxGridLayoutItem>
+
+        <DxGridLayoutItem Row="1">
+            <Template>
+                <DxLoadingPanel @bind-Visible="@PanelVisible"
+                IsContentBlocked="true"
+                ApplyBackgroundShading="true"
+                IndicatorAreaVisible="false"
+                Text="Đang xử lý...">
+                    <DxGrid @ref=dxGrid
+                    TextWrapEnabled="true"
+                    ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+                    CssClass="my-grid"
+                    AllowSort=false
+                    CustomizeElement="Grid_CustomizeElement"
+                    VirtualScrollingEnabled=true
+                    FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                    Data=@dtresult>
+                        <ToolbarTemplate>
+                            <DxToolbar AdaptivityAutoCollapseItemsToIcons="false" ItemRenderStyleMode="ToolbarRenderStyleMode.Plain" SizeMode="SizeMode.Small">
+                                <DxToolbarItem Text="TÌM KIẾM" IconCssClass="bi bi-menu-button-wide" RenderStyle="ButtonRenderStyle.Danger" Click="@(()=>JSRuntime.InvokeVoidAsync("toggleCollapse", string.Format("#{0}",randomdivhide)))">
+                                </DxToolbarItem>
+                                <DxToolbarItem Text="XEM" IconCssClass="bi bi-search m-1" RenderStyle="ButtonRenderStyle.Primary" Click="@searchAsync">
+                                </DxToolbarItem>
+                                <DxToolbarItem Text="LƯU" IconCssClass="bi bi-floppy m-1" RenderStyle="ButtonRenderStyle.Primary" Click="@(()=>saveAsync())">
+                                </DxToolbarItem>
+                                <DxToolbarItem Text="Xuất excel" BeginGroup="true" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=>dxGrid.ExportToXlsxAsync("ExporDinhMuc"))">
+                                </DxToolbarItem>
+                                <DxToolbarItem Text="Chọn cột" BeginGroup="true" Click="@(()=>dxGrid.ShowColumnChooser())" IconCssClass="bi bi-layout-text-window-reverse" />
+                            </DxToolbar>
+                        </ToolbarTemplate>
+                        <Columns>
+
+                            @*   <DxGridDataColumn FieldName="chk" Caption="Chọn" Width="50">
+                                <CellDisplayTemplate>
+                                    @{
+                                        DataRowView dataRowview = (DataRowView)context.DataItem;
+                                        bool value = (bool)dataRowview["chk"];
+
+                                    }
+                                    <DxCheckBox Checked="@value" CheckedChanged="@((bool e) => dataRowview["chk"] = e)"></DxCheckBox>
+                                </CellDisplayTemplate>
+                            </DxGridDataColumn> *@
+
+                            <DxGridDataColumn FieldName="MaHang" Caption="Mã hàng" Width="120" />
+                            <DxGridDataColumn FieldName="TenHang" Caption="Tên hàng" Width="240" />
+                            <DxGridDataColumn FieldName="DVT" Caption="ĐVT" Width="80" />
+                            <DxGridDataColumn FieldName="SLQuyDoi" Width="90" Caption="SL/bộ" DisplayFormat="#,0.####" />
+                            @*   <DxGridDataColumn FieldName="TongKH" Width="90" Caption="Tổng kế hoạch" DisplayFormat="#,0.####" /> *@
+
+                            @*  <DxGridDataColumn FieldName="TongConLai" Width="90" Caption="Còn lại" DisplayFormat="#,0.####" /> *@
+                            <DxGridDataColumn FieldName="SLTon" Width="90" Caption="Tồn kho" DisplayFormat="#,0.##" />
+                            @*  <DxGridDataColumn FieldName="SLDeNghi" Width="90" Caption="Đề nghị">
+                                <CellDisplayTemplate>
+                                    @{
+                                        DataRowView dataRowview = (DataRowView)context.DataItem;
+                                        double value = (dataRowview["SLDeNghi"] == DBNull.Value) ? 0 : (double)dataRowview["SLDeNghi"];
+
+                                    }
+                                    <div class="d-flex row">
+                                        <div class="col-6">
+                                            <DxSpinEdit Value="@value" ShowSpinButtons="false" AllowMouseWheel="false" ValueChanged="@((double e) => dataRowview["SLDeNghi"] = e)" />
+                                        </div>
+                                         <div class="col-6" style="align-items:end;align-content:center">
+                                            / 1234
+                                        </div>
+                                    </div>
+                                </CellDisplayTemplate>
+                            </DxGridDataColumn> *@
+
+                            @renderFragmentcolumn
+                            @*  <DxGridDataColumn FieldName="Err" Caption="Err" Width="120" /> *@
+                        </Columns>
+
+                        <GroupSummary>
+                            <DxGridSummaryItem SummaryType="GridSummaryItemType.Count" FieldName="TenDinhMuc" />
+                        </GroupSummary>
+                    </DxGrid>
+                </DxLoadingPanel>
+            </Template>
+        </DxGridLayoutItem>
+
+    </Items>
+</DxGridLayout>
+@code {
+    [Parameter]
+    public KeHoachMuaHang_Show keHoachMuaHang_Showcrr { get; set; }
+
+    [Inject] IJSRuntime JSRuntime { get; set; }
+    [Inject] BrowserService browserService { get; set; }
+
+    List<DataDropDownList> lstmamau { get; set; }
+    DinhMucVatTuShow dinhMucVatTuShowcrr { get; set; } = new DinhMucVatTuShow();
+    bool Ismobile { get; set; } = false;
+    bool checkkehoachall { get; set; } = false;
+    string heightgrid = "500px";
+    string tendinhmucold { get; set; } = "";
+    int option { get; set; } = 0;
+    List<DataDropDownList> lstnoigiaonhan { get; set; }
+    List<DataDropDownList> lstKhachHang { get; set; }
+    bool PanelVisible { get; set; } = false;
+    DxToast toastTextInput { get; set; }
+    DataTable dtresult = new DataTable();
+    bool isWait { get; set; } = false;
+    List<SanPhamDropDown> lstsanpham { get; set; }
+
+    List<SanPhamDropDown> lstsanphamfilter { get; set; }
+    IEnumerable<KeHoachSuDung> kehoachselected { get; set; }
+    List<KeHoachSuDung> kehoachselectedprev { get; set; } = new List<KeHoachSuDung>();
+
+    public DxGrid dxGrid { get; set; }
+
+    private string randomdivhide { get; set; } = string.Format("id{0}", StaticClass.Randomstring(10));
+    public string showkhuvuc(string khuvuc)
+    {
+        if (khuvuc == "KV2DH")
+            return "Lắp ráp";
+        if (khuvuc == "KV3")
+            return "Nhúng/Sơn";
+        return khuvuc;
+    }
+    private void CongDoanChecked(bool e,DataRowView row)
+    {
+        row["chk"] = e;
+        string stt=row["STT"].ToString();//Chỗ này cần giải quyết cho việc dấu tick nhưng có nhiều kế hoạch, nên thêm 1 list để quản lý công đoạn
+
+        // double SLDongBo=row.Row.Field<double>("SLDongBo");
+        // foreach(DataRow rowitem in dtresult.Rows)
+        // {
+        //     if (rowitem.Field<string>("STT").StartsWith(stt))
+        //     {
+        //         if(rowitem.Field<double>("SLQuyDoi")>0)
+        //         {
+        //             rowitem["SLTheoDoi"] = rowitem.Field<double>("SLQuyDoi")*;
+        //         }
+        //         else
+        //         {
+
+        //         }
+        //     }
+        // }
+        
+    }
+    private void ChangedCongDoan(double d)
+    {
+
+    }
+    void Grid_CustomizeElement(GridCustomizeElementEventArgs e)
+    {
+        if (e.ElementType == GridElementType.DataRow)
+        {
+
+            if (e.Grid.GetRowValue(e.VisibleIndex, "Err") != null && e.Grid.GetRowValue(e.VisibleIndex, "Err") != DBNull.Value)
+            {
+                //Console.WriteLine(e.Grid.GetRowValue(e.VisibleIndex, "Err").ToString());
+                if (!string.IsNullOrEmpty(e.Grid.GetRowValue(e.VisibleIndex, "Err").ToString()))
+                {
+                }
+            }
+            object ob = e.Grid.GetRowValue(e.VisibleIndex, "Colorhex");
+            if (ob != null && ob != DBNull.Value)
+            {
+                if (!string.IsNullOrEmpty(ob.ToString()))
+                {
+                    e.Style = string.Format("background-color: {0};font-weight: bold;", ob.ToString());
+                }
+            }
+        }
+    }
+}

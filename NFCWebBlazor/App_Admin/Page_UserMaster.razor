@@ -1,0 +1,231 @@
+﻿@using BlazorBootstrap
+@using DevExpress.Blazor;
+@using NFCWebBlazor.App_ClassDefine;
+@using System.Data
+<style>
+    .my-grid {
+        height: @heightgrid;
+    }
+
+    .dxbl-grid-empty-data > span {
+        display: none;
+    }
+
+    .marginbutton {
+        margin-bottom: 10px;
+        margin-right: 10px;
+    }
+
+    #customGrid .dxbl-grid-header-row {
+        display: none;
+    }
+</style>
+<NFCWebBlazor.App_Admin.DialogMsg @ref="@dialogMsg"></NFCWebBlazor.App_Admin.DialogMsg>
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+<DxFlyout @ref=dxFlyoutchucnang
+          PositionTarget="@idflychucnang"
+          @bind-IsOpen=IsOpenfly
+          RestrictionTarget="#Navigation-Flyout-Customization"
+          AnimationType=FlyoutAnimationType.Fade
+          PreventCloseOnPositionTargetClick="true"
+          Width="min(95vw,800px)"
+          Position=@(FlyoutPosition.BottomStart | FlyoutPosition.TopStart)>
+    <BodyTextTemplate>
+
+        <div class="container">
+            <div class="row">
+
+                <div class="col-auto d-flex flex-wrap mb-1">
+
+                    <DxButton @ref=btadd Visible=@VisibleThemMoi IconCssClass="bi bi-plus-circle" CssClass="marginbutton" RenderStyle="ButtonRenderStyle.Primary" Text="THÊM CHI TIẾT" Click=@AddItemAsync RenderStyleMode="ButtonRenderStyleMode.Outline">
+                    </DxButton>
+                    <DxButton @ref=btprint Visible=@VisiblePrint IconCssClass="mdi print" Text="IN" CssClass="marginbutton" RenderStyle="ButtonRenderStyle.Success" Click=@PrintItem RenderStyleMode="ButtonRenderStyleMode.Outline">
+                    </DxButton>
+                    <DxButton @ref=btedit Visible=@VisibleSua Text="CHỈNH SỬA" IconCssClass="bi bi-pencil" CssClass="marginbutton" RenderStyle="ButtonRenderStyle.Warning" Click="(() => EditItemAsync())" RenderStyleMode="ButtonRenderStyleMode.Outline">
+                    </DxButton>
+                    <DxButton @ref=btdelete Visible=@VisibleXoa Text="XÓA" IconCssClass="oi oi-x" CssClass="marginbutton" RenderStyle="ButtonRenderStyle.Danger" Click="@(()=>DeleteItem(usercrr))" RenderStyleMode="ButtonRenderStyleMode.Outline">
+                    </DxButton>
+                  
+                </div>
+
+            </div>
+
+
+        </div>
+    </BodyTextTemplate>
+
+</DxFlyout>
+<DxGridLayout CssClass="w-100 ch-480">
+
+    <Rows>
+     
+        <DxGridLayoutRow Height="auto" />
+        <DxGridLayoutRow />
+    </Rows>
+
+    <Items>
+
+        <DxGridLayoutItem Row="0">
+            <Template>
+                <div class="p-2 pt-0 mb-2 bg-white border rounded-bottom-2">
+                 
+                    <div>
+
+                        <DxFormLayout CssClass="w-100 mt-3">
+
+                            <DxFormLayoutItem Caption="Tên người dùng" ColSpanSm="12" ColSpanLg="4" ColSpanMd="6" CaptionPosition="CaptionPosition.Horizontal">
+                                <DxComboBox Data=@lstusers ListRenderMode="ListRenderMode.Virtual"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                            TextFieldName="@nameof(Users.TenUser)"
+                                            @bind-Value="@userselected"
+                                            CssClass="cw-480" />
+
+                            </DxFormLayoutItem>
+
+                           
+                            
+                            <DxFormLayoutItem ColSpanSm="12" ColSpanLg="4" ColSpanMd="6">
+                                <Template>
+                                    <div class="d-flex justify-content-center">
+
+                                        <DxButton RenderStyle="ButtonRenderStyle.Primary" CssClass="bi bi-search m-1"
+                                                  RenderStyleMode="ButtonRenderStyleMode.Outline" Click=@search  Text="XEM">
+                                        </DxButton>
+                                        <DxButton RenderStyle="ButtonRenderStyle.Primary" CssClass="bi bi-plus-circle m-1" style="margin-left:10px;" Click="@AddItemAsync"
+                                                  RenderStyleMode="ButtonRenderStyleMode.Outline" Text="THÊM MỚI">
+                                        </DxButton>
+                                    </div>
+
+                                </Template>
+                            </DxFormLayoutItem>
+                        </DxFormLayout>
+
+                    </div>
+
+                </div>
+
+            </Template>
+        </DxGridLayoutItem>
+
+       
+
+        <DxGridLayoutItem Row="1">
+            <Template>
+                <DxGrid @ref="Grid" Data="@lstdata" VirtualScrollingEnabled=true
+                        id="customGrid" CssClass="my-grid"
+                        FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always" AutoCollapseDetailRow="true">
+                    <Columns>
+                        <DxGridDataColumn>
+                            <CellDisplayTemplate>
+                                @{
+                                    var users = (Users)context.DataItem;
+
+                                }
+                                <div class="card" style="width: 100%;">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center">
+                                            <img src="https://scansia.ddns.net:8003/userimage/user.png" alt="User Image" class="rounded-circle me-3" style="width: 50px; height: 50px;">
+                                            <div>
+                                                <h5 class="card-title text-success mb-1">@users.TenUser</h5>
+                                                <p class="card-text text-danger mb-1">@users.UsersName</p>
+                                                <p class="card-text text-success mb-1">@users.Email</p>
+                                                <p class="card-text text-primary mb-1">@string.Format("Phòng ban/Nhà máy: {0}",users.KhuVuc)</p>
+                                                <p class="card-text mb-1">@string.Format("Nhóm quyền: {0}",users.GroupUser)</p>
+                                                <div>
+                                                    <DxButton IconCssClass="bi bi-list-task"
+                                                              RenderStyle="ButtonRenderStyle.Primary"
+                                                              RenderStyleMode="ButtonRenderStyleMode.Text"
+                                                              CssClass="shadow-none remove-padding" Id=@idelement(users.STT) Text="CHỨC NĂNG" Click=@(()=>ShowFlyout(users))></DxButton>
+                                                </div>
+                                            </div>
+                                           
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </CellDisplayTemplate>
+
+                        </DxGridDataColumn>
+                    </Columns>
+                   
+                </DxGrid>
+
+
+
+
+            </Template>
+        </DxGridLayoutItem>
+
+
+    </Items>
+</DxGridLayout>
+
+@code {
+    [Inject] BrowserService browserService { get; set; }
+   
+    RenderFragment renderFragment;
+    bool VisibleThemMoi = false, VisiblePrint = false, VisibleSua = true, VisibleXoa = true;
+    DialogMsg dialogMsg;
+    bool IsOpenfly = false;
+    DialogWindow dxPopup;
+    DxButton btadd, btdelete, btprint, btedit;
+    //bool IsOpenfly = true;
+    public string idflychucnang { get; set; }
+    public string random { get; set; }
+    List<Users> lstdata { get; set; } = new List<Users>();
+
+    DxFlyout dxFlyoutchucnang { get; set; }
+    IGrid Grid { get; set; }
+    List<Users> lstusers = new List<Users>();
+    Users? userselected{ get; set; }
+    Users? usercrr{ get; set; }
+    public string idelement(int? serial)
+    {
+        if (random == null)
+        {
+            random = prs.RandomString(9);
+        }
+        if (serial == null)
+            string.Format("flychucnang_{0}_{1}", random, "0");
+       
+        return string.Format("flychucnang_{0}_{1}", random, serial);
+    }
+    public async void ShowFlyout(Users users)
+    {
+        await dxFlyoutchucnang.CloseAsync();
+        //CurrentEmployee = employee;
+        usercrr = users;
+        idflychucnang = "#" + idelement(usercrr.STT);
+       
+        // bool showvisiblebutton = false;
+        //StateHasChanged();
+       
+        if (userGlobal.users.GroupUser.Contains("admin"))
+        {
+            VisibleSua = true;
+            VisibleXoa = true;
+            
+
+        }
+        else
+        {
+            VisibleSua = false;
+            VisibleXoa = false;
+        }
+        IsOpenfly = true;
+        await dxFlyoutchucnang.ShowAsync();
+        //dxFlyoutchucnang.PositionTarget = idflychucnang;
+        //Console.WriteLine(idflychucnang);
+        //dxFlyoutchucnang.RepositionAsync();
+
+        // IsOpenfly = true;
+        //await dxFlyoutchucnang.ShowAsync();
+
+    }
+
+}

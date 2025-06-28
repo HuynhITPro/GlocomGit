@@ -1,0 +1,127 @@
+﻿@page "/chat"
+@inject NavigationManager Navigation
+@using BlazorBootstrap
+@using Microsoft.AspNetCore.SignalR.Client
+@using NFCWebBlazor.Model
+
+
+<h3>SignalR Chat</h3>
+
+<div>
+    <input @bind="message" placeholder="Enter your message" />
+    <button @onclick="SendMessageAsync">Send Message</button>
+    <button @onclick="SendMessageAPIAsync">Send MessageAPI</button>
+    <button @onclick="SendMessageAPIAsync">Disconnect MessageAPI</button>
+</div>
+
+<ul id="messagesList">
+    @foreach (var msg in messages)
+    {
+        <li>@msg</li>
+    }
+</ul>
+
+@code {
+    [Inject] IJSRuntime JS{ get; set; }
+    [Inject] ToastService toastService { get; set; }
+    [Inject] SignalRConnect signalRConnect { get; set; }
+    private HubConnection? _hubConnection;
+    private string message = string.Empty;
+
+    private List<string> messages = new List<string>();
+   
+    string url = string.Format("{0}chathub", ModelAdmin.urlAPI); 
+    protected override async Task OnInitializedAsync()
+    {
+        // // Kết nối SignalR đến API server với URL đầy đủ
+        // _hubConnection = new HubConnectionBuilder()
+        //     .WithUrl(url).Build();
+
+        // // Lắng nghe tin nhắn từ server
+
+        // //Trả về Json
+        // _hubConnection.On<string>("ReceiveMessage", (receivedMessage) =>
+        // {
+        //     JsonMsgAndroid jsonMsgAndroid = new JsonMsgAndroid();
+        //     jsonMsgAndroid = jsonMsgAndroid.GetJson(receivedMessage);
+        //     if(jsonMsgAndroid.typemsg==TypemsgAPI.getconnectionid.ToString())
+        //     {
+        //         ModelAdmin.ConnectionID = jsonMsgAndroid.message;
+        //     }
+        //     toastService.Notify(new ToastMessage(ToastType.Success, $"Tin nhắn: {jsonMsgAndroid.message}"));
+        //     messages.Add(receivedMessage); // Lưu tin nhắn vào danh sách
+        //     StateHasChanged(); // Cập nhật giao diện
+        // });
+        // //Bắt đầu kết nối
+        // await _hubConnection.StartAsync();
+
+        // await  getConnectionID();
+
+
+    }
+    private async Task getConnectionID()
+    {
+        JsonMsgAndroid jsonMsgAndroid = new JsonMsgAndroid();
+
+        jsonMsgAndroid.typemsg = TypemsgAPI.getconnectionid.ToString();
+
+        await _hubConnection.SendAsync("SendMsgJsonHub", jsonMsgAndroid.ToJson());
+    }
+    private async Task SendMessageAsync()
+    {
+        if (!string.IsNullOrEmpty(message))
+        {
+            JsonMsgAndroid jsonMsgAndroid = new JsonMsgAndroid();
+            jsonMsgAndroid.message=message;
+            jsonMsgAndroid.topic = "SP/PRINTER/uemczp/INPHIEU";
+            jsonMsgAndroid.typemsg = TypemsgAPI.sendmsgtogroup.ToString();
+            jsonMsgAndroid.clientid=ModelAdmin.ConnectionID;
+
+            await signalRConnect.SendMsg(jsonMsgAndroid);
+            // Gửi tin nhắn đến server
+            // await _hubConnection.SendAsync("SendMsgJsonHub", jsonMsgAndroid.ToJson());
+            Console.WriteLine(message);
+            message = string.Empty; // Reset input
+        }
+        // CallAPI callAPI = new CallAPI();
+       
+        // await callAPI.ExcuteCallSignalR("", param);
+    }
+    private async Task SendMessageAPIAsync()
+    {
+        if (!string.IsNullOrEmpty(message))
+        {
+            JsonMsgAndroid jsonMsgAndroid = new JsonMsgAndroid();
+            jsonMsgAndroid.message = message;
+            jsonMsgAndroid.typemsg = TypemsgAPI.sendmsgall.ToString();
+            jsonMsgAndroid.clientid = ModelAdmin.ConnectionID;
+            CallAPI callAPI = new CallAPI();
+         
+            string json = await callAPI.SendMsgJson(jsonMsgAndroid);
+            // if (json != "")
+            // {
+            //    JsonMsgAndroid jsonMsgAndroidrecieve = new JsonMsgAndroid();
+            //     jsonMsgAndroidrecieve.GetJson(json)
+               
+
+            // }
+            // Gửi tin nhắn đến server
+            // await _hubConnection.SendAsync("SendMsgJsonHub", jsonMsgAndroid.ToJson());
+            // Console.WriteLine(message);
+            message = string.Empty; // Reset input
+        }
+        // CallAPI callAPI = new CallAPI();
+
+        // await callAPI.ExcuteCallSignalR("", param);
+    }
+
+    // Dừng kết nối khi component bị hủy
+    public async ValueTask DisposeAsync()
+    {
+        if (_hubConnection is not null)
+        {
+            await _hubConnection.StopAsync();
+            await _hubConnection.DisposeAsync();
+        }
+    }
+}

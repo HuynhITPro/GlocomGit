@@ -1,0 +1,268 @@
+﻿@using System.Collections.ObjectModel
+@using BlazorBootstrap
+@using NFCWebBlazor.App_NguyenVatLieu.App_NhapXuat
+@using static NFCWebBlazor.App_NguyenVatLieu.App_DonDatHang.Page_DonDatHang_ChuaNhap
+@using static NFCWebBlazor.App_NguyenVatLieu.App_DonDatHang.Page_DonDatHang_Master
+
+<style>
+    .griddetails {
+    max-height: @heightgrid;
+    }
+
+</style>
+
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopupInTem>
+    <BodyContentTemplate>
+        <Urc_NvlInTem nvlInTemShowcrr="@nvlInPhieuShowAdd"></Urc_NvlInTem>
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+<NFCWebBlazor.App_Admin.DialogMsg @ref="@dialogMsg"></NFCWebBlazor.App_Admin.DialogMsg>
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+
+<DxLoadingPanel @bind-Visible="@PanelVisible"
+IsContentBlocked="true"
+ApplyBackgroundShading="true"
+IndicatorAreaVisible="false"
+Text="Đang xử lý...">
+
+    <DxGrid @ref="Grid" Data="@lstdata"
+    AutoExpandAllGroupRows="true"
+    TextWrapEnabled="false"
+    CssClass="griddetails"
+    ShowAllRows=true
+    id="@idgrid"
+    ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+    FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+    VirtualScrollingEnabled=true
+    ShowFilterRow=!Ismobile>
+        <ToolbarTemplate>
+            <DxToolbar ItemRenderStyleMode="ToolbarRenderStyleMode.Plain">
+                <DxToolbarItem Text="TÌM KIẾM" IconCssClass="bi bi-menu-button-wide" RenderStyle="ButtonRenderStyle.Danger" Click="@(()=>JSRuntime.InvokeVoidAsync(CallNameJson.toggleCollapse.ToString(),string.Format("#{0}",randomdivhide)))"> </DxToolbarItem>
+                <DxToolbarItem Text="Xem" IconCssClass="bi bi-search" RenderStyle="ButtonRenderStyle.Primary" Click="@searchAsync">
+                </DxToolbarItem>
+
+
+                <DxToolbarItem Text="Xuất excel" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=>Grid.ExportToXlsxAsync("ExporDonHang"))">
+                </DxToolbarItem>
+                <DxToolbarItem Text="Chọn cột" BeginGroup="true" Click="@(()=>Grid.ShowColumnChooser())" IconCssClass="bi bi-layout-text-window-reverse" />
+
+            </DxToolbar>
+        </ToolbarTemplate>
+        <Columns>
+            <DxGridDataColumn FieldName="TenNCC" Caption="Tên NCC" GroupIndex="0" />
+            <DxGridDataColumn Width="100">
+                <CellDisplayTemplate>
+                    @{
+
+                        var keHoachMuaHang_Show = (DonHangTotalShow)context.DataItem;
+
+
+                    }
+                    <a href="#" class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"
+                    @onclick="@(()=>ShowInTemMasterAdd(keHoachMuaHang_Show))"><i class="bi bi-list-stars me-1"></i>In Tem</a>
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="MaHang" Caption="Mã hàng" Width="120" />
+            <DxGridDataColumn FieldName="TenHang" Caption="Tên hàng" Width="250" />
+            <DxGridDataColumn FieldName="DVT" Caption="ĐVT" Width="90" />
+            <DxGridDataColumn FieldName="SLTonKho" DisplayFormat="#,0.#" Caption="Tồn kho" Width="120" />
+            <DxGridBandColumn Caption="Nợ cũ chưa giao">
+                <Columns>
+                    <DxGridDataColumn FieldName="SLNoCu" DisplayFormat="#,0.#" Caption="Số lượng" Width="120" />
+                    <DxGridDataColumn FieldName="ThanhTienTonDau" DisplayFormat="#,0.#" Caption="Thành tiền" Width="120" />
+                </Columns>
+            </DxGridBandColumn>
+            <DxGridBandColumn Caption="@title">
+                <Columns>
+                    <DxGridDataColumn FieldName="SLDatHang" DisplayFormat="#,0.#" Caption="SL đã đặt" Width="120" />
+                    <DxGridDataColumn FieldName="SLDaGiao" DisplayFormat="#,0.#" Caption="SL đã giao" Width="120" />
+                    <DxGridDataColumn FieldName="SLTheoDoi" DisplayFormat="#,0.#" Caption="SL chưa giao" Width="120" />
+                </Columns>
+            </DxGridBandColumn>
+
+
+            <DxGridDataColumn FieldName="TyLe" Width="160" Caption="% Hoàn thành">
+                <CellDisplayTemplate>
+                    <NFCWebBlazor.App_ClassDefine.ProgressBarDf value=@(((DonHangTotalShow)context.DataItem).TyLe)></NFCWebBlazor.App_ClassDefine.ProgressBarDf>
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="TenNCC" Caption="Tên NCC" Width="240" />
+
+            <DxGridBandColumn Caption="Thành tiền (VNĐ)">
+                <Columns>
+                    <DxGridDataColumn FieldName="ThanhTienDatHang" DisplayFormat="#,0.#" Caption="Đã đặt" Width="120" />
+                    <DxGridDataColumn FieldName="ThanhTienTheoDoi" DisplayFormat="#,0.#" Caption="Chưa giao" Width="120" />
+                </Columns>
+            </DxGridBandColumn>
+
+
+        </Columns>
+        <DetailRowTemplate>
+            @{
+                DonHangTotalShow donHangTotalShow = (DonHangTotalShow)context.DataItem;
+            }
+            <View_DonHang_ChuaNhapItem donHangTotalShow=@donHangTotalShow></View_DonHang_ChuaNhapItem>
+        </DetailRowTemplate>
+        <TotalSummary>
+            <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+            FieldName="ThanhTienTonDau"
+            Name="ThanhTienTonDau"
+            DisplayText="{0}"
+            FooterColumnName="ThanhTienTonDau" />
+            <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+            FieldName="ThanhTienDatHang"
+            Name="ThanhTienDatHang"
+            DisplayText="{0}"
+            FooterColumnName="ThanhTienDatHang" />
+            <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+            FieldName="ThanhTienTheoDoi"
+            Name="ThanhTienTheoDoi"
+            DisplayText="{0}"
+            FooterColumnName="ThanhTienTheoDoi" />
+
+        </TotalSummary>
+    </DxGrid>
+
+</DxLoadingPanel>
+
+@code {
+    [Inject] BrowserService browserService { get; set; }
+    [Inject] ToastService toastService { get; set; }
+    [Inject] IJSRuntime JSRuntime { get; set; }
+    [Parameter]
+    public NVLDonDatHangShow nVLDonDatHangShowcrr { get; set; }
+    [Parameter]
+    public string randomdivhide { get; set; }
+    [Parameter]
+    public bool Ismobile { get; set; }
+
+    [Parameter]
+    public DieuKienTimKiem dieuKienTimKiem { get; set; }
+    DxFlyout dxFlyoutchucnang { get; set; }
+    public string idflychucnang { get; set; }
+    bool IsOpenfly { get; set; } = false;
+    public string random { get; set; }
+    string title { get; set; } = "";
+    List<DonHangTotalShow> lstdata { get; set; }
+    DialogWindow dxPopupInTem;
+    NVLDonDatHangItemShow nvlKeHoachMuaHangItemShowcrr { get; set; }
+    bool checkAddItem = true;
+    bool PanelVisible { get; set; }
+    bool VisibleKeHoachMuaHang = false;
+    IGrid? Grid { get; set; }
+    NvlInTemShow nvlInPhieuShowAdd { get; set; } = new NvlInTemShow();
+    bool PopupVisible { get; set; } = false;
+    DialogWindow? dxPopup { get; set; }
+    RenderFragment? renderFragment { get; set; }
+    DialogMsg? dialogMsg { get; set; }
+
+    string heightgrid = "500px";
+
+    string headerform = "";
+    string showfooterthanhtien = "ThanhTien";
+    string idgrid = "griddetaikehoach";
+    // void Grid_CustomizeSummaryDisplayText(GridCustomizeSummaryDisplayTextEventArgs e)
+    // {
+    //     if (e.Item.Name == "ThanhTienShow")
+    //         e.DisplayText = string.Format("{0:#,#}", e.Value);
+    //     if (e.Item.Name == "SoLuong")
+    //         e.DisplayText = string.Format("{0:#,#.###}", e.Value);
+    // }
+    private string shownguoikiem(string textkiem)
+    {
+        if (textkiem == "")
+        {
+            return "";
+        }
+        return "Kiểm bởi: " + textkiem;
+    }
+    private string shownguoiduyet(string textduyet)
+    {
+        if (textduyet == "")
+        {
+            return "Chưa duyệt";
+        }
+        return "Duyệt bởi: " + textduyet;
+    }
+    private string pathimgduyet(string textduyet)
+    {
+        if (textduyet == "")
+        {
+            return IconImg.NotCheck;
+        }
+        return IconImg.CheckMark;
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        var dimension = await browserService.GetDimensions();
+        // var heighrow = await browserService.GetHeighWithID("divcontainer");
+        int height = dimension.Height - 90;
+        heightgrid = string.Format("{0}px", height);
+        int width = dimension.Width;
+        if (width < 768)
+        {
+            Ismobile = true;
+            idgrid = "customGridnotheader";
+            showfooterthanhtien = "UserInsert";//Hiển thị tổng ở cột này
+        }
+        else
+            Ismobile = false;
+        await loadAsync();
+        // return base.OnInitializedAsync();
+    }
+    App_ClassDefine.ClassProcess prs = new ClassProcess();
+
+    public string idelement(int? serial)
+    {
+        if (serial == null)
+            string.Format("flychucnang_{0}_{1}", random, serial);
+        if (random == null)
+        {
+            random = prs.RandomString(9);
+        }
+        return string.Format("flychucnang_{0}_{1}", random, serial);
+    }
+    private async Task loadAsync()
+    {
+
+
+
+
+    }
+
+    bool expand = true;
+    private void expandall()
+    {
+        Grid.BeginUpdate();
+        Grid.AutoExpandAllGroupRows = expand;
+        Grid.EndUpdate();
+        expand = !expand;
+    }
+    private string showtextdouble(decimal? d)
+    {
+        if (d == null)
+            return "";
+        return d.Value.ToString("#,0.##");
+    }
+    private string showtextgiaduyet(decimal? d)
+    {
+        if (d == null)
+            return "Giá chưa duyệt";
+        return "Giá duyệt: " + d.Value.ToString("#,0.##");
+    }
+    public string idelement(int serial)
+    {
+        if (serial == null)
+            string.Format("flychucnang_{0}_{1}", random, serial);
+        if (random == null)
+        {
+            random = prs.RandomString(9);
+        }
+        return string.Format("flychucnang_{0}_{1}", random, serial);
+    }
+
+}

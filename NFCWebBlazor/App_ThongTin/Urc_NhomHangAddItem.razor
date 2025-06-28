@@ -1,0 +1,57 @@
+﻿@using BlazorBootstrap
+@using NFCWebBlazor.Model
+@using Newtonsoft.Json
+
+<EditForm Model=@dataDropDownList Context="formuser" onkeydown="return handleF11Submit(event)" style="max-width:600px;">
+    <DxFormLayout CssClass="w-100" @onkeydown=@Onkeydown>
+        <DxFormLayoutItem ColSpanMd="12" Caption="Mã nhóm">
+            <Template>
+                <DxTextBox @ref=txtName @bind-Text="@dataDropDownList.MaNhom" />
+                <div class="text-danger">
+                    @namecheck
+                </div>
+            </Template>
+
+        </DxFormLayoutItem>
+        <DxFormLayoutItem ColSpanMd="12" Caption="Tên nhóm">
+            <Template>
+                <DxTextBox @ref=txtFullName @bind-Text="@dataDropDownList.TenNhom" />
+                <div class="text-danger">
+                    @fullnamecheck
+                </div>
+            </Template>
+        </DxFormLayoutItem>
+        <DxFormLayoutItem ColSpanMd=12 Caption="Phân loại">
+            <Template>
+                <NFCWebBlazor.App_ClassDefine.ComboboxFilteredString
+                                                                     ListRenderMode="ListRenderMode.Virtual"
+                                                                     FilteringMode="DataGridFilteringMode.Contains"
+                                                                     ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                                                     ValueFieldName="@nameof(DataDropDownList.Name)"
+                                                                     TextFieldName="@nameof(DataDropDownList.FullName)"
+                                                                     TypeName="NVL_PhanLoai"
+                                                                     @bind-Value="@dataDropDownList.PhanLoai"
+                                                                     CssClass="cw-480" />
+                <div class="text-danger">
+                    @typenamecheck
+                </div>
+            </Template>
+
+
+        </DxFormLayoutItem>
+        <DxFormLayoutItem ColSpanMd="12" Caption="Tên nhóm">
+            <DxMemo @bind-Text=@dataDropDownList.HuongDan NullText="Nguyên tắc đặt mã"></DxMemo>
+        </DxFormLayoutItem>
+        <DxFormLayoutItem ColSpanMd="12" >
+            <Template>
+                <div class="d-flex justify-content-center mt-2">
+                    <DxButton RenderStyle="ButtonRenderStyle.Primary" IconCssClass="bi bi-floppy" Text="Lưu" Visible=@(!visibleedit) Click="@(()=>saveAsync(dataDropDownList))" />
+                    <DxButton RenderStyle="ButtonRenderStyle.Info" IconCssClass="bi bi-pencil" CssClass="ms-2" Text="Sửa" Visible=@visibleedit Click="@updateAsync" />
+                </div>
+            </Template>
+        </DxFormLayoutItem>
+    </DxFormLayout>
+</EditForm>
+@code {
+  
+}

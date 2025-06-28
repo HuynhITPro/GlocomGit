@@ -1,0 +1,103 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+  
+    <ImplicitUsings>enable</ImplicitUsings>
+    <WasmEnableSimd>false</WasmEnableSimd>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Blazor.Bootstrap" Version="3.2.0" />
+    <PackageReference Include="BlazorBarcodeScanner.ZXing.JS" Version="1.0.4" />
+    <PackageReference Include="Blazored.Modal" Version="7.2.0" />
+    <PackageReference Include="Blazored.SessionStorage" Version="2.4.0" />
+    <PackageReference Include="ClipLazor" Version="2.0.0" />
+    <PackageReference Include="ClosedXML" Version="0.104.0-preview2" />
+    <PackageReference Include="CryptoBase.BouncyCastle" Version="1.7.2" />
+    <PackageReference Include="DevExpress.Blazor" Version="24.1.6-pre-24252" />
+    <PackageReference Include="DevExpress.Blazor.Reporting.Viewer" Version="24.1.6-pre-24252" />
+    <PackageReference Include="DevExpress.Drawing.Skia" Version="24.1.6-pre-24252" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.WebAssembly" Version="2.8.2.5" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.10" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.10" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="5.0.17" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="7.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.9" />
+    <PackageReference Include="MQTTnet" Version="5.0.0.1214-RC" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="SkiaSharp.HarfBuzz" Version="2.88.8" />
+    <PackageReference Include="SkiaSharp.NativeAssets.WebAssembly" Version="2.88.8" />
+    <PackageReference Include="SkiaSharp.Views.Blazor" Version="2.88.8" />
+    <PackageReference Include="System.Net.Http.Json" Version="7.0.0" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="7.0.0" />
+
+    <NativeFileReference Include="$(HarfBuzzSharpStaticLibraryPath)\2.0.23\*.a" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="App_NguyenVatLieu\App_ThongTin\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="efpt.config.json.user" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Đánh dấu các assembly DevExpress cần lazy load -->
+   
+    
+    <BlazorWebAssemblyLazyLoad Include="DevExpress.RichEdit.v24.1.Core.wasm" />
+    <BlazorWebAssemblyLazyLoad Include="DevExpress.XtraCharts.v24.1.wasm" />
+    <BlazorWebAssemblyLazyLoad Include="DevExpress.PivotGrid.v24.1.Core.wasm" />
+    <BlazorWebAssemblyLazyLoad Include="DevExpress.Office.v24.1.Core.wasm" />
+   
+
+
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="App_NguyenVatLieu\Report\XtraRp_DeNghiCapVatTuViTri.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XtraRp_DinhMucNVLTest.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XtraRp_DinhMucNVL.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XtraRp_BienBanKiemKe.cs" />
+    <Compile Update="App_NguyenVatLieu\Report\XtraRp_BangKeTongHop.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XtraRp_DeNghiXuatKho.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XtraRp_NhapXuatItemSoLo.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XtraRp_NhapXuatItemIDTem.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\Xtra_PhieuDauMau.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\Xtra_TheKhoHoaChatTheoMaHang.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\Xtra_TheKhoTheoMaHang.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+  </ItemGroup>
+  
+  <!--<ItemGroup>
+    <Compile Update="App_NguyenVatLieu\Report\XtraRp_PhieuXuatKho_ChiTiet.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XtraRp_PhieuXuatKho_KhongGia.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XtraRp_PhieuNhapKho_KhongGia.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+  </ItemGroup>-->
+</Project>

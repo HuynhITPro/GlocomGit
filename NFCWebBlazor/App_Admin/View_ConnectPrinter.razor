@@ -1,0 +1,139 @@
+﻿@inject IJSRuntime JSRuntime
+@using BlazorBarcodeScanner.ZXing.JS
+@using BlazorBootstrap
+<style>
+    .zxing-button
+    {
+        display: inline-block;
+        font-weight: 400;
+        text-align: center;
+        vertical-align: middle;
+        user-select: none;
+        background-color: transparent;
+        border: 1px solid transparent;
+        padding: 0.2rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        border-radius: .25rem;
+        transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+    }
+
+    .btn {
+       
+    }
+
+    .zxing-button:focus, .zxing-button.focus {
+            outline: none;
+            box-shadow: 0 0 0 0.25rem rgba(38, 143, 255, 0.5);
+        }
+
+    .zxing-button.disabled, .zxing-button:disabled {
+            pointer-events: none;
+            opacity: .65;
+        }
+
+    .zxing-button-primary {
+        color: #fff;
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+
+        .zxing-button-primary:hover {
+            color: #fff;
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+
+    .zxing-button-secondary {
+        color: #fff;
+        background-color: #6c757d;
+        border-color: #6c757d;
+    }
+
+        .zxing-button-secondary:hover {
+            color: #fff;
+            background-color: #5a6268;
+            border-color: #545b62;
+        }
+
+    .dxbl-modal {
+        --dxbl-popup-margin: 0.2rem;
+    }
+</style>
+<div class="container w-100 m-0 p-0">
+    <div class="row p-1 text-center">
+        <BlazorBarcodeScanner.ZXing.JS.BarcodeReader @ref="barcodeReader"
+                                                     ShowStart="true"
+                                                     ShowReset="true"
+                                                     ShowToggleTorch="false"
+                                                     ShowVideoDeviceList="false"
+                                                     VideoWidth=@videowidth
+                                                     VideoHeight="400"
+                                                     StartCameraAutomatically=true
+                                                     OnBarcodeReceived="LocalReceivedBarcodeText" />
+    </div>
+    <div class="row d-flex">
+        <div class="col-9">
+            <DxTextBox @bind-Text="connectstring" NullText="Nhập tên máy in"></DxTextBox>
+        </div>
+       <div class="col-3">
+           <DxButton RenderStyleMode="ButtonRenderStyleMode.Outline" RenderStyle="ButtonRenderStyle.Success" Text="Kết nối" Click="@ClickConnect"></DxButton>
+       </div>
+    </div>
+    <div class="row">
+        <p>Kết quả: @ScannedResult</p>
+    </div>
+    </div>
+@code {
+    [Inject]ToastService toastService{ get; set; }
+    [Inject] BrowserService browserService { get; set; }
+    [Inject] SignalRConnect signalRConnect { get; set; }
+    [Parameter]
+    public EventCallback<string> GetBarcode { get; set; }
+    private BarcodeReader barcodeReader;
+    private int videowidth = 350;
+    string connectstring="";
+    private string ScannedResult { get; set; } = "Chưa có kết quả";
+    private void LocalReceivedBarcodeText(BarcodeReceivedEventArgs args)
+    {
+        ScannedResult = args.BarcodeText;
+        signalRConnect.PrinterID=ScannedResult;
+        barcodeReader.DisposeAsync();
+        if (GetBarcode.HasDelegate)
+        {
+            GetBarcode.InvokeAsync(ScannedResult);
+        }
+        //StateHasChanged();
+    }
+    private void ClickConnect()
+    {
+        if(string.IsNullOrEmpty(connectstring))
+        {
+            toastService.Notify(new ToastMessage(ToastType.Warning, "Vui lòng nhập tên máy in"));
+            return;
+        }
+        signalRConnect.PrinterID = connectstring;
+        barcodeReader.DisposeAsync();
+        if (GetBarcode.HasDelegate)
+        {
+            GetBarcode.InvokeAsync(connectstring);
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var dimension = await browserService.GetDimensions();
+        // var heighrow = await browserService.GetHeighWithID("divcontainer");
+      
+        int width = dimension.Width;
+        videowidth= width - 50;
+        if(Model.ModelAdmin.mainLayout!=null)
+        {
+            if(!signalRConnect.IsConnected)
+                await Model.ModelAdmin.mainLayout.ConnectSignalR();
+        }
+        //return base.OnInitializedAsync();
+    }
+     
+
+}

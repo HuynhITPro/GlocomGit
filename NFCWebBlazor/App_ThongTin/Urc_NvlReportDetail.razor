@@ -1,0 +1,81 @@
+﻿<div>
+<span>Khi gõ văn bản gồm nhiều dòng, có thể Nhấn Shift+Enter nếu muốn xuống dòng</span>
+
+<DxGrid Data="@lstdata"
+        @ref=dxGrid
+        AutoExpandAllGroupRows="true"
+        TextWrapEnabled="true"
+        CssClass="my-grid"
+        KeyFieldName="Serial"
+        ShowAllRows=true
+        EditModelSaving="OnEditModelSaving"
+        EditMode="GridEditMode.EditCell"
+        CustomizeEditModel="Grid_CustomizeEditModel"
+        SelectionMode="GridSelectionMode.Multiple"
+        AllowSelectRowByClick="true"
+        ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+        FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+        VirtualScrollingEnabled=true
+        ShowFilterRow=true>
+    <ToolbarTemplate>
+        <DxToolbar ItemRenderStyleMode="ToolbarRenderStyleMode.Plain">
+
+            <DxToolbarItem Text="Xuất file" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=>dxGrid.ExportToXlsxAsync("ExporExcel"))">
+            </DxToolbarItem>
+            <DxToolbarItem Text="Lưu" RenderStyle="ButtonRenderStyle.Success" IconCssClass="bi bi-floppy" Click="@saveAsync" />
+
+        </DxToolbar>
+    </ToolbarTemplate>
+    <Columns>
+        <DxGridDataColumn FieldName="Serial" Width="120" Caption="Serial" Visible=false ExportEnabled=true />
+        <DxGridDataColumn FieldName="NameRp" Width="120" Visible="false" DataRowEditorVisible="false" Caption="FieldName" />
+        <DxGridDataColumn FieldName="ShowNameRp" Width="300"  DataRowEditorVisible="false" Caption="Nội dung" />
+
+        <DxGridDataColumn FieldName="TextRp" Caption="Thay đổi thông tin">
+            <CellEditTemplate>
+                @{
+                    NvlReportDetailShow nvlReportDetailShow = (NvlReportDetailShow)context.EditModel;
+                }
+                <DxMemo @bind-Text=@nvlReportDetailShow.TextRp></DxMemo>
+            </CellEditTemplate>
+        </DxGridDataColumn>
+    </Columns>
+</DxGrid>
+</div>
+@code {
+
+    [Parameter]
+    public NvlReportDetailShow nvlReportDetailShowcrr { get; set; }
+    [Parameter]
+    public List<NvlReportDetailShow> lstdata { get; set; }
+    DxGrid dxGrid;
+    void Grid_CustomizeEditModel(GridCustomizeEditModelEventArgs e)
+    {
+        var dataItem = (NvlReportDetailShow)e.DataItem;
+        if (dataItem == null)
+            e.EditModel = new NvlReportDetailShow { };
+        else
+        {
+            e.EditModel = dataItem.CopyClass();
+        }
+    }
+    async Task OnEditModelSaving(GridEditModelSavingEventArgs e)
+    {
+        var editModel = (NvlReportDetailShow)e.EditModel;
+        // Assign changes from the edit model to the data item.
+        if (e.IsNew)
+        {
+            // DataRow rownew = lstdata.NewRow();
+            // lstdata.Rows.Add(rownew);
+        }
+        else
+        {
+            // Console.WriteLine(((DonHangItem)e.DataItem).SLDatHang);
+            e.CopyChangesToDataItem();
+            // Post changes to the database.
+
+        }
+
+    }
+
+}

@@ -1,0 +1,45 @@
+﻿
+<DxPopup HeaderText="@Header"
+  
+@bind-Visible="@PopupVisible"
+ShowCloseButton="true"
+         ShowFooter="true">
+         <BodyTemplate>
+        <div class="row mb-3 m-3">
+            <div class="col-auto"><img src="@Img" width="32" height="32" /></div>
+            <div class="col">@Body</div>
+        </div>
+         </BodyTemplate>
+    <FooterContentTemplate Context="Context">
+        <DxButton CssClass="popup-button my-1 ms-2" RenderStyle="ButtonRenderStyle.Primary" Text="Đóng" Click="@btclose" />
+       
+    </FooterContentTemplate>
+</DxPopup>
+
+@code {
+    bool PopupVisible { get; set; } = false;
+    string Body{ get; set; }
+    string Header{ get; set; }
+    string Img{ get; set; }
+
+    public void Show(string header,string body,string img)
+    {
+        PopupVisible = true;
+        Body = body;
+        Header = header;
+        Img = img;
+    }
+    public void Show(string body,string img)
+    {
+        PopupVisible = true;
+        Body = body;
+        Img = img;
+        Header = "Thông báo";
+        StateHasChanged();
+    }
+    private void btclose()
+    {
+        PopupVisible = false;
+        StateHasChanged();
+    }
+}

@@ -1,0 +1,640 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="_content/DevExpress.Blazor.Reporting.Viewer/css/dx-blazor-reporting-components.css">
+    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+
+    <link href="_content/DevExpress.Blazor.Themes/bootstrap-external.bs5.css" rel="stylesheet" />
+    <link href="NFCWebBlazor.styles.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <link href="css/materialicon.css" rel="stylesheet" />
+    <link href="css/app.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bs-stepper/dist/css/bs-stepper.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bs-stepper/dist/js/bs-stepper.min.js"></script>
+    <style>
+        /* Optional custom styles */
+        .scrollable-container {
+            height: 300px; /* Chiều cao cố định cho khối chứa */
+            overflow-y: auto; /* Kích hoạt thanh cuộn dọc */
+            border: 1px solid #ccc; /* Đường viền để dễ nhìn */
+            padding: 10px; /* Khoảng cách lề bên trong */
+        }
+
+        .custom-checkbox {
+            width: 40px; /* Chiều rộng */
+            height: 40px; /* Chiều cao */
+            border: 1px solid #198c19; /* Màu border */
+            border-radius: 8px;
+        }
+
+        .content {
+            height: 800px; /* Chiều cao lớn hơn chiều cao của khối chứa */
+        }
+
+        .form-floating > input:focus ~ label,
+        .form-floating > input:not(:placeholder-shown) ~ label {
+            font-size: 0.8rem; /* Kích thước font nhỏ hơn */
+            padding-top: 0.5rem; /* Điều chỉnh padding nếu cần */
+        }
+
+        .col-flex-1 {
+            flex: 1;
+        }
+
+        .col-auto {
+            flex: 0 0 auto;
+        }
+
+        .file-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .file-row img {
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+            }
+
+        .file-icon {
+            font-size: 24px;
+            color: red;
+        }
+
+        .btn-download {
+            color: green;
+        }
+
+        .btn-delete {
+            color: red;
+        }
+
+        .custom-card {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px;
+            border-radius: 50px; /* Bo tròn cả thẻ a */
+            border: 1px solid #ccc; /* Viền sát thẻ a */
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+            .custom-card img {
+                width: 24px;
+                height: 24px;
+                border-radius: 50%; /* Bo tròn hình ảnh */
+                margin-right: 10px;
+            }
+
+            .custom-card span {
+                font-size: 10px;
+                color: #333;
+            }
+
+            .custom-card:hover {
+                border-color: #007bff;
+                background-color: #f0f8ff;
+            }
+
+        .background-image {
+            display: inline-block;
+            width: 30px; /* Kích thước rộng của span */
+            height: 30px; /* Kích thước cao của span */
+
+            background-size: contain; /* Chế độ scale: hiển thị đầy đủ hình ảnh */
+            background-repeat: no-repeat; /* Không lặp lại hình nền */
+            background-position: center; /* Căn giữa hình nền */
+            color: black; /* Màu chữ */
+            text-align: center; /* Canh giữa chữ */
+            line-height: 100px; /* Canh giữa chữ theo chiều dọc */
+            border: 1px solid #ddd; /* Đường viền cho dễ nhìn */
+        }
+
+        .bs-stepper .step-trigger {
+            padding: 0px;
+        }
+
+        .bs-stepper-label {
+            margin: 0px;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-rows: auto 1fr; /* Duy trì chiều cao của hàng đầu tiên tự động và hàng thứ hai có không gian còn lại */
+            height: 100px; /* Chiều cao của div, có thể điều chỉnh theo nhu cầu */
+            padding: 10px; /* Khoảng cách bên trong của div */
+        }
+
+        .top-right {
+            justify-self: end; /* Đẩy thẻ a sát lề bên phải */
+        }
+
+        .bottom-left {
+            justify-self: start; /* Đẩy thẻ a sát lề bên trái */
+        }
+    </style>
+    <title>Auto Scroll to Bottom Example</title>
+</head>
+<body>
+
+    <div class="container">
+        <div class="row p-2 pt-0">
+            <div class="col-auto align-items-center">
+                <div class="row align-items-center">
+                    <span>asdajhsdk</span>
+                    <span class="d-flex justify-content-center">kkk</span>
+                </div>
+
+            </div>
+            <div class="col-auto">
+                <div class="row d-flex justify-content-center">
+                    <span>22222</span>
+                    <div class="col">
+                        <span>
+                            3333
+                        </span>
+                        <span>
+                            44444
+                        </span>
+                        <span>
+                            5555
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col gap-1">
+            <img src="http://123.31.41.25:8003/UserImage/vuthaihuynh.jpg" width="24" />
+            <span>Test</span>
+        </div>
+    </div>
+    <div class="row d-flex justify-content-start">
+        <div class="col-auto text-danger align-content-center">
+            <span>@hangHoaItem.ArticleNumber</span>
+        </div>
+        <div class="col-auto card p-1" style="background-color:red;">
+            <span>@hangHoaItem.TenMau</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12 col-md-6">
+                <img style="width:30px;height:30px;" class="rounded-circle shadow-4-strong" src=@keHoachMuaHang_Show.PathImgTao>
+                <span style="color:forestgreen">Tạo bởi:Vũ thái huynh</span>
+                <span style="font-size:10px;">12/09/2024 13:00</span>
+                <br />
+                <span style="color: #0074bd;margin-right:10px;">Đề nghị mua hàng số: 120</span>
+                <span>Ngày đề nghị: 18/09/2024</span>
+                <br />
+                <span>
+                    <a href="#" class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"
+                       id="@idelement(khachHangNVLShow.Serial)" @onclick="@(()=>ShowFlyout(khachHangNVLShow))"><i class="bi bi-list-stars me-1"></i>Chức năng</a>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+    <a href="#" class="custom-card mt-1">
+        <img src="http://123.31.41.25:8003/UserImage/vuthaihuynh.jpg" alt="Image" />
+        <div class="row">
+            <span>
+                Vũ Thái Huynh
+                <span style="color:gray;font-size:8px;font-style:italic">
+                    Duyệt: 5/10
+                    <img src="http://123.31.41.25:8003/UserImage/vuthaihuynh.jpg" style="width:10px;height:auto">
+                </span>
+            </span>
+            <div class="btn-group" style="height:7px;" role="group">
+                <div class="btn btn-primary p-0" style="width:80%"></div>
+                <div class="btn btn-danger p-0" style="width:20%"></div>
+            </div>
+
+        </div>
+
+    </a>
+
+
+    <br />
+    <a href="#" class="custom-card mt-1">
+        <img src="http://123.31.41.25:8003/UserImage/vuthaihuynh.jpg" alt="Image" />
+        <div class="row">
+            <span>Vũ Thái Huynh</span>
+            <div class="btn-group" style="height:7px;" role="group">
+                <div class="btn btn-primary p-0" style="width:80%"></div>
+                <div class="btn btn-danger p-0" style="width:20%"></div>
+            </div>
+        </div>
+    </a>
+    <br />
+    <div class="row">
+        <span style="color:gray;font-size:0.5rem;">Kiểm bởi:ajshas kjashd kasdj</span>
+        <span style="color:forestgreen;font-size:0.8rem">
+            <img src="http://123.31.41.25:8003/UserImage/vuthaihuynh.jpg" width="16" alt="Image" />
+            Duyệt bởi: nguyễn văn teo
+        </span>
+    </div>
+    <br style="margin-bottom:10px;" />
+    <h3>Linear stepper</h3>
+    <div id="stepper1" class="bs-stepper">
+        <div class="bs-stepper-header" role="tablist">
+            <div class="step" data-target="#test-l-1">
+                <button type="button" style="width:35px;" class="step-trigger" role="tab" id="stepper1trigger1" aria-controls="test-l-1">
+                    <div class="row justify-content-center">
+                        <span class="bs-stepper-circle">1</span>
+                        <span class="bs-stepper-label text-primary">Vũ thái huynh</span>
+                    </div>
+                </button>
+            </div>
+            <div class="bs-stepper-line"></div>
+            <div class="step" data-target="#test-l-2">
+                <button type="button" style="width: 35px;" class="step-trigger" role="tab" id="stepper1trigger2" aria-controls="test-l-2">
+                    <div class="row justify-content-center">
+                        <span class="bs-stepper-circle">2</span>
+                        <span class="bs-stepper-label">Password</span>
+                    </div>
+                </button>
+            </div>
+            <div class="bs-stepper-line"></div>
+            <div class="step" data-target="#test-l-3">
+                <button type="button" style="width: 35px;" class="step-trigger" role="tab" id="stepper1trigger3" aria-controls="test-l-3">
+                    <div class="row justify-content-center">
+                        <span class="bs-stepper-circle">3</span>
+                        <span class="bs-stepper-label">Validate</span>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="stepper1" class="bs-stepper">
+        <div class="bs-stepper-header" role="tablist">
+            <div class="step" data-target="#test-l-1">
+                <button type="button" class="step-trigger" role="tab" id="stepper1trigger1" aria-controls="test-l-1">
+                    <div class="row justify-content-center">
+                        <span class="bs-stepper-circle background-image" style="background-image: url('http://123.31.41.25:8003/UserImage/vuthaihuynh.jpg')">
+                        </span>
+                        <span class="bs-stepper-label text-primary" style="font-size:10px;">Vũ thái huynh</span>
+                    </div>
+                </button>
+            </div>
+            <div class="bs-stepper-line"></div>
+            <div class="step" data-target="#test-l-2">
+                <button disabled="true" type="button" class="step-trigger" role="tab" id="stepper1trigger2" aria-controls="test-l-2">
+                    <span class="bs-stepper-circle">2</span>
+                    <span class="bs-stepper-label">Password</span>
+                </button>
+            </div>
+            <div class="bs-stepper-line"></div>
+            <div class="step" data-target="#test-l-3">
+                <button type="button" class="step-trigger" role="tab" id="stepper1trigger3" aria-controls="test-l-3">
+                    <span class="bs-stepper-circle">3</span>
+                    <span class="bs-stepper-label">Validate</span>
+                </button>
+            </div>
+        </div>
+
+    </div>
+    <div class="row d-flex justify-content-center">
+        <div class="col-auto text-center" style="min-width:120px;">
+            <img style="width:30px;height:30px;" class="rounded-circle" src="http://123.31.41.25:8003/UserImage/vuthaihuynh.jpg">
+            <br />
+            <span style="color: forestgreen;">Vũ thái huynh</span>
+            <br />
+            <span style="font-size:7px">IT Pro</span>
+        </div>
+        <div class="col-auto">
+            <div class="row" style="height:30px;">
+                <div class="col-auto">
+                    Kiểm tra
+                </div>
+                <div class="col-auto">
+                    Duyệt
+                </div>
+            </div>
+            <div class="row">
+                <br />
+                <span style="color:red">
+                    Hạn  mức: 10,000,000 VNĐ/tháng
+                    <a class="bi bi-pencil text-warning" style="text-decoration: none;" href="javascript:void(0);"></a>
+                </span>
+
+            </div>
+            <div class="row">
+                <div class="btn-group" style="height:12px;" role="group">
+                    <div class="btn btn-danger p-0" style="width:80%;font-size:8px;">8,000,000</div>
+                    <div class="btn btn-primary p-0" style="width:20%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ms-2" style="display: flex; justify-content: space-between; width: 350px; ">
+        <span style="color: blue">Tên SP asasd</span>
+        <span style="color: red;">Số lượng</span>
+    </div>
+    <div class="rounded-2 p-1" style="background: red; display: flex; justify-content: space-between; width: 270px;">
+        <span>ArticleNumber</span>
+        <span><a href="#" class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"><i class="oi oi-x me-1"></i>XÓA</a></span>
+    </div>
+    <div class="grid-container">
+        <a href="#" class="top-right">Link Top Right</a>
+        <a href="#" class="bottom-left">Link Bottom Left</a>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <span class="bi bi-check2-circle text-primary ms-1" style="font-size:1.5rem"></span>
+        </div>
+        <div class="col" style="text-align:end">
+            <span style="color:forestgreen">7000000</span>
+            <br />
+            <span class="text-danger" style="font-size:0.6rem">20000</span>
+        </div>
+    </div>
+
+
+
+    <div style="text-align: center;">
+        <img style="width: 30px; height: 30px;" src="http://123.31.41.25:8003/UserImage/checkicon.png">
+        <span style="color: forestgreen;">
+            Vũ Thái Huynh
+        </span>
+        <br />
+        <span style="font-size:12px;font-style:italic;">IT Pro</span>
+    </div>
+    <div style="text-align:right">
+        <b style="color: forestgreen;text-align:right">
+            110,000
+        </b>
+        <br />
+        <span style="font-size:12px;font-style:italic;text-align:right;">187,000</span>
+    </div>
+    <div class="row d-flex align-items-end" style="text-align:right">
+        <span>200,000,000</span>
+        <br />
+        <a style="color:red;font-size:10px;">Giá Chưa duyệt</a>
+    </div>
+    <div>
+
+        <span style="width:250px;">
+            Cty TNHH ABC
+        </span>
+        <a href="#" class="bi bi-plus-circle link-success link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover ms-2">Tạo mới</a>
+        <a href="#" class="bi bi-link link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover ms-1">Liên kết</a>
+    </div>
+    <div class="card border-primary m-1" style="max-width: 350px;">
+        <div class="card-header">
+            <div class="row d-flex">
+                <div class="col flex-grow-1">
+                    <span>Bas điều chỉnh (bondholmen) qweqwe adadqweqwe</span>
+                </div>
+                <div class="col flex-grow-0">
+                    <input class="form-check-input custom-checkbox" type="checkbox" width="50" value="">
+                </div>
+            </div>
+        </div>
+        <div class="card-body text-primary">
+            <div class="row">
+                <div class="col-6">
+                    <span>Serial:</span>
+                    <span style="color: green; font-weight: bold">1231313</span>
+                </div>
+                <div class="col-6">
+                    <span>Số lượng:</span>
+                    <span style="color: green; font-weight: bold">120 chiếc</span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-6">
+                    <span>Ngày:</span>
+                    <span style="color:green;font-weight:bold">20/11/2024 13:20</span>
+                </div>
+                <div class="col-6">
+                    <span>User nhập:</span>
+                    <span style="color: green; font-weight: bold">vuthaihuynh</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="card border-secondary m-1" style="max-width: 350px;">
+        <div class="card-header">
+            <div class="row d-flex">
+                <div class="col flex-grow-1 gap-1">
+                    <span>Bas điều chỉnh (bondholmen) qweqwe adadqweqwe</span>
+
+                </div>
+                <div class="col flex-grow-0">
+                    <img style="width: 30px; height: 30px;" src="http://123.31.41.25:8003/UserImage/checkicon.png">
+                </div>
+            </div>
+        </div>
+        <div class="card-body text-primary">
+            <div class="row">
+                <div class="col-6">
+                    <span>Serial:</span>
+                    <span style="color: green; font-weight: bold">1231313</span>
+                </div>
+                <div class="col-6">
+                    <span>Số lượng:</span>
+                    <span style="color: green; font-weight: bold">120 chiếc</span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-6">
+                    <span>Đơn giá:</span>
+                    <span style="color:green;font-weight:bold">1000000</span>
+                </div>
+                <div class="col-6">
+                    <span>Thành tiền:</span>
+                    <span style="color: green; font-weight: bold">2000000</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="shadow-sm p-3 mb-5 bg-body-tertiary rounded">
+        <div class="row">
+            <span style="font-size:1.5rem;font-weight:bold;color:forestgreen">Bas điều chỉnh (bondholmen) qweqwe adadqweqwe</span>
+        </div>
+        <div class="row">
+            <div class="col-6">
+                <span>Lý do:</span>
+                <span style="color: green; font-weight: bold">Sửa chữa</span>
+            </div>
+            <div class="col-6">
+                <span>Kho:</span>
+                <span style="color: green; font-weight: bold">Kho phụ kiện</span>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-6">
+                <span>Số lượng:</span>
+                <span style="color:green;font-weight:bold">1000000</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="shadow-sm p-3 bg-body-tertiary rounded">
+        <div class="row d-flex">
+            <div class="col flex-grow-1">
+                <span style="font-size:1.1rem;font-weight:bold;color:forestgreen">1. Tên hàng jasdhakjs djhajhd jdhkjakjas kd khhdkjhdkjdh jhdskas d daj ajhdakj hjkd kdhakjdh ahjkhjkh akjdhakjhddddddddddkjahsj dhkjhdhakjdhda  akjdhskj a</span>
+            </div>
+            <div class="col flex-grow-0">
+                <div class="row">
+                    <span style="color:gray;font-size:0.5rem;">vuhaihuynhkiem</span>
+                    <span style="color:forestgreen;font-size:0.6rem;min-width:140px;">
+                        <img src="@pathimgduyet(nvlKeHoachMuaHangItem.TextDuyet)" width="12" alt="Image" />
+                        dinh diem thuy duyet
+                    </span>
+                </div>
+            </div>
+
+        </div>
+        <div class="row">
+            <div class="col-6">
+                <span>Số lượng:</span>
+                <span style="font-weight: bold">1231313</span>
+            </div>
+            <div class="col-6">
+                <span>Đơn giá:</span>
+                <span style=" font-weight: bold">12123</span>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-6">
+                <span>Thành tiền:</span>
+                <span style="font-weight: bold">131313</span>
+            </div>
+            <div class="col-6">
+                <span>Ghi chú:</span>
+                <span style=" font-weight: bold">UserInsert</span>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-4">
+            </div>
+            <div class="col-4">
+            </div>
+            <div class="col-4">
+            </div>
+            <div class="col-4">
+            </div>
+        </div>
+
+    </div>
+
+    <div class="shadow-sm p-3 bg-body-tertiary rounded">
+        <div class="row d-flex">
+            <div class="col flex-grow-1">
+                <span style="font-size: 1.1rem; font-weight: bold; color: #0074bd">1. Tên hàng jasdhakjs djhajhd jdhkjakjas kd</span>
+            </div>
+            <div class="col flex-grow-0">
+                <span style="color: forestgreen; font-size: 1.1rem;white-space: nowrap;">5000 cái</span>
+            </div>
+
+        </div>
+    </div>
+    <div class="input-group">
+        <input type="text" class="form-control">
+        <button class="btn btn-primary">
+            =
+        </button>
+    </div>
+    <div class="input-group">
+        <input type="text" class="form-control" placeholder="Nhập nội dung...">
+        <button class="btn btn-primary" @onclick="OnSearchClick">
+            <i class="bi bi-search"></i>
+        </button>
+    </div>
+    <div class="row d-flex text-center gap-1">
+        <div class="col">
+            <button class="btn btn-primary" @onclick="OnSearchClick">
+                <i class="bi bi-search">asdasd</i>
+            </button>
+        </div>
+        <div class="col">
+            <button class="btn btn-primary" @onclick="OnSearchClick">
+                <i class="bi bi-search">asdasd</i>
+            </button>
+        </div>
+    </div>
+
+    <a href="#" class="custom-card mt-1" style="background-color:red;">
+        <span style="color:white">
+            000681; SL:200
+        </span>
+    </a>
+    <div class="d-flex"> <a href="#" data-bs-toggle="tooltip" data-bs-placement="top" style="width:110px" title="heo lô!">Nhập kho:</a><span style="color:orangered;text-align:right;width:120px;">asdadad</span></div>
+    <button data-bs-toggle="tooltip" data-bs-placement="right" title="Tooltip on the right!">
+        Hover me
+    </button>
+
+    <div style="position: relative; width: 300px; height: 300px; display: flex; justify-content: center; align-items: center">
+        <div style="position: absolute; width: 180px; height:180px; display: flex; justify-content: center; align-items: center;">
+            <button>AAAAAA</button>
+        </div>
+        <div style="position: absolute;  width: 150px; height: 150px; display: none; justify-content: center; align-items: center;">Div 2</div>
+    </div>
+
+    <div style="position: relative; display: flex;width:100vw;height:400px; justify-content: center; background-color: yellow; align-items: center; background-color: green ">
+        <div style="position: absolute;display: flex;background-color:green">
+            aaaaaasdadadadadadasdasdasd a as da
+        </div>
+        <div style="position: absolute; display: flex; width: 300px; height: 100px; background-color: black; background-color: rgba(0, 0, 0, 0.3); justify-content: center; align-items: center; ">
+            <div>bbbbb435345354</div>
+        </div>
+    </div>
+    <div style="display: flex; flex-direction: column;">
+        <div style="background-color: lightblue;">Dòng 1</div>
+        <div style="background-color: lightgreen;">Dòng 2</div>
+        <div style="background-color: lightcoral;">Dòng 3</div>
+    </div>
+</body>
+
+
+</html>
+
+
+<!-- Bootstrap JS và jQuery (nếu cần) -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+
+
+<!-- JavaScript để tự động cuộn xuống cuối trang -->
+<script>
+    // Hàm cuộn xuống cuối trang
+    function scrollToBottom() {
+        var scrollableContainer = document.getElementById('scrollableContainer');
+        scrollableContainer.scrollTop = scrollableContainer.scrollHeight;
+    }
+
+    // Gọi hàm cuộn xuống khi trang tải hoàn tất
+    $(document).ready(function () {
+        scrollToBottom();
+    });
+    window.initializeTooltips = () => {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    };
+</script>
+
+</body>
+</html>

@@ -1,0 +1,317 @@
+﻿@page "/khotptk"
+@using BlazorBootstrap
+@using DevExpress.Blazor;
+@using NFCWebBlazor.App_ClassDefine;
+@using System.Data
+<style>
+    .my-grid {
+        height: @heightgrid;
+    }
+
+    .highRed {
+        color: red;
+        font-weight: bold
+    }
+
+    .highGreen {
+        color: Green;
+        font-weight: bold
+    }
+
+</style>
+<DxGridLayout CssClass="w-100 ch-480">
+
+    <Rows>
+        <DxGridLayoutRow Height="Auto" />
+        <DxGridLayoutRow Height="Auto" />
+        <DxGridLayoutRow />
+    </Rows>
+
+    <Items>
+
+        <DxGridLayoutItem Row="0">
+            <Template>
+                <div class="shadow-sm p-3 mb-2 bg-white border rounded-bottom-2">
+                    <DxTextBox NullText="Tìm kiếm chi tiết" onclick="@Showdivsearch">
+                        <Buttons>
+                            <DxEditorButton Position=EditorButtonPosition.Left IconCssClass="bi bi-search" Click="@Showdivsearch" />
+                        </Buttons>
+                    </DxTextBox>
+
+                    <div class="@divClass">
+
+                        <DxFormLayout CssClass="w-100 mt-3">
+
+                            <DxFormLayoutItem Caption="Khách hàng" ColSpanLg="4" ColSpanMd="6">
+                                <DxComboBox Data=@lstkhachhang ListRenderMode="ListRenderMode.Virtual"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                            TextFieldName="@nameof(NvlKhachHang.TenKh)"
+                                            @bind-Value="@khachhangselected"
+                                            CssClass="cw-480" />
+
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem Caption="Sản phẩm" ColSpanLg="4" ColSpanMd="6">
+
+                                <DxComboBox Data=@lstsanpham ListRenderMode="ListRenderMode.Virtual"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                            TextFieldName="@nameof(SanPhamDropDown.TenSP)"
+                                            @bind-Value="@sanphamselected"
+                                            CssClass="cw-480" />
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem Caption="Loại báo cáo" ColSpanLg="4" ColSpanMd="6">
+                                <ComboboxFilteredTable @ref=txtloaibaocao ListRenderMode="ListRenderMode.Virtual"
+                                                       FilteringMode="DataGridFilteringMode.Contains"
+                                                       TypeName="KhoTP_RpTonKho"
+                                                       ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                                       TextFieldName="@nameof(DataDropDownList.FullName)"
+                                                       @bind-Value="@baocaoselected"
+                                                       CssClass="cw-480" />
+
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem Caption="Từ ngày" ColSpanLg="4" ColSpanMd="6">
+
+                                <DxDateEdit @bind-Date="@dtpbegin" Mask="@DateTimeMask.ShortDate" DisplayFormat="dd-MM-yy" />
+
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem Caption="Đến" ColSpanLg="4" ColSpanMd="6">
+
+                                <DxDateEdit @bind-Date="@dtpend" Mask="@DateTimeMask.ShortDate" DisplayFormat="dd-MM-yy" />
+
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem ColSpanMd="12">
+                                <Template>
+                                    <div class="d-flex justify-content-center m-2">
+
+                                        <DxButton RenderStyle="ButtonRenderStyle.Primary" CssClass="bi bi-search m-1" Click=@search
+                                                  RenderStyleMode="ButtonRenderStyleMode.Outline" Text="XEM">
+
+
+                                        </DxButton>
+
+                                    </div>
+
+                                </Template>
+                            </DxFormLayoutItem>
+                        </DxFormLayout>
+
+                    </div>
+                </div>
+
+            </Template>
+        </DxGridLayoutItem>
+        <DxGridLayoutItem Row="1">
+            <Template>
+                @if (lstthanhtien.Count > 0)
+                {
+
+                    <div class="container mb-3">
+                        <div class="row d-flex justify-content-center">
+
+                            @foreach (ThanhTienNhaMay ttnm in lstthanhtien)
+                            {
+                                <div class="col-auto">
+                                    <div class="card text-center mt-2 border border-primary">
+                                        <div class="card-header text-bg-primary">
+                                            <i class="bi bi-house-door" style="margin-right:10px"></i>
+                                            @ttnm.NhaMay.ToUpper()
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="card-text" style="color:forestgreen;font-size:22px;font-weight:bold;">@ttnm.ThanhTien.ToString("#,#") USD</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
+                        </div>
+                    </div>
+                }
+            </Template>
+        </DxGridLayoutItem>
+        <DxGridLayoutItem Row="2">
+            <Template>
+                <DxGrid @ref=dxGrid
+                        CssClass="my-grid"
+                        ShowFilterRow="true"
+                        CustomizeElement="OnCustomizeElement"
+                        ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+                        PageSize="20"
+                        AllowSelectRowByClick="true"
+                        EditMode="GridEditMode.PopupEditForm"
+                        PopupEditFormHeaderText="Chỉnh sửa"
+                        PagerNavigationMode="PagerNavigationMode.InputBox"
+                        PageSizeSelectorVisible="true"
+                        PageSizeSelectorAllRowsItemVisible="true"
+                        PageSizeSelectorItems="@(new int[] { 20,30,50 })"
+                        EditFormButtonsVisible="false"
+                        VirtualScrollingEnabled="true"
+                        FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                        Data=@dtresultfinal
+                        AutoExpandAllGroupRows="true">
+                    <Columns>
+                        @if (visiblechart)
+                        {
+                            <DxGridDataColumn Width="260" Visible=@visiblechart>
+                                <HeaderCaptionTemplate>
+                                    <div class="container">
+                                        <div class="row mb-1">
+                                            <div style="width:250px">
+                                                <div class="progress" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="height:10px;">
+                                                    <div class="progress-bar" style="width: 100%;font-size:9px;">@titlechart</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div style="width: 250px">
+                                                <div class="progress-stacked" style="height:10px;">
+                                                    <div class="progress" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width:50%;height: 10px;">
+                                                        <div class="progress-bar bg-success" style="font-size:9px;">
+                                                            Tồn kho
+                                                        </div>
+                                                    </div>
+                                                    <div class="progress" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width:50%;height: 10px;">
+                                                        <div class="progress-bar bg-danger" style="font-size:9px;">Phải làm</div>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </HeaderCaptionTemplate>
+                                <CellDisplayTemplate>
+                                    @{
+                                        DataRowView? datarow;
+                                        if (visiblechart)
+                                            datarow = (DataRowView)context.DataItem;
+                                        else
+                                            datarow = null;
+
+                                    }
+                                    <div class="container">
+                                        <div class="row mb-1">
+                                            <div style=@($"width: {((datarow==null)?0:datarow["wTotal"].ToString())}px")>
+                                                <div class="progress" role="progressbar" aria-valuenow=@((datarow ==null) ? "" : datarow["wPhaiXuat"].ToString()) aria-valuemin="0" aria-valuemax="100" style=@($"width: {datarow["wPhaiXuat"].ToString()}%;height: 10px;")>
+                                                    <div class="progress-bar" style="width: 100%;font-size:9px;"> @((datarow == null) ? "" : datarow["PhaiXuat"].ToString())</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div style=@($"width: {((datarow==null)?0:datarow["wTotal"].ToString())}px")>
+                                                <div class="progress-stacked" style="height:10px;">
+                                                    <div class="progress" role="progressbar" aria-valuenow=@($"{datarow["wSLTon"]}") aria-valuemin="0" aria-valuemax="100" style=@($"width: {datarow["wSLTon"].ToString()}%;height: 10px;")>
+                                                        <div class="progress-bar bg-success" style="font-size:9px;">
+                                                            @((datarow == null) ? "" : datarow["SLTon"].ToString())
+                                                        </div>
+                                                    </div>
+                                                    <div class="progress" role="progressbar" aria-valuenow=@($"{datarow["wPhaiNhap"]}") aria-valuemin="0" aria-valuemax="100" style=@($"width: {datarow["wPhaiNhap"].ToString()}%;height: 10px;")>
+                                                        <div class="progress-bar bg-danger" style="font-size:9px;">@((datarow == null) ? "" : datarow["PhaiNhap"].ToString())</div>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </CellDisplayTemplate>
+                            </DxGridDataColumn>
+                        }
+                        @buildrender()
+                        
+                    </Columns>
+                    <ToolbarTemplate>
+                        <DxToolbar>
+                            <DxToolbarItem Text="Xuất file Excel" Click="ExportXlsx_Click" />
+
+                        </DxToolbar>
+                    </ToolbarTemplate>
+
+
+                </DxGrid>
+            </Template>
+        </DxGridLayoutItem>
+
+    </Items>
+</DxGridLayout>
+@code {
+    [Inject] PreloadService PreloadService { get; set; }
+    [Inject] IJSRuntime JS { get; set; }
+    string heightgrid = "500px";
+    string divClass = "expandable-content";
+    bool visiblechart = false;
+    public int widthtotal = 250;
+    string titlechart = "Đơn hàng chưa xuất";
+    List<NvlKhachHang> lstkhachhang { get; set; }
+    List<DataDropDownList> lstloaibaocao { get; set; }
+    ComboboxFilteredTable txtloaibaocao { get; set; }
+    List<SanPhamDropDown> lstsanpham { get; set; }
+    NvlKhachHang khachhangselected { get; set; }
+    SanPhamDropDown sanphamselected { get; set; }
+    DataDropDownList baocaoselected { get; set; }
+    DateTime? dtpbegin { get; set; } = DateTime.Now;
+    DateTime? dtpend { get; set; } = DateTime.Now;
+    public DxGrid dxGrid { get; set; }
+    DxContextMenu ContextMenu { get; set; }
+    DataTable dtresultfinal = new DataTable();
+
+
+    List<InitDxGridDataColumn> lstcolumn = new List<InitDxGridDataColumn>();
+    async Task ExportXlsx_Click()
+    {
+        await dxGrid.ExportToXlsxAsync("ExportResult");
+    }
+    async Task ExportCsv_Click()
+    {
+        await dxGrid.ExportToCsvAsync("ExportResult");
+    }
+    void OnCustomizeElement(GridCustomizeElementEventArgs e)
+    {
+        if (e.ElementType == GridElementType.DataCell)
+        {
+            var dataColumn = (IGridDataColumn)e.Column;
+            switch (dataColumn.FieldName)
+            {
+                case "SLTon":
+                    e.CssClass = "highGreen";
+                    break;
+                case "SuaChua":
+                    e.CssClass = "highRed";
+                    break;
+                case "TenMau":
+                    var colorhex = e.Grid.GetRowValue(e.VisibleIndex, "Colorhex");
+                    if (colorhex != null)
+                    {
+                        e.Style = string.Format("background-color:{0}", colorhex.ToString());
+                    }
+
+                    break;
+
+            }
+        }
+    }
+    private bool isExpanded = false;
+
+    // Hàm xử lý sự kiện click của nút
+    private void hidedivsearch()
+    {
+        isExpanded = false;
+        divClass = "expandable-content";
+    }
+    private void Showdivsearch()
+    {
+        isExpanded = !isExpanded;
+
+        if (isExpanded)
+        {
+
+            divClass = "expandable-content show";
+        }
+        else
+        {
+
+            divClass = "expandable-content";
+        }
+    }
+
+}

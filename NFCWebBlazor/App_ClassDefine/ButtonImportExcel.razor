@@ -1,0 +1,100 @@
+﻿@using BlazorBootstrap
+@using ClosedXML.Excel
+@using System.IO
+@using System.Buffers
+@using System.Data
+<DxGridLayout CssClass="w-100 ch-480">
+
+    <Rows>
+        <DxGridLayoutRow Height="Auto" />
+        <DxGridLayoutRow Height="Auto" />
+        <DxGridLayoutRow />
+    </Rows>
+
+    <Items>
+
+        <DxGridLayoutItem Row="0">
+            <Template>
+               
+                <div class="input-group mb-3">
+                    <InputFile @key="InputFileId" class="form-control" id="inputFile" OnChange="OnInputFileChange" aria-describedby="uploadButton" required />
+                 @*    <button class="btn btn-primary" type="submit" id="uploadButton" disabled="@IsUploadDisabled">
+                        <span class="oi oi-cloud-upload" aria-hidden="true"></span> Upload Selected File
+                    </button> *@
+                </div>
+              
+
+            
+            </Template>
+        </DxGridLayoutItem>
+        <DxGridLayoutItem Row="1">
+            <Template>
+                <div class="row">
+                    <label style="font-size:20px;color:forestgreen">@textxuly</label>
+                </div>
+               
+            </Template>
+        </DxGridLayoutItem>
+
+
+    </Items>
+</DxGridLayout>
+@code {
+    [Parameter]
+    public  string[] arrcolumncheck{ get; set; }
+    [Parameter]
+    public EventCallback<DataTable> getdatatble { get; set; }
+    private const long MaxFileSize = 10 * 1024L * 1024L; // gioi han 10MB thoi
+    private static readonly string[] AllowedExtensions = { ".xlsx" };
+
+    // Properties for UI state management
+
+ 
+    private IBrowserFile? SelectedFile { get; set; }
+    private bool IsUploadDisabled { get; set; } = true;
+    private Guid InputFileId { get; set; } = Guid.NewGuid();
+    
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+       
+    }
+    private void OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        SelectedFile = e.GetMultipleFiles().FirstOrDefault();
+
+        IsUploadDisabled = true;
+
+        // Validate selected file
+        if (SelectedFile is null)
+        {
+            ToastService.Notify(new ToastMessage(ToastType.Danger, $"Chưa có file "));
+            
+            return;
+        }
+
+        if (SelectedFile.Size > MaxFileSize)
+        {
+            ToastService.Notify(new ToastMessage(ToastType.Danger,  $"File vượt quá giới hạn cho phép là  <strong>{MaxFileSize / (1024 * 1024)} MB"));
+            
+            return;
+        }
+
+        string fileExtension = Path.GetExtension(SelectedFile.Name).ToLowerInvariant();
+        if (!AllowedExtensions.Contains(fileExtension))
+        {
+            ToastService.Notify(new ToastMessage(ToastType.Danger, $"Lỗi định dạng, file chỉ chấp nhận định dạng <strong>{string.Join(", ", AllowedExtensions)}</strong>."));
+           
+            return;
+        }
+        getdataimport(e);
+        //SetAlert("alert alert-info", "oi oi-info", $"<strong>{SelectedFile.Name}</strong> ({SelectedFile.Size} bytes) file selected.");
+        IsUploadDisabled = false;
+    }
+   
+
+    // private void SetAlert(string alertClass, string iconClass, string message)
+    // {
+    //     AlertClass = alertClass;
+    //     AlertMessage = new MarkupString($"<span class='{iconClass}' aria-hidden='true'></span> {message}");
+    // }
+}

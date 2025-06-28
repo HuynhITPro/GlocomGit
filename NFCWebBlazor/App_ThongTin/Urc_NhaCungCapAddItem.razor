@@ -1,0 +1,247 @@
+﻿@using DevExpress.Blazor;
+@using NFCWebBlazor.App_ClassDefine
+@using NFCWebBlazor.Model
+@using static NFCWebBlazor.App_ThongTin.Page_NhaCungCapMaster
+
+<EditForm EditContext="@editContext" Context="formuser" onkeydown="return handleEnterSubmit(event)">
+    <DataAnnotationsValidator />
+    <DxFormLayout @onkeydown=Onkeydown>
+        <DxFormLayoutItem Caption="Mã số thuế" ColSpanXs="6" ColSpanSm="6" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+            <DxTextBox @bind-Text="@khachHangNVLShow.MaSoThue" onblur="@(()=>getMaSoThue(khachHangNVLShow))"></DxTextBox>
+            <div class="text-danger">
+
+                <ValidationMessage For="@(() => @khachHangNVLShow.MaSoThue)" />
+            </div>
+        </DxFormLayoutItem>
+        <DxFormLayoutItem ColSpanXs="6" ColSpanSm="6" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+            <CaptionTemplate>
+                Nhóm nhà cung cấp <span class="text-danger">*</span>
+            </CaptionTemplate>
+            <Template>
+                <ComboboxFilteredString TextFieldName="@nameof(DataDropDownList.FullName)"
+                ValueFieldName="@nameof(DataDropDownList.Name)"
+                CssClass="cw-480"
+                SearchFilterCondition="ListSearchFilterCondition.Contains"
+                ListRenderMode=ListRenderMode.Virtual
+                SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                SearchMode="ListSearchMode.AutoSearch"
+                ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto
+                TypeName="NvlNhomNCC"
+                @bind-Value=@khachHangNVLShow.NhomNCC />
+                <div class="text-danger">
+                    <ValidationMessage For="@(() => @khachHangNVLShow.NhomNCC)" />
+                </div>
+            </Template>
+        </DxFormLayoutItem>
+        <DxFormLayoutItem ColSpanXs="6" ColSpanSm="6" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+            <CaptionTemplate>
+                Mã nhà cung cấp/Nơi giao <span class="text-danger">*</span>
+            </CaptionTemplate>
+            <Template>
+                <DxTextBox @ref=txtMaKH @bind-Text="@khachHangNVLShow.MaNCC" Enabled="@(!visibleedit)" />
+                <div class="text-danger">
+
+                    <ValidationMessage For="@(() => @khachHangNVLShow.MaNCC)" />
+                </div>
+            </Template>
+        </DxFormLayoutItem>
+
+        <DxFormLayoutItem ColSpanXs="6" ColSpanSm="6" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+            <CaptionTemplate>
+                Tên nhà cung cấp/Nơi giao<span class="text-danger">*</span>
+            </CaptionTemplate>
+            <Template>
+                <DxTextBox @bind-Text="@khachHangNVLShow.TenNCC" />
+                <div class="text-danger">
+                    <ValidationMessage For="@(() => @khachHangNVLShow.TenNCC)" />
+                </div>
+            </Template>
+        </DxFormLayoutItem>
+
+        <DxFormLayoutItem ColSpanXs="6" ColSpanSm="6" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+            <CaptionTemplate>
+                Quốc gia <span class="text-danger">*</span>
+            </CaptionTemplate>
+            <Template>
+                <ComboboxFilteredString @ref=txtquocgia
+                TextFieldName="@nameof(DataDropDownList.FullName)"
+                ValueFieldName="@nameof(DataDropDownList.Name)"
+                CssClass="cw-480"
+                SearchFilterCondition="ListSearchFilterCondition.Contains"
+                ListRenderMode=ListRenderMode.Virtual
+                SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                SearchMode="ListSearchMode.AutoSearch"
+                ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto
+                TypeName="QuocGia"
+                @bind-Value=@khachHangNVLShow.QuocGia />
+                <div class="text-danger">
+
+                    <ValidationMessage For="@(() => @khachHangNVLShow.QuocGia)" />
+                </div>
+            </Template>
+
+        </DxFormLayoutItem>
+        <DxFormLayoutItem ColSpanXs="6" ColSpanSm="6" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+            <CaptionTemplate>
+                Tỉnh thành <span class="text-danger">*</span>
+            </CaptionTemplate>
+            <Template>
+                <ComboboxFilteredString @ref=txttinhthanh
+                TextFieldName="@nameof(DataDropDownList.FullName)"
+                ValueFieldName="@nameof(DataDropDownList.Name)"
+                CssClass="cw-480"
+                SearchFilterCondition="ListSearchFilterCondition.Contains"
+                ListRenderMode=ListRenderMode.Virtual
+                SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                SearchMode="ListSearchMode.AutoSearch"
+                ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto
+                TypeName="TinhThanh"
+                @bind-Value=@khachHangNVLShow.TinhThanh />
+                <div class="text-danger">
+                    <ValidationMessage For="@(() => @khachHangNVLShow.TinhThanh)" />
+                </div>
+            </Template>
+
+        </DxFormLayoutItem>
+
+        <DxFormLayoutItem Caption="Địa chỉ" ColSpanXs="12" ColSpanSm="6" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+
+            <Template>
+                <DxTextBox @bind-Text="@khachHangNVLShow.DiaChi" />
+            </Template>
+        </DxFormLayoutItem>
+
+
+        <DxFormLayoutItem Caption="Ngân hàng" ColSpanXs="6" ColSpanSm="6" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+            <DxTextBox @bind-Text="@khachHangNVLShow.MaNganHang"></DxTextBox>
+        </DxFormLayoutItem>
+
+
+        <DxFormLayoutItem Caption="Số tài khoản" ColSpanXs="6" ColSpanSm="6" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+            <DxTextBox @bind-Text="@khachHangNVLShow.SoTK"></DxTextBox>
+
+        </DxFormLayoutItem>
+        <DxFormLayoutItem Caption="Tên tài khoản" ColSpanXs="6" ColSpanSm="6" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+            <DxTextBox @bind-Text="@khachHangNVLShow.TenTK"></DxTextBox>
+
+        </DxFormLayoutItem>
+        <DxFormLayoutItem Caption="Đại diện pháp luật" ColSpanXs="6" ColSpanSm="6" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+            <DxTextBox @bind-Text="@khachHangNVLShow.DaiDienPL"></DxTextBox>
+        </DxFormLayoutItem>
+
+        <DxFormLayoutItem Caption="Tình trạng thuế" ColSpanXs="6" ColSpanSm="6" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+            <ComboboxFilteredString @ref=txttinhtrangthue
+            TextFieldName="@nameof(DataDropDownList.FullName)"
+            ValueFieldName="@nameof(DataDropDownList.Name)"
+            CssClass="cw-480"
+            SearchFilterCondition="ListSearchFilterCondition.Contains"
+            ListRenderMode=ListRenderMode.Virtual
+            SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+            SearchMode="ListSearchMode.AutoSearch"
+            ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto
+            @bind-Value=@khachHangNVLShow.TinhTrangThue
+            TypeName="TinhTrangThue" />
+
+
+        </DxFormLayoutItem>
+
+        <DxFormLayoutItem Caption="Mặt hàng chủ yếu" ColSpanXs="6" ColSpanSm="6" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+            <DxTextBox @bind-Text="@khachHangNVLShow.LoaiHinhKinhDoanh"></DxTextBox>
+
+        </DxFormLayoutItem>
+
+        <DxFormLayoutItem Caption="Nhóm chi phí" ColSpanXs="6" ColSpanSm="6" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+            <DxTextBox @bind-Text="@khachHangNVLShow.NhomMatHang"></DxTextBox>
+        </DxFormLayoutItem>
+
+        <DxFormLayoutItem ColSpanXs="6" ColSpanSm="6" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+            <CaptionTemplate>
+                Mã chứng chỉ
+            </CaptionTemplate>
+            <Template>
+                <DxTextBox @bind-Text="@khachHangNVLShow.MaChungChi" />
+
+            </Template>
+        </DxFormLayoutItem>
+
+        <DxFormLayoutItem Caption="Số điện thoại" ColSpanXs="6" ColSpanSm="6" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+            <DxTextBox @bind-Text="@khachHangNVLShow.DienThoaiBan"></DxTextBox>
+        </DxFormLayoutItem>
+
+        <DxFormLayoutItem Caption="Điện thoại cầm tay" ColSpanXs="6" ColSpanSm="6" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+            <DxTextBox @bind-Text="@khachHangNVLShow.DiDong"></DxTextBox>
+        </DxFormLayoutItem>
+
+        <DxFormLayoutItem Caption="SwiftCode" ColSpanXs="6" ColSpanSm="6" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+            <DxTextBox @bind-Text="@khachHangNVLShow.SwiftCode"></DxTextBox>
+        </DxFormLayoutItem>
+
+        <DxFormLayoutItem Caption="Website" ColSpanXs="6" ColSpanSm="6" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+            <DxTextBox @bind-Text="@khachHangNVLShow.Website"></DxTextBox>
+        </DxFormLayoutItem>
+
+        <DxFormLayoutItem Caption="Email" ColSpanXs="6" ColSpanSm="6" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+            <DxTextBox @bind-Text="@khachHangNVLShow.Email"></DxTextBox>
+        </DxFormLayoutItem>
+
+        <DxFormLayoutItem Caption="Ghi chú" ColSpanXs="6" ColSpanSm="6" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+            <DxTextBox @bind-Text="@khachHangNVLShow.GhiChu"></DxTextBox>
+        </DxFormLayoutItem>
+
+        <DxFormLayoutItem ColSpanMd="12">
+            <Template>
+                <div class="d-flex justify-content-center mt-2 gap-2">
+                    <DxButton RenderStyle="ButtonRenderStyle.Primary" IconCssClass="bi bi-floppy" Text="Lưu (nhấn F11)" Visible=@(!visibleedit) Click="@saveAsync" />
+                    <DxButton RenderStyle="ButtonRenderStyle.Success" IconCssClass="bi bi-file-earmark m-1" Text="Làm lại" Visible=@(!visibleedit) Click="@reset" />
+                    <DxButton RenderStyle="ButtonRenderStyle.Info" IconCssClass="bi bi-pencil" CssClass="ms-2" Text="Sửa" Visible=@visibleedit Click="@updateAsync" />
+                </div>
+            </Template>
+        </DxFormLayoutItem>
+    </DxFormLayout>
+</EditForm>
+@code {
+    [Parameter]
+    public NVLNhaCungCapShow khachHangNVLShow { get; set; }
+
+    [Parameter]
+    public EventCallback<NVLNhaCungCapShow> GotoMainForm { get; set; }
+
+
+
+    private EditContext? editContext;
+
+    ComboboxFilteredString? txtquocgia, txttinhthanh, txtloaihinhkinhdoanh, txtmathangkinhdoanh, txttinhtrangthue, txtnganhang;
+    public string? MaKH, TenKhachHang, QuocGia, TinhThanh, MaSoThue;
+    bool visibleedit { get; set; } = false;
+    DxTextBox? txtMaKH { get; set; }
+    private async void Onkeydown(KeyboardEventArgs e)
+    {
+        if (e.Key == "F11")
+        {
+            await saveAsync();
+        }
+    }
+
+    private void reset()
+    {
+        khachHangNVLShow.MaNCC = "";
+        khachHangNVLShow.MaSoThue = "";
+        khachHangNVLShow.DiaChi="";
+
+        khachHangNVLShow.TenNCC="";
+        khachHangNVLShow.Email="";
+        khachHangNVLShow.DaiDienPL="";
+        khachHangNVLShow.DiDong="";
+        khachHangNVLShow.DienThoaiBan="";
+        khachHangNVLShow.NhomMatHang = "";
+        
+        // NVLNhaCungCapShow khachHangNVLShownew = new NVLNhaCungCapShow();
+        // khachHangNVLShow = khachHangNVLShownew.CopyClass();
+        //editContext = new EditContext(khachHangNVLShow);
+        StateHasChanged();
+        txtMaKH.FocusAsync();
+
+
+    }
+
+}

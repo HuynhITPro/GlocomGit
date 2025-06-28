@@ -1,0 +1,81 @@
+﻿<style>
+
+</style>
+@if (lstchart != null)
+{
+    int i = 0;
+    <div id="@id" class="bs-stepper">
+        <div class="bs-stepper-header" role="tablist">
+            @foreach (var it in lstchart)
+            {
+                if (i > 0)
+                {
+                    <div class="bs-stepper-line" style="color:@colorhex(it.Active);margin: auto;margin-bottom: 30px;"></div>
+                }
+
+                <div class="step" data-target="#@string.Format("{0}-{1}",it.Serial,id)">
+                    <button type="button" style="width:30px;" class="step-trigger" role="tab"  aria-controls="@string.Format("{0}-{1}",it.Serial,id)">
+                        <div class="row justify-content-center">
+                            <span class="bs-stepper-circle" style="background-color:@colorhex(it.Active)">@it.STT</span>
+                           
+                            @if(it.Text.Contains("Ký duyệt"))
+                            {
+                                <span class="bs-stepper-label" style="font-size:10px;color:forestgreen">
+                                    <i class="@it.Icon me-1"></i>@it.Text
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="bs-stepper-label" style="font-size:10px;color:@colorhex(it.Active)">
+                                    @it.Text
+                                </span>
+                            }
+                        </div>
+                    </button>
+                </div>
+
+
+                i++;
+            }
+        </div>
+    </div>
+}
+@code {
+    [Parameter]
+    public string TypeName { get; set; }
+
+    List<StepFlowChart> lstchart { get; set; }
+    public string RandomString(int length)
+    {
+
+        Random random = new Random();
+        const string pool = "abcdefghijklmnopqrstuvwxyz0123456789";
+        var chars = Enumerable.Range(0, length)
+            .Select(x => pool[random.Next(0, pool.Length)]);
+        return new string(chars.ToArray());
+    }
+    string id = "";
+   
+ 
+    private string colorhex(int active)
+    {
+        if (active == 1)
+        {
+            return "red";
+        }
+        return "gray";
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (TypeName != null)
+        {
+            var query = await Model.ModelData.GetFlowchart();
+            lstchart = query.Where(p => p.TypeName == TypeName).OrderBy(p=>p.STT).ToList();
+            id = RandomString(9);
+
+        }
+
+    }
+
+}

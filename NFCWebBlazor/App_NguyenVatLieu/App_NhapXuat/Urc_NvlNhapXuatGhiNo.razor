@@ -1,0 +1,136 @@
+﻿@using NFCWebBlazor.App_ClassDefine
+@using static NFCWebBlazor.App_NguyenVatLieu.App_NhapXuat.Page_NhapXuat_Master
+<style>
+    #customGridnotheader .dxbl-grid-header-row {
+        display: none;
+    }
+</style>
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+<div style="max-width:700px;">
+
+
+<DxFormLayout  CaptionPosition="CaptionPosition.Vertical">
+    <DxFormLayoutItem Caption="Chọn kho" ColSpanXs="12" ColSpanSm="6" ColSpanMd="6" ColSpanLg="6">
+        <DxComboBox SearchFilterCondition="ListSearchFilterCondition.Contains"
+                    ListRenderMode=ListRenderMode.Virtual
+                    SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                    SearchMode="ListSearchMode.AutoSearch"
+                    Data=@lstkhonvl
+                    ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto
+                    TextFieldName="@nameof(DataDropDownList.FullName)"
+                    ValueFieldName="@nameof(DataDropDownList.Name)"
+                    @bind-Value="@nvlNhapXuatItemShowcrr.MaKho"
+                    CssClass="cw-480" />
+    </DxFormLayoutItem>
+    <DxFormLayoutItem Caption="Mã hàng" ColSpanXs="12" ColSpanSm="6" ColSpanMd="6" ColSpanLg="6">
+        <ComboboxMaHang TextFieldName="@nameof(NvlHangHoaDropDown.TenHang)"
+                        ValueFieldName="@nameof(NvlHangHoaDropDown.MaHang)"
+                        SearchFilterCondition="ListSearchFilterCondition.Contains"
+                        ListRenderMode=ListRenderMode.Virtual
+                        SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                        SearchMode="ListSearchMode.AutoSearch"
+                        @bind-Value=@nvlNhapXuatItemShowcrr.MaHang
+                        ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto />
+    </DxFormLayoutItem>
+    <DxFormLayoutItem ColSpanMd="12">
+        <div class="d-flex justify-content-center m-1">
+            <DxButton Text="XEM" IconCssClass="bi bi-search m-1" RenderStyle="ButtonRenderStyle.Primary" Click="@searchAsync">
+            </DxButton>
+        </div>
+       
+    </DxFormLayoutItem>
+</DxFormLayout>
+
+<DxLoadingPanel @bind-Visible="@PanelVisible"
+                IsContentBlocked="true"
+                ApplyBackgroundShading="true"
+                IndicatorAreaVisible="false"
+                Text="Đang xử lý...">
+    <DxGrid @ref=dxGrid
+            ShowFilterRow="true"
+            ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+            VirtualScrollingEnabled="true"
+            TextWrapEnabled="false"
+            id="customGridnotheader"
+            CssClass="gridcss"
+            FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+            Data=@lstdata
+            AutoExpandAllGroupRows="false">
+
+        <Columns>
+
+            <DxGridDataColumn FieldName="TenHang">
+                <CellDisplayTemplate>
+                    @{
+                        NvlNhapXuatItemShow nvlNhapXuatItemShow = (NvlNhapXuatItemShow)context.DataItem;
+                    }
+                    <div class="shadow-sm bg-body-tertiary rounded">
+                        <div class="row d-flex">
+                            <div class="col flex-grow-1">
+                                <span style="font-weight:bold;color:forestgreen">@nvlNhapXuatItemShow.TenHang</span>
+                            </div>
+                            <div class="col flex-grow-0">
+                                <img src="@nvlNhapXuatItemShow.PathImgTinhTrang" style="width: auto; height: 20px;">
+
+                            </div>
+
+                        </div>
+                        <div class="row">
+                            <div class="col-6">
+                                <span>Lý do:</span>
+                                <span style="color: green; font-weight: bold">@nvlNhapXuatItemShow.LyDo</span>
+                            </div>
+                            <div class="col-6">
+                                <span>Số lượng:</span>
+                                <span style="color: green; font-weight: bold">@string.Format("{0} {1}",  showtextdouble(nvlNhapXuatItemShow.SoLuong), nvlNhapXuatItemShow.DVT)</span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6">
+                                <span>Kho:</span>
+                                <span style="color:green;font-weight:bold">@nvlNhapXuatItemShow.GhiChu</span>
+                            </div>
+                        </div>
+                        <div class="gap-2 text-center">
+                               
+                                <DxButton Text="IN TEM" IconCssClass="bi bi-upc-scan" RenderStyle="ButtonRenderStyle.Secondary" RenderStyleMode="ButtonRenderStyleMode.Outline" Click="@(()=>ClickInTem(nvlNhapXuatItemShow))">
+                                </DxButton>
+                           
+                        </div>
+                    </div>
+
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+
+        </Columns>
+
+
+
+    </DxGrid>
+</DxLoadingPanel>
+
+</div>
+
+@code {
+    List<NvlNhapXuatItemShow> lstdata { get; set; }
+    bool PanelVisible { get; set; } = false;
+    DxGrid dxGrid { get; set; }
+    NvlNhapXuatItemShow nvlNhapXuatItemShowcrr { get; set; } = new NvlNhapXuatItemShow();
+    List<DataDropDownList> lstkhonvl { get; set; }
+    DialogWindow dxPopup;
+    RenderFragment renderFragment;
+    private string showtextdouble(decimal? d)
+    {
+        if (d == null)
+            return "";
+        if (d == 0)
+            return "";
+        return d.Value.ToString("#,0.####");
+    }
+
+
+}

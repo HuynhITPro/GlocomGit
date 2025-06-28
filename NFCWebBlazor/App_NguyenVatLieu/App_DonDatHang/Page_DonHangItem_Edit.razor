@@ -1,0 +1,57 @@
+﻿@using static NFCWebBlazor.App_NguyenVatLieu.App_DonDatHang.Page_DonDatHang_Master
+<DxFormLayout>
+    <DxFormLayoutItem ColSpanXs="12"  ColSpanSm="12" ColSpanMd="12" ColSpanLg="12" CaptionPosition="CaptionPosition.Vertical">
+        <CaptionTemplate>
+            @string.Format("Nhà cung cấp") <span class="text-danger">*</span>
+        </CaptionTemplate>
+        <Template>
+
+            <DxComboBox CssClass="cw-480"
+                        SearchFilterCondition="ListSearchFilterCondition.Contains"
+                        ListRenderMode=ListRenderMode.Virtual
+                        SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                        SearchMode="ListSearchMode.AutoSearch"
+                        TextFieldName="@nameof(DataDropDownList.FullName)"
+                        ValueFieldName="@nameof(DataDropDownList.Name)"
+                      
+                        Data="@lstncc"
+                        ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                        @bind-Value="@nVLDonDatHangItemShowcrr.MaNCC" />
+         
+
+        </Template>
+    </DxFormLayoutItem>
+    <DxFormLayoutItem Caption="Đơn giá" ColSpanXs="6" ColSpanSm="6" ColSpanMd="6" ColSpanLg="6" CaptionPosition="CaptionPosition.Vertical">
+        <CaptionTemplate>
+            @string.Format("Đơn giá") <span class="text-danger">*</span>
+        </CaptionTemplate>
+        <Template>
+            <DxSpinEdit MinValue="0" @bind-Value="@nVLDonDatHangItemShowcrr.DonGia" DisplayFormat="#,0.######" ShowSpinButtons=false>
+            </DxSpinEdit>
+           
+
+        </Template>
+    </DxFormLayoutItem>
+    <DxFormLayoutItem Caption="Ghi chú" ColSpanXs="12" ColSpanSm="12" ColSpanMd="12" ColSpanLg="12" CaptionPosition="CaptionPosition.Vertical">
+        <Template>
+            <DxTextBox @bind-Text=@nVLDonDatHangItemShowcrr.NoiDung></DxTextBox>
+        </Template>
+    </DxFormLayoutItem>
+    
+    <DxFormLayoutItem>
+        <Template>
+            <div class="d-flex justify-content-center mt-2 gap-2 mb-2">
+                <DxButton RenderStyle="ButtonRenderStyle.Info" IconCssClass="bi bi-pencil" CssClass="ms-2" Text="Sửa" Visible=@EnableEdit Click="@updateAsync" />
+            </div>
+        </Template>
+
+    </DxFormLayoutItem>
+</DxFormLayout>
+@code {
+    [Parameter]
+    public NVLDonDatHangItemShow nVLDonDatHangItemShowcrr { get; set; }
+    [Parameter]
+    public EventCallback<NVLDonDatHangItemShow> AfterEdit { get; set; }
+    public List<DataDropDownList> lstncc = new List<DataDropDownList>();
+
+}

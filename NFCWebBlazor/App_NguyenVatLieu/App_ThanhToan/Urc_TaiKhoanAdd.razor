@@ -1,0 +1,131 @@
+﻿<style>
+    .csswidth {
+        width: min(95vw, 1100px);
+    }
+</style>
+<EditForm EditContext="@editContext" Context="EditFormContext">
+    <DataAnnotationsValidator />
+    <DxFormLayout CssClass="csswidth">
+
+        <DxFormLayoutItem ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+            <CaptionTemplate>
+                <span style="color:red">Số tài khoản *</span>
+            </CaptionTemplate>
+            <Template>
+                <DxTextBox @bind-Text=thongTinTaiKhoan.SoTK></DxTextBox>
+                <div class="text-danger">
+                    <ValidationMessage For="@(() =>thongTinTaiKhoan.SoTK)" />
+                </div>
+            </Template>
+        </DxFormLayoutItem>
+        <DxFormLayoutItem ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+            <CaptionTemplate>
+                <span>Tên tài khoản *</span>
+            </CaptionTemplate>
+            <Template>
+                <DxTextBox @bind-Text=@thongTinTaiKhoan.TenTaiKhoan></DxTextBox>
+                <div class="text-danger">
+                    <ValidationMessage For="@(() => thongTinTaiKhoan.TenTaiKhoan)" />
+                </div>
+            </Template>
+        </DxFormLayoutItem>
+        <DxFormLayoutItem ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+            <CaptionTemplate>
+                <span>Chi nhánh ngân hàng*</span>
+            </CaptionTemplate>
+            <Template>
+                <DxMemo @bind-Text=thongTinTaiKhoan.ChiNhanh></DxMemo>
+                <div class="text-danger">
+                    <ValidationMessage For="@(() => thongTinTaiKhoan.ChiNhanh)" />
+                </div>
+            </Template>
+        </DxFormLayoutItem>
+        <DxFormLayoutItem ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+            <CaptionTemplate>
+                <span>Ngân hàng *</span>
+            </CaptionTemplate>
+            <Template>
+                <DxTextBox @bind-Text=thongTinTaiKhoan.NganHang></DxTextBox>
+                <div class="text-danger">
+                    <ValidationMessage For="@(() => thongTinTaiKhoan.NganHang)" />
+                </div>
+            </Template>
+        </DxFormLayoutItem>
+        <DxFormLayoutItem ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+            <CaptionTemplate>
+                <span>Địa chỉ *</span>
+
+            </CaptionTemplate>
+            <Template>
+                <DxMemo  @bind-Text=thongTinTaiKhoan.DiaChi></DxMemo>
+                <div class="text-danger">
+                    <ValidationMessage For="@(() => thongTinTaiKhoan.DiaChi)" />
+                </div>
+            </Template>
+        </DxFormLayoutItem>
+        <DxFormLayoutItem ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+            <CaptionTemplate>
+                <span>Swiftcode</span>
+
+            </CaptionTemplate>
+            <Template>
+                <DxTextBox @bind-Text=thongTinTaiKhoan.Swiftcode></DxTextBox>
+
+            </Template>
+        </DxFormLayoutItem>
+      
+        <DxFormLayoutItem ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+            <CaptionTemplate>
+                <span>IBan</span>
+
+            </CaptionTemplate>
+            <Template>
+                <DxTextBox @bind-Text=thongTinTaiKhoan.IBAN></DxTextBox>
+
+            </Template>
+        </DxFormLayoutItem>
+        <DxFormLayoutItem Caption="Nhà cung cấp" ColSpanXs="12" ColSpanSm="12" ColSpanMd="12" ColSpanLg="12" CaptionPosition="CaptionPosition.Vertical">
+
+            <DxComboBox Data=@lstnhacungcap
+                        SearchFilterCondition="ListSearchFilterCondition.Contains"
+                        ListRenderMode=ListRenderMode.Virtual
+                        SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                        SearchMode="ListSearchMode.AutoSearch"
+                        ValueFieldName="@nameof(DataDropDownList.Name)"
+                        ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto
+                        TextFieldName="@nameof(DataDropDownList.FullName)"
+                        @bind-Value="@thongTinTaiKhoan.MaNCC"
+                        CssClass="cw-480" />
+
+        </DxFormLayoutItem>
+
+
+        <DxFormLayoutItem ColSpanMd="12">
+            <Template>
+                <div class="d-flex justify-content-center mt-2 gap-2 mb-2">
+                    <DxButton RenderStyle="ButtonRenderStyle.Primary" IconCssClass="bi bi-floppy" Text="Lưu"  Click="@saveAsync" />
+                    <DxButton RenderStyle="ButtonRenderStyle.Info" IconCssClass="bi bi-pencil" CssClass="ms-2" Text="Sửa"  Click="@updateAsync" />
+                    <DxButton Text="XÓA" IconCssClass="oi oi-x" RenderStyle="ButtonRenderStyle.Danger" Click="@(()=>deleteAsync())" RenderStyleMode="ButtonRenderStyleMode.Outline">
+                    </DxButton>
+                </div>
+            </Template>
+        </DxFormLayoutItem>
+
+
+    </DxFormLayout>
+</EditForm>
+@code {
+    List<DataDropDownList> lstnhacungcap { get; set; }
+    List<DataDropDownList> dataDropDownLists = new List<DataDropDownList>();
+    Dieukien dieukien = new Dieukien();
+    bool EnableEdit = false;
+    private EditContext? editContext;
+    [Parameter]
+    public EventCallback<ThongTinTaiKhoan> GotoMainForm { get; set; }
+    [Parameter]
+    public ThongTinTaiKhoan thongTinTaiKhoan { get; set; }
+    public class Dieukien
+    {
+        public string FullName { get; set; }
+    }
+}

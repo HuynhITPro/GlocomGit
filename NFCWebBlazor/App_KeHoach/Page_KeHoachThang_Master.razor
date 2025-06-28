@@ -1,0 +1,229 @@
+﻿@using BlazorBootstrap
+@using DevExpress.Blazor;
+@using NFCWebBlazor.App_ClassDefine;
+@using System.Data
+@using System.Collections.ObjectModel
+
+<style>
+    .my-grid {
+        height: @heightgrid;
+    }
+
+</style>
+@inject Model.ThemeColor themcolor;
+<NFCWebBlazor.App_Admin.DialogMsg @ref="@dialogMsg"></NFCWebBlazor.App_Admin.DialogMsg>
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+<DxFlyout @ref=dxFlyoutchucnang
+          PositionTarget="@idflychucnang"
+          @bind-IsOpen="@IsOpenfly"
+          RestrictionTarget="#Navigation-Flyout-Customization"
+          AnimationType=FlyoutAnimationType.Fade
+          PreventCloseOnPositionTargetClick="true"
+          Width="min(95vw,400px)"
+          Position=@(FlyoutPosition.BottomStart | FlyoutPosition.TopStart)>
+    <BodyTextTemplate>
+
+        <div class="container">
+            <div class="row gap-1">
+                <DxButton Visible=@Visilethemchitiet IconCssClass="bi bi-plus-circle" RenderStyle="ButtonRenderStyle.Primary" Text="THÊM SẢN PHẨM" Click="@KeHoachMasterAddItemAsync" RenderStyleMode="ButtonRenderStyleMode.Outline">
+                </DxButton>
+                <DxButton Visible=@Visilethemchitiet IconCssClass="bi bi-file-earmark-spreadsheet" RenderStyle="ButtonRenderStyle.Primary" Text="IMPORT TỪ FILE" Click="@ImportTuFileAsync" RenderStyleMode="ButtonRenderStyleMode.Outline">
+                </DxButton>
+                <DxButton Visible=@Visilechinhsua Text="CHỈNH SỬA" IconCssClass="bi bi-pencil" RenderStyle="ButtonRenderStyle.Warning" RenderStyleMode="ButtonRenderStyleMode.Outline" Click="@EditMasterAsync">
+                </DxButton>
+                <DxButton Visible=@Visiledelete Text="XÓA" IconCssClass="oi oi-x" RenderStyle="ButtonRenderStyle.Danger" RenderStyleMode="ButtonRenderStyleMode.Outline" Click="@deleteAsync">
+                </DxButton>
+                <DxButton IconCssClass="bi bi-file-earmark-spreadsheet" RenderStyle="ButtonRenderStyle.Primary" Text="TẠO ĐỀ NGHỊ ĐÓNG VỈ" Click="@CreateDeNghiDongVi" RenderStyleMode="ButtonRenderStyleMode.Outline">
+                </DxButton>
+            </div>
+
+
+        </div>
+    </BodyTextTemplate>
+
+</DxFlyout>
+<DxGridLayout CssClass="w-100 ch-480">
+    <Rows>
+        <DxGridLayoutRow Height="auto" />
+        <DxGridLayoutRow />
+    </Rows>
+    <Items>
+        <DxGridLayoutItem Row="0">
+            <Template>
+                <div class="p-2 pt-0 mb-2 bg-white border rounded-bottom-2">
+                    <div>
+                        <DxFormLayout CssClass="w-100 mt-3">
+
+                            <DxFormLayoutItem ColSpanSm="12" ColSpanMd="12" ColSpanLg="4" CaptionPosition="CaptionPosition.Vertical" Caption="Nhà máy">
+                                <NFCWebBlazor.App_ClassDefine.ComboboxFilteredString SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                                                                     ListRenderMode=ListRenderMode.Virtual
+                                                                                     @ref=txtnhamay
+                                                                                     TypeName="NhaMay_NVL"
+                                                                                     SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                                                                     ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                                                                     SearchMode="ListSearchMode.AutoSearch"
+                                                                                     TextFieldName="@nameof(DataDropDownList.FullName)"
+                                                                                     ValueFieldName="@nameof(DataDropDownList.Name)"
+                                                                                     CssClass="cw-480" />
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem ColSpanSm="6" Caption="Từ ngày" ColSpanMd="3" ColSpanLg="3" CaptionPosition="CaptionPosition.Vertical">
+                                <DxDateEdit @bind-Date="@datebegin" Mask="@DateTimeMask.ShortDate" DisplayFormat="dd-MM-yy" ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto" />
+
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem ColSpanSm="6" Caption="Đến ngày" ColSpanMd="3" ColSpanLg="3" CaptionPosition="CaptionPosition.Vertical">
+                                <DxDateEdit @bind-Date="@dateend" Mask="@DateTimeMask.ShortDate" DisplayFormat="dd-MM-yy" ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto" />
+
+                            </DxFormLayoutItem>
+                        </DxFormLayout>
+
+                    </div>
+
+                </div>
+
+            </Template>
+        </DxGridLayoutItem>
+        <DxGridLayoutItem Row="1">
+            <Template>
+                <div>
+                    <DxLoadingPanel @bind-Visible="@PanelVisible"
+                                    IsContentBlocked="true"
+                                    ApplyBackgroundShading="true"
+                                    IndicatorAreaVisible="false"
+                                    Text="Đang xử lý...">
+                        <DxGrid @ref="Grid" Data="@lstdata"
+                                id="customGrid" CssClass="my-grid"
+                                ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+                                PageSize="20"
+                                PagerPosition="GridPagerPosition.Bottom"
+                                PageSizeSelectorVisible="true"
+                                PageSizeSelectorItems="@(new int[] { 10, 20, 100 })"
+                                PageSizeSelectorAllRowsItemVisible="true"
+                                AutoCollapseDetailRow="true"
+                                FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                                ShowFilterRow=true>
+                            <ToolbarTemplate>
+                                <DxToolbar ItemRenderStyleMode="ToolbarRenderStyleMode.Plain">
+                                    <DxToolbarItem Text="Xem" IconCssClass="bi bi-search" RenderStyle="ButtonRenderStyle.Primary" Click="@searchAsync">
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="Thêm mới" IconCssClass="bi bi-plus-circle" RenderStyle="ButtonRenderStyle.Success" Click="@AddMasterItem">
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="Xuất Excel" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=> Grid.ExportToXlsxAsync("ExportKeHoachThang"))">
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="Chọn cột" Click="@(()=>Grid.ShowColumnChooser())" IconCssClass="bi bi-layout-text-window-reverse" />
+                                </DxToolbar>
+                            </ToolbarTemplate>
+                            <Columns>
+                                <DxGridDataColumn FieldName="Serial" Width="100" Caption=" " ShowInColumnChooser=false Visible="@CheckQuyen">
+                                    <CellDisplayTemplate>
+                                        @{
+                                            KeHoachSP_Show keHoachSP_Show;
+                                            if (context.DataItem != null)
+                                                keHoachSP_Show = (KeHoachSP_Show)context.DataItem;
+                                            else
+                                                keHoachSP_Show = new KeHoachSP_Show();
+                                        }
+                                        <span>
+                                            <a href="#" class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"
+                                               id="@idelement(keHoachSP_Show.Serial)" @onclick="@(()=>ShowFlyout(keHoachSP_Show))"><i class="bi bi-list-stars me-1"></i>CHỨC NĂNG</a>
+                                        </span>
+                                    </CellDisplayTemplate>
+
+                                </DxGridDataColumn>
+                                <DxGridDataColumn FieldName="MaKHThang" Width="120" Caption="Mã KH" />
+                                <DxGridDataColumn FieldName="TenKHThang" MinWidth="140" Caption="Tên kế hoạch tháng" />
+                                <DxGridDataColumn FieldName="ThangMin" Width="100" Caption="Ngày bắt đầu" DisplayFormat="dd-MM-yy"></DxGridDataColumn>
+                                <DxGridDataColumn FieldName="ThangMax" Width="100" Caption="Ngày bắt đầu" DisplayFormat="dd-MM-yy"></DxGridDataColumn>
+                                <DxGridDataColumn FieldName="UserInsert" Width="100" Caption="Người tạo"></DxGridDataColumn>
+                                <DxGridDataColumn FieldName="NgayInsert" Width="100" Caption="Ngày Insert" DisplayFormat="dd-MM-yy HH:mm"></DxGridDataColumn>
+                                <DxGridDataColumn FieldName="NhaMay" Width="120" Caption="Nhà máy"></DxGridDataColumn>
+                                <DxGridDataColumn FieldName="GhiChu" Width="120" Caption="Ghi chú"></DxGridDataColumn>
+                            </Columns>
+                            <DetailRowTemplate>
+
+                                <DxTabs>
+                                    <DxTabPage Text="Chi tiết" TabIconCssClass="bi bi-list-ol">
+                                        @{
+                                            var keHoachSP_Show = (KeHoachSP_Show)context.DataItem;
+                                        }
+                                        <div style="overflow-x:auto; white-space:nowrap; max-width:100%;">
+                                            <View_KeHoachThang_Detail keHoachSP_Showcrr="@keHoachSP_Show" GotoMasterGrid=RefreshList></View_KeHoachThang_Detail>
+                                        </div>
+                                    </DxTabPage>
+
+
+                                </DxTabs>
+
+                            </DetailRowTemplate>
+                        </DxGrid>
+                    </DxLoadingPanel>
+                </div>
+
+
+            </Template>
+        </DxGridLayoutItem>
+
+
+    </Items>
+</DxGridLayout>
+@code {
+    [Inject] BrowserService browserService { get; set; }
+    bool PopupVisible { get; set; } = false;
+    bool Visilethemchitiet = true, Visilechinhsua = true, Visiledelete = true;
+    bool CheckQuyen { get; set; } = false;
+    RenderFragment? renderFragment { get; set; }
+    DialogWindow? dxPopup { get; set; }
+    DateTime datebegin = DateTime.Now.AddMonths(-1);
+    DateTime dateend = DateTime.Now;
+    ComboboxFilteredString txtnhamay { get; set; }
+    DxFlyout dxFlyoutchucnang { get; set; }
+    DialogMsg dialogMsg { get; set; }
+    public string random { get; set; }
+    bool IsOpenfly { get; set; }
+    string heightgrid = "500px";
+    string headerform = "";
+    KeHoachSP_Show keHoachSP_Showcrr { get; set; }
+    List<KeHoachSP_Show> lstdata { get; set; }
+
+    List<DataDropDownList> lsttype { get; set; }
+    IGrid? Grid { get; set; }
+
+    //bool IsOpenfly = true;
+    public string idflychucnang { get; set; }
+    bool PanelVisible { get; set; } = false;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await loadAsync();
+        // return base.OnInitializedAsync();
+    }
+    private async Task loadAsync()
+    {
+        await loaddatadropdownAsync();
+        var dimension = await browserService.GetDimensions();
+        // var heighrow = await browserService.GetHeighWithID("divcontainer");
+        int height = dimension.Height - 90;
+        heightgrid = string.Format("{0}px", height);
+        CheckQuyen = await phanQuyenAccess.CreateKeHoachThang(Model.ModelAdmin.users);
+
+        // var query=ModelData.L
+    }
+    App_ClassDefine.ClassProcess prs = new App_ClassDefine.ClassProcess();
+    public string idelement(int? serial)
+    {
+        if (serial == null)
+            string.Format("flychucnang_{0}_{1}", random, serial);
+        if (random == null)
+        {
+            random = prs.RandomString(9);
+        }
+        return string.Format("flychucnang_{0}_{1}", random, serial);
+    }
+
+
+
+}

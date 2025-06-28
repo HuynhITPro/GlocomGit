@@ -1,0 +1,208 @@
+﻿@using System.Data
+@using BlazorBootstrap
+@using NFCWebBlazor.App_NguyenVatLieu.App_NhapXuat
+@using NFCWebBlazor.Model
+@using Newtonsoft.Json
+@using static NFCWebBlazor.App_NguyenVatLieu.App_ThanhToan.Page_ThanhToanMaster
+@using static NFCWebBlazor.App_NguyenVatLieu.App_NhapXuat.Page_NhapXuat_Master
+@using static NFCWebBlazor.App_NguyenVatLieu.App_NhapXuat.Page_NvlTonKho
+<style>
+    .gridcss {
+        max-height: @heightgrid;
+    }
+</style>
+
+<NFCWebBlazor.App_Admin.DialogMsg @ref="@dialogMsg"></NFCWebBlazor.App_Admin.DialogMsg>
+<DxLoadingPanel @bind-Visible="@PanelVisible"
+IsContentBlocked="true"
+ApplyBackgroundShading="true"
+IndicatorAreaVisible="false"
+Text="Đang xử lý...">
+    <DxGrid @ref=dxGrid
+    TextWrapEnabled="false"
+    ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+    AutoCollapseDetailRow="true"
+            CssClass="gridcss"
+    VirtualScrollingEnabled=true
+
+    FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+    Data=@lstNhapXuatKhoSearchShow
+    AutoExpandAllGroupRows=true>
+       @*  <ToolbarTemplate>
+            <DxToolbar AdaptivityAutoCollapseItemsToIcons="false" ItemRenderStyleMode="ToolbarRenderStyleMode.Plain" SizeMode="SizeMode.Small">
+                <DxToolbarItem Text="TẢI LẠI" IconCssClass="bi bi-menu-button-wide" RenderStyle="ButtonRenderStyle.Danger" Click="@(()=>JSRuntime.InvokeVoidAsync(CallNameJson.toggleCollapse.ToString(),string.Format("#{0}",randomdivhide)))">
+                </DxToolbarItem>
+                <DxToolbarItem Text="XEM" IconCssClass="bi bi-search" RenderStyle="ButtonRenderStyle.Primary" >
+                </DxToolbarItem>
+                <DxToolbarItem Text="Xuất excel" BeginGroup="true" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=>dxGrid.ExportToXlsxAsync("ExporChungTu"))">
+                </DxToolbarItem>
+                <DxToolbarItem Text="Chọn cột" BeginGroup="true"  Click="@(()=>dxGrid.ShowColumnChooser())" IconCssClass="bi bi-layout-text-window-reverse" />
+            </DxToolbar>
+        </ToolbarTemplate> *@
+        <Columns>
+            <DxGridDataColumn FieldName="Serial" Width="110">
+                <CellDisplayTemplate>
+                    @{
+                        NvlNhapXuatKhoShow nvlnhapxuatitem = (NvlNhapXuatKhoShow)context.DataItem;
+                    }
+                    <span>
+                        <a href="#" class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"
+                           @onclick="@(()=>deleteitem(nvlnhapxuatitem))"><i class="bi bi-list-stars me-1"></i>Xóa</a>
+                    </span>
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="Serial" DisplayFormat="#" Caption="Serial" Width="120">
+                <CellDisplayTemplate>
+                    @{
+                        NvlNhapXuatKhoShow nvlnhapxuatitem = (NvlNhapXuatKhoShow)context.DataItem;
+                    }
+                    @if (nvlnhapxuatitem != null)
+                    {
+                        <div>
+                            @if (nvlnhapxuatitem.VisibleHoadon)
+                            {
+                                <img src="@nvlnhapxuatitem.PathFileHoaDon" style="margin-right:10px;width: auto; height: 24px;">
+                            }
+                            <span>@nvlnhapxuatitem.Serial</span>
+                        </div>
+                    }
+
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="TinhTrang" Caption="Kiểm hàng" Width="120">
+                <CellDisplayTemplate>
+                    @{
+                        NvlNhapXuatKhoShow nvlnhapxuatitem = (NvlNhapXuatKhoShow)context.DataItem;
+                    }
+                    <div>
+                        <img src="@nvlnhapxuatitem.PathImgTinhTrang" style="width: auto; height: 18px;margin-right:10px">
+                        <span class="text-primary" style="font-size:0.7rem;">@nvlnhapxuatitem.TinhTrang</span>
+                    </div>
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+          
+            <DxGridDataColumn FieldName="MaCT" Caption="Chứng từ" Width="160"/>
+            <DxGridDataColumn FieldName="ThanhTien" Caption="Thành tiền" Width="120" />
+
+            <DxGridDataColumn FieldName="TenKho" Caption="Kho"  Width="200" Visible="false"/>
+          
+            <DxGridDataColumn FieldName="LyDo" Caption="Lý do" Width="170" />
+            <DxGridDataColumn FieldName="DienGiai" Caption="Diễn giải" Width="170" />
+            <DxGridDataColumn FieldName="NguoiXacNhan" Caption="Xác nhận bởi" Width="140"/>
+            <DxGridDataColumn FieldName="Ngay" Caption="Ngày" Width="120" />
+            
+            <DxGridDataColumn FieldName="UserInsert" Caption=" UserInsert" Width="120" />
+
+        </Columns>
+        <DetailRowTemplate>
+            <DxTabs>
+                    @{
+                        NvlNhapXuatKhoShow nvlNhapXuatKhoShow = (NvlNhapXuatKhoShow)context.DataItem;
+                    }
+                    <View_NhapXuatItemDetail nvlNhapXuatKhoShowcrr="@nvlNhapXuatKhoShow"></View_NhapXuatItemDetail>
+            </DxTabs>
+
+        </DetailRowTemplate>
+    </DxGrid>
+</DxLoadingPanel>
+
+@code {
+    [Inject] IJSRuntime JSRuntime { get; set; }
+    [Inject] BrowserService browserService { get; set; }
+
+    [Parameter]
+    public bool visibleSearch { get; set; } = true;
+    [Parameter]
+    public NvlNhapXuatKhoShow nvlNhapXuatKhoShowcrr { get; set; }
+    [Parameter]
+    public NvlThanhToanShow nvlThanhToanShowcrr { get; set; }
+    List<NvlNhapXuatKhoShow> lstNhapXuatKhoSearchShow{ get; set; }
+    DialogWindow dxPopup;
+    List<DataDropDownList> lstnoigiaonhan { get; set; }
+    RenderFragment renderFragment;
+    RenderFragment renderFragmentdetail { get; set; }
+    DialogMsg dialogMsg;
+    int? sochungtu { get; set; }
+
+    DialogWindow dxPopupDetail { get; set; }
+    private string randomdivhide { get; set; } = string.Format("id{0}", StaticClass.Randomstring(10));//ID của CSS nên bắt đầu bằng chữ, vì nếu bat đầu bằng số dễ bị hẹo lắm
+
+    string idgrid = "griddetailnhapkhoms";
+    bool showallgroup { get; set; } = false;
+    bool IsOpenfly = false;
+    List<DataDropDownList> lsttinhtrang { get; set; }
+    bool SaveVisible { get; set; } = false;
+
+    //bool IsOpenfly = true;
+    DxFlyout dxFlyoutchucnang { get; set; }
+    public string idflychucnang { get; set; }
+    public string random { get; set; }
+    string heightgrid = "500px";
+    DateTime? dtpbegin { get; set; } = DateTime.Now.AddMonths(-4);
+    DateTime? dtpend { get; set; } = DateTime.Now;
+    string tengiaonhanheader = "Tên giao nhận";
+    bool isclick = false;
+    bool checkall { get; set; } = false;
+
+    bool PanelVisible { get; set; } = false;
+    bool VisibleThemChungTu { get; set; } = true;
+    bool VisibleHangNo { get; set; } = false;
+    ComboboxFilteredTable txtnhamay { get; set; }
+    DataDropDownList nhamayselected { get; set; }
+    List<DataDropDownList> lstlydo { get; set; }
+
+    List<DataDropDownList> lstkhonvl { get; set; }
+
+    public DxGrid dxGrid { get; set; }
+
+    public async void ClosePopupWhenBack()
+    {
+        await JSRuntime.InvokeVoidAsync("PopupHelper.unregisterBackEvent");
+        await dxPopup.CloseAsync();
+    }
+
+    List<InitDxGridDataColumn> lstcolumn = new List<InitDxGridDataColumn>();
+
+
+    private bool CheckChungTuNhap(NvlNhapXuatKhoShow nvlNhapXuatKhoShow)
+    {
+        if (nvlNhapXuatKhoShow.STTCT >= 0)
+        {
+            return true;
+        }
+
+        return false;
+    }
+    App_ClassDefine.ClassProcess prs=new ClassProcess();
+    public string idelement(NvlNhapXuatKhoShow nvlNhapXuatKhoShow)
+    {
+        if (nvlNhapXuatKhoShow == null)
+            return "";
+        int serial = nvlNhapXuatKhoShow.Serial;
+        if (nvlNhapXuatKhoShow == null)
+            string.Format("flychucnang_{0}_{1}", random, serial);
+        if (serial == null)
+            string.Format("flychucnang_{0}_{1}", random, serial);
+        if (random == null)
+        {
+            random = prs.RandomString(9);
+        }
+        return string.Format("flychucnang_{0}_{1}", random, serial);
+    }
+    // Hàm xử lý sự kiện click của nút
+
+
+    private string showdate(DateTime? dt)
+    {
+        if (dt == null)
+            return "";
+        return dt.Value.ToString("dd-MM-yy");
+    }
+    private void expandorcollapse(int i)
+    {
+        if (dxGrid.IsDetailRowExpanded(i))
+            dxGrid.CollapseDetailRow(i);
+        else
+            dxGrid.ExpandDetailRow(i);
+    }
+}

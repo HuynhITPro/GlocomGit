@@ -1,0 +1,115 @@
+﻿@using NFCWebBlazor.Model
+@using Newtonsoft.Json
+@using static NFCWebBlazor.App_ThongTin.Page_NhaCungCapMaster
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f8f9fa;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+
+    .form-container {
+        min-width:300px;
+        padding: 20px;
+        background-color: #ffffff;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+    }
+
+        .form-container h2 {
+            text-align: center;
+            color: #343a40;
+            margin-bottom: 20px;
+        }
+
+    .info-group {
+        margin-bottom: 15px;
+    }
+
+        .info-group label {
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .info-group .info-text {
+            display: block;
+            margin-top: 5px;
+            color: #212529;
+        }
+</style>
+<div class="form-container">
+    @if (nvlNhaCungCapShowcrr != null)
+    {
+        <h3>@nvlNhaCungCapShowcrr.TenNCC</h3>
+
+        <div class="info-group">
+            <label>Mã nhà cung cấp:</label>
+            <div class="info-text">@nvlNhaCungCapShowcrr.MaNCC</div>
+        </div>
+        <div class="info-group">
+            <label>Mã số thuế:</label>
+            <div class="info-text">@nvlNhaCungCapShowcrr.MaSoThue</div>
+        </div>
+        <div class="info-group">
+            <label>Địa Chỉ:</label>
+            <div class="info-text">@nvlNhaCungCapShowcrr.DiaChi</div>
+        </div>
+
+        <div class="info-group">
+            <label>Số Điện Thoại:</label>
+            <div class="info-text">@nvlNhaCungCapShowcrr.DienThoaiBan</div>
+        </div>
+        <div class="info-group">
+            <label>Di động:</label>
+            <div class="info-text">@nvlNhaCungCapShowcrr.DiDong</div>
+        </div>
+        <div class="info-group">
+            <label>Email:</label>
+            <div class="info-text">@nvlNhaCungCapShowcrr.Email</div>
+        </div>
+
+        <div class="info-group">
+            <label>Mô Tả Ngắn:</label>
+            <div class="info-text">@nvlNhaCungCapShowcrr.GhiChu</div>
+        </div>
+        <div>
+            <NFCWebBlazor.App_Admin.Urc_FileHoSoGroup serialLink="@nvlNhaCungCapShowcrr.Serial" tableName="NvlNhaCungCap" lstdata="nvlNhaCungCapShowcrr.lstfilehoso" GotoMainForm="@nvlNhaCungCapShowcrr.setlstfilehoso"></NFCWebBlazor.App_Admin.Urc_FileHoSoGroup>
+        </div>
+    }
+</div>
+
+
+@code {
+    [Parameter]
+    public string MaNCC { get; set; }
+    [Parameter]
+    public NVLNhaCungCapShow nvlNhaCungCapShowcrr { get; set; }
+    List<NVLNhaCungCapShow> lstdata = new List<NVLNhaCungCapShow>();
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            CallAPI callAPI = new CallAPI();
+
+            string sql = "Use [NVLDB] Select * from NvlNhaCungCap where MaNCC = @MaNCC";
+            List<ParameterDefine> parameterDefineList = new List<ParameterDefine>();
+            parameterDefineList.Add(new ParameterDefine("@MaNCC", MaNCC));
+            string json = await callAPI.ExcuteQueryEncryptAsync(sql, parameterDefineList);
+            if (json != "")
+            {
+                lstdata = JsonConvert.DeserializeObject<List<NVLNhaCungCapShow>>(json);
+                if (lstdata.Count > 0)
+                {
+                    nvlNhaCungCapShowcrr = lstdata[0];
+                    StateHasChanged();
+                }
+                //Grid.Reload();
+            }
+        }
+        // return base.OnAfterRenderAsync(firstRender);
+    }
+}

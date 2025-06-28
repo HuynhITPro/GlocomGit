@@ -1,0 +1,131 @@
+﻿@using BlazorBootstrap
+@using DevExpress.Blazor;
+@using NFCWebBlazor.App_ClassDefine;
+@using System.Data
+@using System.Collections.ObjectModel
+
+<style>
+    .my-grid {
+        height: @heightgrid;
+    }
+
+</style>
+@inject Model.ThemeColor themcolor;
+<NFCWebBlazor.App_Admin.DialogMsg @ref="@dialogMsg"></NFCWebBlazor.App_Admin.DialogMsg>
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+<DxGridLayout CssClass="w-100 ch-480">
+
+    <Rows>
+
+        <DxGridLayoutRow Height="auto" />
+        <DxGridLayoutRow />
+    </Rows>
+    <Items>
+        <DxGridLayoutItem Row="1">
+            <Template>
+                <div>
+                    <DxLoadingPanel @bind-Visible="@PanelVisible"
+                                    IsContentBlocked="true"
+                                    ApplyBackgroundShading="true"
+                                    IndicatorAreaVisible="false"
+                                    Text="Đang xử lý...">
+                        <DxGrid @ref="Grid" Data="@lstdata" 
+                                id="customGrid" CssClass="my-grid"
+                                VirtualScrollingEnabled="true"
+                                FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                                ShowFilterRow=true>
+                            <ToolbarTemplate>
+                                <DxToolbar ItemRenderStyleMode="ToolbarRenderStyleMode.Plain">
+                                    <DxToolbarItem Text="Xem" IconCssClass="bi bi-search" RenderStyle="ButtonRenderStyle.Primary" Click="@searchAsync">
+
+                                    </DxToolbarItem>
+
+                                    <DxToolbarItem Text="Thêm mới" IconCssClass="bi bi-plus-circle" RenderStyle="ButtonRenderStyle.Success" Click="@saveAsync">
+
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="Xuất Excel" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=> Grid.ExportToXlsxAsync("ExportNhomHang"))">
+
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="Chọn cột" Click="@(()=>Grid.ShowColumnChooser())" IconCssClass="bi bi-layout-text-window-reverse" />
+                                </DxToolbar>
+                            </ToolbarTemplate>
+                            <Columns>
+                                <DxGridDataColumn FieldName="MaNhom" Width="120" Caption="Mã nhóm" />
+                                <DxGridDataColumn FieldName="TenNhom" Width="240" Caption="Diễn giải" />
+                                <DxGridDataColumn FieldName="KhoNhap" Width="200" Caption="Kho nhập" GroupIndex="0"/>
+                                <DxGridDataColumn FieldName="PhanLoai" Width="200" Caption="Kho/ Phân loại" ></DxGridDataColumn>
+                                <DxGridDataColumn FieldName="HuongDan" Width="200" Caption="Hướng dẫn"></DxGridDataColumn>
+                                <DxGridDataColumn FieldName="UserInsert" Width="100" Caption="Người tạo">
+                                </DxGridDataColumn>
+                                <DxGridDataColumn FieldName="Serial" Width="100" Caption=" " ShowInColumnChooser=false Visible="@CheckQuyen">
+                                    <CellDisplayTemplate>
+                                        @{
+                                            NvlNhomHang dataDropDownList = (NvlNhomHang)context.DataItem;
+                                        }
+                                        <div class="d-flex gap-4">
+                                            <span><a href="#" class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" @onclick="@(()=>deleteAsync(dataDropDownList))">XÓA</a></span>
+                                            <span><a href="#" class="link-warning link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" @onclick="@(()=>EditItemAsync(dataDropDownList))">SỬA</a></span>
+                                        </div>
+                                        
+                                        @*  <DxButton Text="XÓA" IconCssClass="bi bi-trash3-fill" RenderStyle="ButtonRenderStyle.Danger" Click="@(()=>deleteAsync(dataDropDownList))" RenderStyleMode="ButtonRenderStyleMode.Text"> *@
+                                       @*  </DxButton> *@
+                                    </CellDisplayTemplate>
+                                </DxGridDataColumn>
+                               
+                            </Columns>
+
+                        </DxGrid>
+                    </DxLoadingPanel>
+                </div>
+
+
+            </Template>
+        </DxGridLayoutItem>
+
+
+    </Items>
+</DxGridLayout>
+@code {
+    [Inject] BrowserService browserService { get; set; }
+    bool PopupVisible { get; set; } = false;
+
+    bool CheckQuyen { get; set; } = false;
+    RenderFragment? renderFragment { get; set; }
+    DialogWindow? dxPopup { get; set; }
+    //bool IsOpenfly = true;
+    DialogMsg dialogMsg { get; set; }
+    public string random { get; set; }
+    string heightgrid = "500px";
+    string headerform = "";
+
+    List<NvlNhomHang> lstdata { get; set; }
+
+    List<DataDropDownList> lsttype { get; set; }
+    IGrid? Grid { get; set; }
+
+    bool PanelVisible { get; set; } = false;
+
+   
+    protected override async Task OnInitializedAsync()
+    {
+        await loadAsync();
+        // return base.OnInitializedAsync();
+    }
+    private async Task loadAsync()
+    {
+
+        var dimension = await browserService.GetDimensions();
+        // var heighrow = await browserService.GetHeighWithID("divcontainer");
+        int height = dimension.Height - 90;
+        heightgrid = string.Format("{0}px", height);
+        CheckQuyen = await phanQuyenAccess.CreateNhomHang(Model.ModelAdmin.users);
+        await loaddatadropdownAsync();
+        // var query=ModelData.L
+    }
+
+
+}

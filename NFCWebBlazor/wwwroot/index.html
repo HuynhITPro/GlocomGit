@@ -1,0 +1,199 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <!--<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/x-icon" href="/images/logosp.ico">
+    <title>GLOCOM</title>
+    <base href="/" />
+
+    <link rel="stylesheet" href="_content/DevExpress.Blazor.Reporting.Viewer/css/dx-blazor-reporting-components.css">
+    <link rel="stylesheet" href="_content/DevExpress.Blazor.Viewer/css/dx-blazor-viewer-components.css"><!--Class cho PDF viewer-->
+
+    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <!--<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">-->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+
+    <link href="_content/DevExpress.Blazor.Themes/bootstrap-external.bs5.css" rel="stylesheet" />
+    <link href="NFCWebBlazor.styles.css" rel="stylesheet" />
+    <!--<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">-->
+    <!--<link href="manifest.webmanifest" rel="manifest" />-->
+    <link href="css/materialicon.css" rel="stylesheet" />
+    <link href="css/app.css?v=20250401" rel="stylesheet" />
+    <link href="css/bs-stepper.css" rel="stylesheet" />
+
+    <style type="text/css">
+        .splash-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-flow: column nowrap;
+            height: 100vh;
+            font-family: "Segoe UI",Roboto,"Helvetica Neue","-apple-system",BlinkMacSystemFont,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+            font-size: .88rem;
+            font-weight: 400;
+            line-height: 1.5;
+            text-align: center;
+        }
+
+            .splash-screen .spinner-border {
+                border: .2em solid;
+                border-color: #5f368d #bfbfbf #bfbfbf;
+                width: 120px;
+                height: 120px;
+            }
+
+        .splash-screen-caption {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-top: 1.5rem;
+        }
+
+        .splash-screen-text {
+            color: #a1a1a1;
+            margin-top: .5rem;
+        }
+    </style>
+
+
+
+</head>
+
+<body>
+    <div id="app">
+        <script type="text/javascript">
+            if (/MSIE \d|Trident.*rv:|Edge\//.test(window.navigator.userAgent))
+                window.location.href = "browserNotSupported.html";
+        </script>
+        <div class="d-flex justify-content-center align-items-center vh-100">
+            <div id="checkload" class="text-center">
+                <img src="images/logo.png" alt="Logo" class="img-fluid" style="width:150px; height: auto;">
+                <p>
+                    <button class="btn btn-outline-primary" type="button" style="border:none;color:#000032">
+                        <span class="spinner-grow spinner-grow-sm" aria-hidden="true"></span>
+                        <span role="status" style="color: #007300">App đang được tải. Vui lòng đợi...</span>
+                    </button>
+                </p>
+
+
+            </div>
+
+
+        </div>
+
+        <div id="blazor-error-ui">
+            Đã có lỗi xảy ra.
+            <a href="" class="reload">Tải lại</a>
+            <a class="dismiss">X</a>
+        </div>
+
+    </div>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="js/jsproject.js?v=2025031003"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bs-stepper/dist/js/bs-stepper.min.js"></script>
+
+
+    <script src="_framework/blazor.webassembly.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.0.1/chart.umd.js" integrity="sha512-gQhCDsnnnUfaRzD8k1L5llCCV6O9HN09zClIzzeJ8OJ9MpGmIlCxm+pdCkqTwqJ4JcjbojFr79rl2F1mzcoLMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> <!-- Add chart.js reference if Chart components are used in the application. -->
+    <!-- Add sortable.js reference if SortableList component is used in your application. -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+    <script src="_content/Blazor.Bootstrap/blazor.bootstrap.js"></script>
+    <script src="_content/BlazorBarcodeScanner.ZXing.JS/zxingjs.index.min.js"></script>
+    <script src="_content/BlazorBarcodeScanner.ZXing.JS/BlazorBarcodeScanner.js"></script>
+
+    <!--<script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.published.js')
+                .then(() => console.log('Service Worker registered'));
+        }
+    </script>-->
+    <!--<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>-->
+    <!--<script type="text/javascript">
+            const logToScreen = (message) => {
+
+            };
+            console.error = (message) => {
+                logToScreen(`Error: ${message}`);
+                // Gọi hàm console.error gốc (nếu cần)
+                // console.log(message);
+            };
+            // Hàm hiển thị lỗi
+            function showError(error) {
+                var errorDiv = document.getElementById("blazor-error-ui");
+                if (errorDiv !== null) {
+                    alert(error.message);
+
+                    return;
+                }
+                const check = document.getElementById("checklogin");
+                if (error.message === undefined) {
+                    console.log("Lỗi:" + error);
+                    return;
+                }
+                if (check === null) {
+                    console.log("Lỗi console:" + error);
+                    return; // Kết thúc hàm nếu giá trị là null
+                }
+
+                if (error.message.indexOf("ResizeObserver loop") !== -1) {
+                    console.log("Lỗi console:" + error.message);
+                    return; // Kết thúc hàm nếu giá trị là null
+                }
+                //const errorMessage = document.getElementById("errormessage");
+                //errorLog.style.display = "block";
+                const logDiv = document.createElement("div");
+                logDiv.style.position = "fixed";
+                logDiv.style.bottom = "0";
+                logDiv.style.left = "0";
+                logDiv.style.width = "100%";
+                logDiv.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+                logDiv.style.color = "white";
+                logDiv.style.fontSize = "12px";
+                logDiv.style.zIndex = "9999";
+                logDiv.style.padding = "10px";
+                logDiv.innerText = error.message;
+                logDiv.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>${error.message}</span>
+                <button style="
+                    background: transparent;
+                    color: white;
+                    border: none;
+                    cursor: pointer;
+                    font-size: 14px;
+                ">✖</button>
+            </div>
+    `;
+
+                // Xử lý sự kiện đóng
+                logDiv.querySelector("button").addEventListener("click", () => {
+                    logDiv.remove(); // Xóa div khỏi DOM
+                });
+                document.body.appendChild(logDiv);
+                //errorMessage.textContent = error.message || error.toString();
+                console.error(error);
+            }
+
+            // Bắt các lỗi không được bắt trong window
+            window.onerror = function (message, source, lineno, colno, error) {
+                showError(error || { message, source, lineno, colno });
+            };
+
+            // Bắt lỗi Promise bị reject mà không xử lý
+            window.addEventListener("unhandledrejection", function (event) {
+                showError(event.reason);
+            });
+        </script>-->
+    <!--<script src="_content/ClipLazor/clipboard.min.js"></script>-->
+</body>
+
+</html>

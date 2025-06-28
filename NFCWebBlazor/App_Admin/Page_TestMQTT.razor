@@ -1,0 +1,85 @@
+﻿<DxFormLayout CssClass="sizelayout">
+
+    <DxFormLayoutItem ColSpanSm="12" ColSpanMd="4" ColSpanLg="4" CaptionPosition="CaptionPosition.Vertical">
+        <DxButton Text="Connect" Click="(() => ConnectMQTT())"></DxButton>
+    </DxFormLayoutItem>
+    <DxFormLayoutItem Caption="Subscribe *" ColSpanSm="12" ColSpanMd="4" ColSpanLg="4" CaptionPosition="CaptionPosition.Vertical">
+        <Template>
+            <div class="row">
+                <div class="col-auto">
+                    <DxTextBox @bind-Text=texttopic>
+                    </DxTextBox>
+                </div>
+                <div class="col-auto">
+                    <DxButton Text="Subscribe" Click="(() => Subcribe())"></DxButton>
+                </div>
+            </div>
+
+
+        </Template>
+    </DxFormLayoutItem>
+  
+    <DxFormLayoutItem ColSpanSm="12" ColSpanMd="4" ColSpanLg="4" CaptionPosition="CaptionPosition.Vertical">
+        <div class="row">
+            <div class="col-auto">
+                <DxTextBox @bind-Text=txtpublish>
+                </DxTextBox>
+            </div>
+            <div class="col-auto">
+                <DxButton Text="Pushlish" Click="(() => Pushlish())"></DxButton>
+            </div>
+        </div>
+    </DxFormLayoutItem>
+</DxFormLayout>
+@code {
+    private Timer _timer;
+    string texttopic = "", txtpublish = "";
+    MqttService mqttService;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(firstRender)
+        {
+            mqttService=new MqttService("AAAAA");
+            _timer = new Timer(Reconnect, null, 0, 60000);
+        }
+        //return base.OnAfterRenderAsync(firstRender);
+    }
+    protected override async Task OnInitializedAsync()
+    {
+
+
+    }
+    private async void Subcribe()
+    {
+        if (Model.ModelAdmin.mainLayout.mqttService != null)
+        {
+            //await Model.ModelAdmin.mainLayout.mqttService.UnsubscribeAsync(texttopic);
+            //await Model.ModelAdmin.mainLayout.mqttService.SubscribeAsync(texttopic);
+
+            //Model.ModelAdmin.mainLayout.mqttService = null;
+        }
+        //await mqttService.SubscribeAsync(texttopic);
+        // MqttService mqttService = new MqttService();
+
+    }
+    private async void ConnectMQTT()
+    {
+        if(Model.ModelAdmin.mainLayout.mqttService!=null)
+        {
+           await Model.ModelAdmin.mainLayout.mqttService.ConnectAsync();
+
+            //Model.ModelAdmin.mainLayout.mqttService = null;
+        }
+        //await mqttService.ConnectAsync();
+
+    }
+    private async void Pushlish()
+    {
+        await mqttService.PublishAsync(texttopic, txtpublish);
+
+    }
+    private  async void Reconnect(object state)
+    {
+        await mqttService.ReconnectAsync();
+    }
+}

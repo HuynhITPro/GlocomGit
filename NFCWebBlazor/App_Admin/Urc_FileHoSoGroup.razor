@@ -1,0 +1,117 @@
+﻿
+<style>
+    #grdfiledetail .dxbl-grid-header-row {
+        display: none;
+    }
+
+  
+</style>
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=dxPopup>
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+<NFCWebBlazor.App_Admin.DialogMsg @ref="@dialogMsg"></NFCWebBlazor.App_Admin.DialogMsg>
+
+<DxGrid @ref=Grid id="grdfiledetail"
+        VirtualScrollingEnabled="true"
+        Data=@lstdata
+        AutoExpandAllGroupRows="false">
+    <Columns>
+
+        <DxGridDataColumn FieldName="NoiDung" Caption=" " GroupIndex=0 Visible=false>
+            <GroupRowTemplate>
+                @{
+                    int rowindex = context.VisibleIndex;
+                    string valuegroup = (string)context.GroupValue;
+                    FileHoSoGroup fileHoSoGroup = lstdata.FirstOrDefault(p => p.NoiDung.Equals(valuegroup));
+
+                }
+                @if (fileHoSoGroup != null)
+                {
+                    <div class="row d-flex">
+                        <div class="col-auto text-primary">
+                            <span>@fileHoSoGroup.NoiDung</span>
+                            <i style="color:gray;font-size:0.7rem;">@getCountGroup(valuegroup)</i>
+                            <DxButton RenderStyle="ButtonRenderStyle.Primary" RenderStyleMode=ButtonRenderStyleMode.Text CssClass="bi bi-paperclip m-1"
+                                      Text="Thêm file" Click="@(()=>btuploadfile(fileHoSoGroup))">
+
+                            </DxButton>
+                        </div>
+                    </div>
+                }
+            </GroupRowTemplate>
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="TenFile" Caption=" " Width="*">
+            <CellDisplayTemplate>
+                @{
+                    FileHoSoGroup fileHoSoGroup = (FileHoSoGroup)context.DataItem;
+                }
+                @if (fileHoSoGroup.TenFile != null)
+                {
+                    <div class="row d-flex">
+
+                        <div class="col-auto">
+                            <div class="row d-flex justify-content-center">
+                                <img src=@fileHoSoGroup.PathImgUser style="width: auto; height: 32px;  border-radius: 50%;">
+                                <span style="font-size:0.7rem;" class="text-primary d-flex justify-content-center">@fileHoSoGroup.TenUserUpload</span>
+                            </div>
+                        </div>
+
+                       
+                        <div class="col-auto">
+                            <div class="row text-primary" style="font-size:0.7rem;">
+                                @fileHoSoGroup.TenFile
+                            </div>
+                            <div class="d-flex text-primary justify-content-center g-2">
+                                <div class="row d-flex justify-content-center">
+                                    <img src=@fileHoSoGroup.PathIcon style="width: auto; height: 20px;">
+                                    <i class="d-flex justify-content-center" style="font-size:0.7rem;color:gray;">@showdungluong(fileHoSoGroup.DungLuong)</i>
+                                </div>
+                                <DxButton RenderStyle="ButtonRenderStyle.Success" RenderStyleMode=ButtonRenderStyleMode.Text Click="@(()=>savefile(fileHoSoGroup))" CssClass="bi bi-download m-1"
+                                          Text="Tải file">
+                                </DxButton>
+
+                                <DxButton RenderStyle="ButtonRenderStyle.Danger" RenderStyleMode=ButtonRenderStyleMode.Text CssClass="bi bi-x-circle-fill m-1"
+                                          Click="@(()=>deleteDeletefile(fileHoSoGroup))" Text="Xóa file">
+                                </DxButton>
+                               
+                            </div>
+                        </div>
+
+                    </div>
+                }
+            </CellDisplayTemplate>
+        </DxGridDataColumn>
+    </Columns>
+
+</DxGrid>
+
+@code {
+
+    DxGrid Grid { get; set; }
+    DialogWindow dxPopup { get; set; }
+    RenderFragment? renderFragment { get; set; }
+
+    DialogMsg dialogMsg { get; set; }
+    bool PanelVisible = false;
+    private string getCountGroup(string valueGroup)
+    {
+        if (lstdata == null)
+            return "(Chưa có file)";
+        int i = lstdata.Where(p => p.NoiDung == valueGroup && p.Serial > 0).Count();
+        if (i == 0)
+            return "(Chưa có file)";
+        return string.Format(" (Có {0} file)", i);
+    }
+    private string showdungluong(double? dungluong)
+    {
+        if (dungluong == null)
+            return "";
+        if(dungluong<1)
+        {
+            return string.Format("{0} KB", Math.Round(dungluong.Value * 1024,0));
+        }
+        return string.Format("{0} KB", Math.Round(dungluong.Value,4));
+    }
+}

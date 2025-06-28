@@ -1,0 +1,146 @@
+﻿@using System.Data
+@using BlazorBootstrap
+@using NFCWebBlazor.Model
+@using Newtonsoft.Json
+@using static NFCWebBlazor.App_NguyenVatLieu.App_NhapXuat.Page_NvlNhapXuatGhiNo
+<div style="max-width:500px">
+
+
+<DxLoadingPanel @bind-Visible="@PanelVisible"
+IsContentBlocked="true"
+ApplyBackgroundShading="true"
+IndicatorAreaVisible="false"
+Text="Đang xử lý...">
+    <DxGrid @ref=dxGrid
+    ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+    VirtualScrollingEnabled="true"
+    TextWrapEnabled="false"
+    FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+    Data=@lstdata
+    AutoExpandAllGroupRows="false">
+        <ToolbarTemplate>
+            <DxToolbar ItemRenderStyleMode="ToolbarRenderStyleMode.Plain">
+                <DxToolbarItem Text="Tải lại" IconCssClass="bi bi-arrow-clockwise" RenderStyle="ButtonRenderStyle.Primary" Click="@load">
+                </DxToolbarItem>
+                <DxToolbarItem Text="Xuất excel" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=>dxGrid.ExportToXlsxAsync("ExporNhapXuatKho"))">
+                </DxToolbarItem>
+
+            </DxToolbar>
+        </ToolbarTemplate>
+        <Columns>
+          
+            <DxGridDataColumn FieldName="TenUserDuyet" Caption="Người duyệt đề nghị" Width="150"></DxGridDataColumn>
+            <DxGridDataColumn FieldName="SLGhiNo" Caption="SL Ghi nợ" Width="110" DisplayFormat="#,0.###;-#,0.###;''" />
+            <DxGridDataColumn FieldName="SLTra" Caption="SL Trả" Width="110" DisplayFormat="#,0.###;-#,0.###;''" />
+            <DxGridDataColumn FieldName="TonCuoi" Caption="Còn nợ" Width="110" DisplayFormat="#,0.###;-#,0.###;''" />
+        </Columns>
+        <TotalSummary>
+            <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+            FieldName="TenGN"
+            Name="TenGN"
+            DisplayText="Tổng:" />
+            <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+            FieldName="SLGhiNo"
+            Name="SLGhiNo"
+            DisplayText="{0}" />
+            <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+            FieldName="SLTra"
+            Name="SLTra"
+            DisplayText="{0}" />
+                <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+                                   FieldName="TonCuoi"
+                                   Name="TonCuoi"
+                                   DisplayText="{0}" />
+
+        </TotalSummary>
+    </DxGrid>
+</DxLoadingPanel>
+</div>
+@code {
+    [Inject] ToastService toastService { get; set; }
+
+    [Parameter]
+    public string MaHang { get; set; }
+
+    DxGrid dxGrid { get; set; }
+    bool PanelVisible { get; set; } = false;
+    List<NvlNhapXuatGhiNoItem> lstdata { get; set; }
+    protected override Task OnInitializedAsync()
+    {
+        _ = load();
+        return base.OnInitializedAsync();
+    }
+    private async Task load()
+    {
+
+        CallAPI callAPI = new CallAPI();
+        try
+        {
+            PanelVisible = true;
+            string sql = string.Format(@"use NVLDB
+
+                declare @tblnxghino table([Serial] [int],[MaHang] [nvarchar](100),[SerialNXItem] [int],[SerialDNItem] [int],[SLGhiNo] [decimal](18, 6),[SLTra] [decimal](18, 6),NgayInsert date)
+                insert into @tblnxghino([Serial],[MaHang],[SerialNXItem],[SerialDNItem],[SLGhiNo],[SLTra],NgayInsert)
+                select [Serial],[MaHang],[SerialNXItem],[SerialDNItem],[SLGhiNo],[SLTra],NgayInsert from
+                (select [Serial],[MaHang],[SerialNXItem],[SerialDNItem],[SLGhiNo],[SLTra],NgayInsert
+                from NvlNhapXuatGhiNo
+                where MaHang=@MaHang) as qry
+
+                --Xử lý ký duyệt
+                declare @tbldnitem table(SerialDNItem int primary key)
+                insert into @tbldnitem(SerialDNItem)
+                select [SerialDNItem] from @tblnxghino group by SerialDNItem
+
+                declare @tblkyduyet Table([Serial] int,[SerialLinkMaster] int,[SerialLinkItem] int,[UserDuyet] nvarchar(100),TenUserDuyet nvarchar(100))
+
+                insert into @tblkyduyet([Serial] ,[SerialLinkMaster],[SerialLinkItem],[UserDuyet],[TenUserDuyet])
+                select [Serial] ,[SerialLinkMaster],[SerialLinkItem],[UserDuyet],usr.TenUser
+                from (SELECT  [Serial] ,[SerialLinkMaster],[SerialLinkItem],[UserDuyet]
+                ,ROW_NUMBER() OVER (PARTITION BY [SerialLinkItem] ORDER BY [Serial] DESC) AS RowNum
+                FROM [NvlKyDuyetItem] where TableName=N'NvlKehoachMuaHang' and LoaiDuyet=N'Duyệt'
+                and SerialLinkItem in (select SerialDNItem from @tbldnitem)
+                ) as qry  inner join  DBMaster.dbo.Users usr on qry.UserDuyet=usr.UsersName
+                where RowNum=1
+
+
+                 select qry.MaHang,isnull(TenUserDuyet,N'Nợ ban đầu') as TenUserDuyet,qry.SLGhiNo,qry.SLTra,qry.TonCuoi
+                ,hh.TenHang,hh.DVT
+                        from
+                        (select gn.MaHang,sum(SLGhiNo) as SLGhiNo,sum(SLTra) as SLTra,sum(SLGhiNo-SLTra) as TonCuoi,tblduyet.TenUserDuyet
+                        from (select * from @tblnxghino)  gn
+						left join dbo.NvlNhapXuatItem nxitem on gn.SerialNXItem=nxitem.Serial
+						left join dbo.NvlNhapXuat nx on nxitem.SerialCT=nx.Serial
+						left join @tblkyduyet tblduyet on gn.SerialDNItem=tblduyet.SerialLinkItem
+						group by gn.MaHang,tblduyet.TenUserDuyet)
+                        as qry
+
+                        inner join dbo.NvlHangHoa hh on qry.MaHang=hh.MaHang
+
+                            ");
+            List<ParameterDefine> lstpara = new List<ParameterDefine>();
+            lstpara.Add(new ParameterDefine("@MaHang", MaHang));
+            string json = await callAPI.ExcuteQueryEncryptAsync(sql, lstpara);
+                if (json != "")
+                {
+                    
+                    var query = JsonConvert.DeserializeObject<List<NvlNhapXuatGhiNoItem>>(json);
+                   
+                    lstdata =query;
+                    //dataRowView["lstitem"] = lstdata;
+                }
+            }
+            catch (Exception ex)
+            {
+                toastService.Notify(new ToastMessage(ToastType.Danger, "Lỗi:" + ex.Message));
+            }
+            finally
+            {
+                dxGrid.Reload();
+                PanelVisible = false;
+                StateHasChanged();
+            }
+        
+      
+
+    }
+}

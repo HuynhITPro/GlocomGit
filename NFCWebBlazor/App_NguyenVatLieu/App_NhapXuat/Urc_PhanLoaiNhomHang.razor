@@ -1,0 +1,57 @@
+﻿@using BlazorBootstrap
+
+<div class="container">
+
+
+    <div class="row m-2">
+        <NFCWebBlazor.App_ClassDefine.ComboboxFilteredString SearchFilterCondition="ListSearchFilterCondition.Contains"
+        ListRenderMode=ListRenderMode.Virtual
+        SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+        SearchMode="ListSearchMode.AutoSearch"
+        ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+        ValueFieldName="@nameof(DataDropDownList.Name)"
+        TextFieldName="@nameof(DataDropDownList.FullName)"
+        TypeName="NVL_PhanLoai"
+        @bind-Value="@PhanLoai"
+        CssClass="cw-480" />
+    </div>
+    <div class="row text-center">
+        <div class="col m-2">
+            <DxButton Text="Xác nhận" Click="OnXacNhan"></DxButton>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback GotoMainForm { get; set; }
+    [Inject]ToastService toastService{ get;set;}
+    string PhanLoai { get; set; }
+    protected override Task OnInitializedAsync()
+    {
+        PhanLoai=Model.ModelAdmin.PhanLoaiHang;
+        return base.OnInitializedAsync();
+    }
+    private async void OnXacNhan()
+    {
+        Model.ModelAdmin.PhanLoaiHang=PhanLoai;
+        if (!string.IsNullOrEmpty(Model.ModelAdmin.PhanLoaiHang))
+        {
+            List<NvlHangHoaDropDown> lst = await Model.ModelData.GetHangHoa();
+            Model.ModelAdmin.lsthanghoafilter.Clear();
+            if (Model.ModelAdmin.PhanLoaiHang == "TẤT CẢ")
+            {
+                Model.ModelAdmin.lsthanghoafilter.AddRange(lst.ToList());
+            }
+            else
+            {
+                Model.ModelAdmin.lsthanghoafilter.AddRange(lst.Where(x => x.PhanLoai == Model.ModelAdmin.PhanLoaiHang).ToList());
+
+            }
+        }
+        if(GotoMainForm.HasDelegate)
+        {
+            GotoMainForm.InvokeAsync();
+        }
+    }
+}

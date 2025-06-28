@@ -1,0 +1,14 @@
+﻿
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+<View_KeHoachMuaHangSP_Detail></View_KeHoachMuaHangSP_Detail>
+
+@code {
+    [Inject] BrowserService browserService { get; set; }
+    RenderFragment? renderFragment { get; set; }
+    DialogWindow? dxPopup { get; set; }
+
+}

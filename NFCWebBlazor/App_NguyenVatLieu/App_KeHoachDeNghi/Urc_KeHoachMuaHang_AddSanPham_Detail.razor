@@ -1,0 +1,295 @@
+﻿@using BlazorBootstrap
+@using DevExpress.Blazor;
+@using NFCWebBlazor.App_ClassDefine;
+@using System.Data
+@using System.Collections.ObjectModel
+@using static NFCWebBlazor.App_ThongTin.Page_DinhMucNVLMaster
+@using static NFCWebBlazor.App_NguyenVatLieu.App_KeHoachDeNghi.Page_DeNghiTheoDinhMuc
+@using static NFCWebBlazor.App_NguyenVatLieu.App_KeHoachDeNghi.Page_KeHoachMuaHangMaster
+@using static NFCWebBlazor.App_NguyenVatLieu.App_KeHoachDeNghi.Urc_KeHoachMuaHang_AddSanPham
+@using static NFCWebBlazor.App_ThongTin.Page_DinhMucHangHoaMaster
+
+@inject Model.ThemeColor themcolor;
+<style>
+    .my-grid {
+        max-height: @heightgrid;
+    }
+</style>
+<NFCWebBlazor.App_Admin.DialogMsg @ref="@dialogMsg"></NFCWebBlazor.App_Admin.DialogMsg>
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+<DxFlyout @ref=dxFlyoutchucnang
+          PositionTarget="@idflychucnang"
+          @bind-IsOpen=IsOpenfly
+          RestrictionTarget="#Navigation-Flyout-Customization"
+          AnimationType=FlyoutAnimationType.Fade
+          PreventCloseOnPositionTargetClick="true"
+          Width="min(95vw,800px)"
+          Position=@(FlyoutPosition.BottomStart | FlyoutPosition.TopStart)>
+    <BodyTextTemplate>
+
+
+    </BodyTextTemplate>
+
+</DxFlyout>
+<div>
+    <DxLoadingPanel @bind-Visible="@PanelVisible"
+                    IsContentBlocked="true"
+                    ApplyBackgroundShading="true"
+                    IndicatorAreaVisible="false"
+                    Text="Đang xử lý...">
+        @*  <div>
+            <h4>@keHoachThang_Showcrr.TenSP</h4>
+        </div> *@
+        <DxGrid @ref=dxGrid
+                TextWrapEnabled="true"
+                ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+                CustomizeElement="Grid_CustomizeElement"
+                VirtualScrollingEnabled=true
+               
+                
+                FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                Data=@lstdata
+                >
+            <ToolbarTemplate>
+                <DxToolbar AdaptivityAutoCollapseItemsToIcons="false" ItemRenderStyleMode="ToolbarRenderStyleMode.Plain" SizeMode="SizeMode.Small">
+
+                    <DxToolbarItem Text="Xuất excel" BeginGroup="true" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=>dxGrid.ExportToXlsxAsync("ExporDinhMuc"))">
+                    </DxToolbarItem>
+                    <DxToolbarItem Text="Chọn cột" BeginGroup="true" Click="@(()=>dxGrid.ShowColumnChooser())" IconCssClass="bi bi-layout-text-window-reverse" />
+                </DxToolbar>
+            </ToolbarTemplate>
+            <Columns>
+
+                <DxGridDataColumn FieldName="chk" Caption=" " Width="50">
+                    <CellDisplayTemplate>
+                        @{
+                            DinhMucVatTuShow dinhMucVatTuShow = (DinhMucVatTuShow)context.DataItem;
+
+                        }
+                        <DxCheckBox Checked="@dinhMucVatTuShow.chk" CheckedChanged="@((bool e)=>checkedchangedItem(e,dinhMucVatTuShow))"></DxCheckBox>
+                    </CellDisplayTemplate>
+                </DxGridDataColumn>
+                <DxGridDataColumn FieldName="NhaCungCap" Caption="Mã NCC" Width="110"></DxGridDataColumn>
+
+                <DxGridDataColumn FieldName="GroupMauSP" Caption="Màu SP" Width="110" GroupIndex="0">
+                    <GroupRowTemplate>
+                        @{
+                            if (context.GroupValue != null)
+                            {
+                                string s = context.GroupValue.ToString();
+                                int rowindex = context.VisibleIndex;
+                                DinhMucVatTuShow dinhMucVatTuShow = (DinhMucVatTuShow)context.Grid.GetDataItem(context.VisibleIndex);
+                                //context.Grid.ExpandGroupRow(context.VisibleIndex, true);
+                                @if (dinhMucVatTuShow != null)
+                                {
+                                    <div class="row d-flex ms-2">
+                                        <div class="col-auto card p-1" style="background-color:@dinhMucVatTuShow.Colorhex;min-width:250px;">
+                                            <span style="color:@StaticClass.GetContrastColor(dinhMucVatTuShow.Colorhex)">@(string.IsNullOrEmpty(dinhMucVatTuShow.TenMau) ? "Không có màu" : dinhMucVatTuShow.TenMau)</span>
+
+                                        </div>
+                                    </div>
+
+                                }
+                            }
+                        }
+                    </GroupRowTemplate>
+                </DxGridDataColumn>
+                <DxGridDataColumn FieldName="MauSP" Caption="Màu SP" Width="110"></DxGridDataColumn>
+                <DxGridDataColumn FieldName="TenDinhMuc" Width="140" Caption="Tên định mức" GroupIndex="1">
+                    <GroupRowTemplate>
+                        @{
+                            // object ob = context.Grid.GetDataItem(context.VisibleIndex);
+                            DinhMucVatTuShow dinhMucVatTuShow = (DinhMucVatTuShow)context.Grid.GetDataItem(context.VisibleIndex);
+
+                            // <DxCheckBox Checked="@dinhMucVatTuShow.chk" CheckedChanged="@((bool e)=>GetGroupDataItems(e,context.VisibleIndex))">@context.GroupValue</DxCheckBox>
+                            <span style="color:orangered">@context.GroupValue</span>
+                            var summaryItems = context.Grid.GetGroupSummaryItems();
+                            if (summaryItems.Any())
+                            {
+
+                                foreach (var i in summaryItems)
+                                {
+
+                                    <span style="font-style:italic;color:gray;margin-left:10px">@string.Format("({0} mã hàng)", context.Grid.GetGroupSummaryFormattedValue(i, context.VisibleIndex))</span>
+                                }
+
+                            }
+                        }
+                    </GroupRowTemplate>
+                </DxGridDataColumn>
+                @if (checkncc)
+                {
+                    <DxGridDataColumn FieldName="GroupNhaCungCap" Caption="Nhà cung cấp" Width="110" GroupIndex="2">
+                        <GroupRowTemplate>
+                            @{
+                                if (context.GroupValue != null)
+                                {
+                                    string s = context.GroupValue.ToString();
+                                    if (string.IsNullOrEmpty(s))
+                                    {
+                                        <span>Sử dụng chung</span>
+                                    }
+                                    else
+                                    {
+                                        var query = lstdata.Where(p => !string.IsNullOrEmpty(p.TenNCC)).FirstOrDefault(p => p.GroupNhaCungCap == s);
+                                        if (query != null)
+                                        {
+                                            <span>@query.TenNCC</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@context.GroupValue</span>
+                                        }
+                                    }
+                                    //context.Grid.ExpandGroupRow(context.VisibleIndex, true);
+                                }
+                            }
+                        </GroupRowTemplate>
+                    </DxGridDataColumn>
+                }
+                <DxGridDataColumn FieldName="MaVatTu" Caption="Mã hàng" Width="120" />
+                <DxGridDataColumn FieldName="TenHang" Caption="Tên hàng" Width="240" />
+                <DxGridDataColumn FieldName="DVT" Caption="ĐVT" Width="80" />
+
+                <DxGridDataColumn FieldName="CongDoan" Width="140" Caption="Công đoạn" GroupIndex="3">
+                    <GroupRowTemplate>
+                        @{
+
+                            DinhMucVatTuShow dinhMucVatTuShow = (DinhMucVatTuShow)context.Grid.GetDataItem(context.VisibleIndex);
+                            var summaryItems = context.Grid.GetGroupSummaryItems();
+                            //Hiển thị danh sách các kế hoạch được chọn trong listcongdoan
+                            //Kiểm tra xem công đoạn theo định mức này là duy nhất hay có thể lặp lại cho nhiều lựa chọn
+                            var querygroup = lstkehoachcongdoan.Where(p => p.MauSP == dinhMucVatTuShow.GroupMauSP && p.TenDinhMuc == dinhMucVatTuShow.TenDinhMuc && p.CongDoan == dinhMucVatTuShow.CongDoan);
+                            var querydataview = lstkehoachcongdoan.Where(p => p.GroupNhaCungCap == dinhMucVatTuShow.GroupNhaCungCap && p.MauSP == dinhMucVatTuShow.GroupMauSP && p.TenDinhMuc == dinhMucVatTuShow.TenDinhMuc && p.CongDoan == dinhMucVatTuShow.CongDoan).FirstOrDefault();
+                        }
+                        <div class="d-flex align-items-center">
+                            <DxCheckBox Checked="@querydataview.chk" CheckedChanged="@((bool e)=>GetGroupDataItems(e,context.VisibleIndex,querydataview))">@context.GroupValue</DxCheckBox>
+
+                            @if (summaryItems.Any())
+                            {
+
+                                @foreach (var i in summaryItems)
+                                {
+                                    var queryi = i;
+                                    <span style="font-style:italic;color:gray;margin-left:10px">@string.Format("({0} mã hàng)", context.Grid.GetGroupSummaryFormattedValue(i, context.VisibleIndex))</span>
+                                }
+                            }
+                            @foreach (var it in querydataview.lstkehoachcongdoanitem)
+                            {
+                                <span class="custom-card ms-1" style="background-color:@it.Colorhex;">
+                                    <span style="color:@it.Colortext">
+                                        @string.Format("S.Lượng: ", it.MaKH)
+                                    </span>
+                                    <DxSpinEdit ShowSpinButtons=false CssClass="text-danger" style="width:40px;" Value="@it.SLDeNghi" MaxValue="@it.SoLuongSP" ValueChanged="@((double e)=>SLCongDoanChanged(e,querydataview,it,dinhMucVatTuShow,context.VisibleIndex))" MinValue="0"></DxSpinEdit>
+                                    <span style="color:@it.Colortext">(bộ)</span>
+                                </span>
+                            }
+                        </div>
+                    </GroupRowTemplate>
+                </DxGridDataColumn>
+                <DxGridDataColumn FieldName="SLQuyDoi" Width="90" Caption="SL/bộ" DisplayFormat="#,0.####" />
+                <DxGridDataColumn FieldName="SLDeNghi" Width="90" Caption="Đề nghị" DisplayFormat="#,0.####" />
+                <DxGridDataColumn FieldName="SLTon" Caption="Tồn kho" Width="100" DisplayFormat="#,0.####;-#,0.####;''" />
+                <DxGridDataColumn FieldName="Err" Caption="Err" Width="180" />
+            </Columns>
+            @*   <DetailRowTemplate>
+                @{
+                    DinhMucVatTuShow dinhMucVatTuShow=(DinhMucVatTuShow)context.DataItem;
+                    @foreach (var it in lstKeHoachSelected)
+                    {
+                        <span class="custom-card ms-1">
+                            <DxSpinEdit ShowSpinButtons=false CssClass="text-danger" style="width:40px;" Value="@it.SLDeNghi" MaxValue="@dinhMucVatTuShow.SLDeNghi" ValueChanged="@((decimal? e)=>SLDeNghiChanged(e,it,dinhMucVatTuShow))" MinValue="0">
+                            </DxSpinEdit>
+                            <span>(bộ)</span>
+                        </span>
+                    }
+                }
+            </DetailRowTemplate> *@
+            <GroupSummary>
+                <DxGridSummaryItem SummaryType="GridSummaryItemType.Count" FieldName="TenDinhMuc" />
+            </GroupSummary>
+        </DxGrid>
+    </DxLoadingPanel>
+</div>
+
+
+@code {
+    [Parameter]
+    public KeHoachThang_Show keHoachThang_Showcrr { get; set; }
+    [Parameter]
+    public List<DinhMucVatTuShow> lstdata { get; set; }
+    [Parameter]
+    public List<DinhMucVatTuShow> lstdinhmucall { get; set; }
+    [Inject] BrowserService browserService { get; set; }
+    bool checkncc = false;
+    DialogWindow? dxPopup { get; set; }
+    RenderFragment? renderFragment { get; set; }
+    DialogMsg? dialogMsg { get; set; }
+    public string? random { get; set; }
+    string heightgrid = "500px";
+    bool Visilethemchitiet = true, Visilechinhsua = true, Visiledelete = true, Visilethemfile = true;
+    public List<KeHoachDinhMucCongDoan> lstkehoachcongdoan { get; set; } = new List<KeHoachDinhMucCongDoan>();
+    IGrid? dxGrid { get; set; }
+    DxFlyout? dxFlyoutchucnang { get; set; }
+    public string? idflychucnang { get; set; }
+    bool IsOpenfly { get; set; } = false;
+    App_ClassDefine.ClassProcess prs = new ClassProcess();
+    bool PanelVisible { get; set; } = false;
+    protected override async Task OnInitializedAsync()
+    {
+        var dimension = await browserService.GetDimensions();
+        // var heighrow = await browserService.GetHeighWithID("divcontainer");
+        int height = dimension.Height - 90;
+        heightgrid = string.Format("{0}px", height);
+        await loadAsync();
+        // return base.OnInitializedAsync();
+    }
+    public string idelement(int? serial)
+    {
+        if (serial == null)
+            string.Format("flychucnang_{0}_{1}", random, serial);
+        if (random == null)
+        {
+            random = prs.RandomString(9);
+        }
+        return string.Format("flychucnang_{0}_{1}", random, serial);
+    }
+    private async Task loadAsync()
+    {
+        CheckQuyen = await phanQuyenAccess.CreateKeHoachMuaHang(Model.ModelAdmin.users);
+        if (keHoachThang_Showcrr != null)
+        {
+            loaddataAsyn();
+        }
+    }
+    public string showkhuvuc(string khuvuc)
+    {
+        if (khuvuc == "KV2DH")
+            return "Lắp ráp";
+        if (khuvuc == "KV3")
+            return "Nhúng/Sơn";
+        return khuvuc;
+    }
+    void Grid_CustomizeElement(GridCustomizeElementEventArgs e)
+    {
+        if (e.ElementType == GridElementType.DataRow)
+        {
+            e.CssClass = "highlighted-item";
+            // if (e.Grid.GetRowValue(e.VisibleIndex, "Err") != null && e.Grid.GetRowValue(e.VisibleIndex, "Err") != DBNull.Value)
+            // {
+            //     //Console.WriteLine(e.Grid.GetRowValue(e.VisibleIndex, "Err").ToString());
+            //     if (!string.IsNullOrEmpty(e.Grid.GetRowValue(e.VisibleIndex, "Err").ToString()))
+            //         e.CssClass = "highlighted-item";
+            // }
+
+        }
+
+    }
+
+
+
+}

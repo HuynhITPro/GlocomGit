@@ -1,0 +1,12 @@
+﻿<h3>Page_TestCamera</h3>
+<video id="videoElement" width="640" height="480" autoplay></video>
+<canvas id="canvasElement" width="640" height="480"></canvas>
+<p id="objectCount">Objects detected: 0</p>
+<button @onclick="showcamera">Start Detection</button>
+@code {
+    [Inject] IJSRuntime jSRuntime { get; set; }
+    private async void showcamera()
+    {
+        await jSRuntime.InvokeVoidAsync("startObjectDetection", "videoElement", "canvasElement");
+    }
+}

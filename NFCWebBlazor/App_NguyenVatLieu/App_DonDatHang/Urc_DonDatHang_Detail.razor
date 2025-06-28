@@ -1,0 +1,319 @@
+﻿@using System.Collections.ObjectModel
+@using static NFCWebBlazor.App_NguyenVatLieu.App_DonDatHang.Page_DonDatHang_Master
+
+<style>
+    .griddetails {
+        max-height: @heightgrid;
+    }
+
+    .highlighted-item-linethrough > td {
+        background-color: pink;
+        text-decoration: line-through;
+    }
+</style>
+
+<NFCWebBlazor.App_Admin.DialogMsg @ref="@dialogMsg"></NFCWebBlazor.App_Admin.DialogMsg>
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+<DxFlyout @ref=dxFlyoutchucnang
+          PositionTarget="@idflychucnang"
+          @bind-IsOpen=IsOpenfly
+          RestrictionTarget="#Navigation-Flyout-Customization"
+          AnimationType=FlyoutAnimationType.Fade
+          PreventCloseOnPositionTargetClick="true"
+          Width="250px"
+          Position=@(FlyoutPosition.BottomStart | FlyoutPosition.TopStart)>
+    <BodyTextTemplate>
+
+        <div class="container">
+            <div class="row gap-1">
+
+                <DxButton Visible=@PhanQuyenCheck Text="Xóa" IconCssClass="oi oi-x" RenderStyle="ButtonRenderStyle.Danger" Click=@DeleteItemAsync RenderStyleMode="ButtonRenderStyleMode.Outline">
+                </DxButton>
+                <DxButton RenderStyle="ButtonRenderStyle.Info" IconCssClass="bi bi-pencil" Text="Sửa" Visible=@PhanQuyenCheck Click="@EditItem" />
+
+                <DxButton RenderStyle="ButtonRenderStyle.Danger" IconCssClass="oi oi-x" Text="Bỏ đặt hàng" Visible=@PhanQuyenCheck Click="@(HuyDatHangAsync)" />
+            </div>
+
+
+        </div>
+    </BodyTextTemplate>
+
+</DxFlyout>
+<DxLoadingPanel @bind-Visible="@PanelVisible"
+                IsContentBlocked="true"
+                ApplyBackgroundShading="true"
+                IndicatorAreaVisible="false"
+                Text="Đang xử lý...">
+
+    <DxGrid @ref="Grid" Data="@lstdata"
+            AutoExpandAllGroupRows="true"
+            TextWrapEnabled="true"
+            CssClass="griddetails"
+            ShowAllRows=true
+            CustomizeElement="OnCustomizeElement"
+            id="@idgrid"
+            ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+            FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+            VirtualScrollingEnabled=true
+            ShowFilterRow=!Ismobile>
+        <ToolbarTemplate>
+            <DxToolbar ItemRenderStyleMode="ToolbarRenderStyleMode.Plain">
+                <DxToolbarItem Text="Tải lại" IconCssClass="bi bi-arrow-clockwise" RenderStyle="ButtonRenderStyle.Primary" Click="@searchAsync">
+                </DxToolbarItem>
+                <DxToolbarItem Visible="@(!Ismobile)" Text="Xuất excel" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=>Grid.ExportToXlsxAsync("ExporDeNghi"))">
+                </DxToolbarItem>
+                <DxToolbarItem Visible="@(!Ismobile)" Text="Chọn cột" BeginGroup="true" Click="@(()=>Grid.ShowColumnChooser())" IconCssClass="bi bi-layout-text-window-reverse" />
+
+                <DxToolbarItem Text="Duyệt tất cả" Click="@(()=>DuyetItemAllAsync())" RenderStyle="ButtonRenderStyle.Success" Visible=@Visibleduyetall() IconCssClass="bi bi-check2-all" />
+                <DxToolbarItem Text="Hủy Duyệt" Click="@(()=>HuyDuyetItemAllAsync())" RenderStyle="ButtonRenderStyle.Danger" Visible=@Visibleduyetall() IconCssClass="oi oi-x" />
+
+              
+            </DxToolbar>
+        </ToolbarTemplate>
+        <Columns>
+
+            <DxGridDataColumn FieldName="TenHang" Width="100" Caption=" ">
+                <CellDisplayTemplate>
+                    @{
+                        NVLDonDatHangItemShow nvlKeHoachMuaHangItem = (NVLDonDatHangItemShow)context.DataItem;
+                    }
+                    <span>
+                        <a href="#" class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"
+                           id=@idelement(nvlKeHoachMuaHangItem.Serial) @onclick="@(()=>ShowFlyout(nvlKeHoachMuaHangItem))"><i class="bi bi-list-stars me-1"></i>Chức năng</a>
+                    </span>
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="TextDuyet" Visible=@(!VisibleKeHoachMuaHang) Caption="Tình trạng" Width="110">
+                <CellDisplayTemplate>
+                    @{
+                        NVLDonDatHangItemShow nvlKeHoachMuaHangItem = (NVLDonDatHangItemShow)context.DataItem;
+                    }
+                    @if (nvlKeHoachMuaHangItem.TextDuyet != "Không duyệt")
+                    {
+                        <div class="row">
+                            <span style="color:gray;font-size:0.5rem;">@shownguoikiem(nvlKeHoachMuaHangItem.TextKiem)</span>
+                            <span style="color:forestgreen;font-size:0.6rem">
+                                <img src="@pathimgduyet(nvlKeHoachMuaHangItem.TextDuyet)" width="12" alt="Image" />
+                                @shownguoiduyet(nvlKeHoachMuaHangItem.TextDuyet)
+                            </span>
+                        </div>
+                    }
+                    else
+                    {
+                        <span style="color:orangered">
+                            @string.Format("Không duyệt vì:{0}", nvlKeHoachMuaHangItem.MsgKhongDuyet)
+                        </span>
+                    }
+
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="MaHang" Caption="Duyệt" Width="140" Visible=@Visibleduyetall() ShowInColumnChooser=false>
+                <CellDisplayTemplate>
+                    @{
+                        NVLDonDatHangItemShow nvlKeHoachMuaHangItem = (NVLDonDatHangItemShow)context.DataItem;
+                    }
+
+                    <a class="bi bi-check2-circle" @onclick="@(()=>DuyetItemAsync(nvlKeHoachMuaHangItem))" style="text-decoration: none;color:green;font-size:0.7rem;" href="#">Duyệt</a>
+                    <a class="oi oi-x ms-2" @onclick="@(()=>showmsgAsync(nvlKeHoachMuaHangItem))" style="text-decoration: none;color:red;font-size:0.7rem;" href="#">Không đồng ý</a>
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="Serial" Caption="Serial" Visible=false Width="100" />
+            <DxGridDataColumn FieldName="PhanLoai" Caption="Nhóm hàng" Width="100" GroupIndex="0" />
+            <DxGridDataColumn FieldName="MaHang" Caption="Mã hàng" Width="100" />
+            <DxGridDataColumn FieldName="TenHang" Caption="Tên hàng" Width="250" />
+            <DxGridDataColumn FieldName="SLTon" DisplayFormat="#,0.###" Caption="Tồn kho" Width="100" />
+            <DxGridDataColumn FieldName="SoLuong" DisplayFormat="#,0.###" Caption="Số lượng" Width="90" />
+            <DxGridDataColumn FieldName="SLTheoDoi" DisplayFormat="#,0.###" Caption="SL theo dõi" Width="80" Visible=!checkAddItem />
+            <DxGridDataColumn FieldName="DonGia" Caption="Đơn giá" Width="120">
+                <CellDisplayTemplate>
+                    @{
+                        NVLDonDatHangItemShow nvlKeHoachMuaHangItem = (NVLDonDatHangItemShow)context.DataItem;
+                    }
+                    <div class="row d-flex align-items-end" style="text-align:right">
+                        <span>@showtextdouble(nvlKeHoachMuaHangItem.DonGia)</span>
+                        <br />
+                        <a style="color:red;font-size:10px;">@showtextgiaduyet(nvlKeHoachMuaHangItem.DonGiaDuyet)</a>
+
+                    </div>
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="ThanhTien" DisplayFormat="#,0.###" Caption="Thành tiền" Width="120" />
+            <DxGridDataColumn FieldName="DVT" Caption="ĐVT" Width="80" />
+            <DxGridDataColumn FieldName="TenNCC" Caption="Tên NCC" Width="240" />
+            <DxGridDataColumn FieldName="TyLe" Width="140" Caption="% Nhập kho">
+                <CellDisplayTemplate>
+                    <NFCWebBlazor.App_ClassDefine.ProgressBarDf value=@(((NVLDonDatHangItemShow)context.DataItem).TyLe)></NFCWebBlazor.App_ClassDefine.ProgressBarDf>
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="NoiDung" Caption="Ghi chú" Visible=false />
+            <DxGridDataColumn FieldName="UserInsert" Width="120" Caption="UserInsert" Visible=false />
+            <DxGridDataColumn FieldName="NgayInsert" Caption="NgayInsert" Width="130" DisplayFormat="dd-MM-yy HH:mm" />
+
+        </Columns>
+        <TotalSummary>
+            <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+                               FieldName="ThanhTien"
+                               Name="ThanhTienShow"
+                               DisplayText="Tổng: {0}"
+                               FooterColumnName="@showfooterthanhtien" />
+            <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+                               FieldName="SoLuong"
+                               Name="SoLuong"
+                               DisplayText="Tổng: {0}"
+                               FooterColumnName="SoLuong" />
+        </TotalSummary>
+    </DxGrid>
+
+</DxLoadingPanel>
+
+@code {
+    [Inject] BrowserService browserService { get; set; }
+
+    [Parameter]
+    public NVLDonDatHangShow nVLDonDatHangShowcrr { get; set; }
+    [Parameter]
+    public EventCallback GotoMasterGrid { get; set; }
+    [Parameter]
+    public bool Ismobile { get; set; }
+
+    DxFlyout dxFlyoutchucnang { get; set; }
+    public string idflychucnang { get; set; }
+    bool IsOpenfly { get; set; } = false;
+    public string random { get; set; }
+
+    ObservableCollection<NVLDonDatHangItemShow> lstdata { get; set; }
+
+    NVLDonDatHangItemShow nvlKeHoachMuaHangItemShowcrr { get; set; }
+    bool checkAddItem = true;
+    bool PanelVisible { get; set; }
+    bool VisibleKeHoachMuaHang = false;
+    IGrid? Grid { get; set; }
+
+    bool PopupVisible { get; set; } = false;
+    DialogWindow? dxPopup { get; set; }
+    RenderFragment? renderFragment { get; set; }
+    DialogMsg? dialogMsg { get; set; }
+
+    string heightgrid = "500px";
+
+    string headerform = "";
+    string showfooterthanhtien = "ThanhTien";
+    string idgrid = "griddetaikehoach";
+    // void Grid_CustomizeSummaryDisplayText(GridCustomizeSummaryDisplayTextEventArgs e)
+    // {
+    //     if (e.Item.Name == "ThanhTienShow")
+    //         e.DisplayText = string.Format("{0:#,#}", e.Value);
+    //     if (e.Item.Name == "SoLuong")
+    //         e.DisplayText = string.Format("{0:#,#.###}", e.Value);
+    // }
+    private string shownguoikiem(string textkiem)
+    {
+        if (textkiem == "")
+        {
+            return "";
+        }
+        return "Kiểm bởi: " + textkiem;
+    }
+    private string shownguoiduyet(string textduyet)
+    {
+        if (textduyet == "")
+        {
+            return "Chưa duyệt";
+        }
+        return "Duyệt bởi: " + textduyet;
+    }
+    private string pathimgduyet(string textduyet)
+    {
+        if (textduyet == "")
+        {
+            return IconImg.NotCheck;
+        }
+        return IconImg.CheckMark;
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        var dimension = await browserService.GetDimensions();
+        // var heighrow = await browserService.GetHeighWithID("divcontainer");
+        int height = dimension.Height - 90;
+        heightgrid = string.Format("{0}px", height);
+        int width = dimension.Width;
+        if (width < 768)
+        {
+            Ismobile = true;
+            idgrid = "customGridnotheader";
+            showfooterthanhtien = "UserInsert";//Hiển thị tổng ở cột này
+        }
+        else
+            Ismobile = false;
+        await loadAsync();
+        // return base.OnInitializedAsync();
+    }
+    App_ClassDefine.ClassProcess prs = new ClassProcess();
+
+    public string idelement(int? serial)
+    {
+        if (serial == null)
+            string.Format("flychucnang_{0}_{1}", random, serial);
+        if (random == null)
+        {
+            random = prs.RandomString(9);
+        }
+        return string.Format("flychucnang_{0}_{1}", random, serial);
+    }
+    private async Task loadAsync()
+    {
+
+
+
+
+    }
+
+    bool expand = true;
+    private void expandall()
+    {
+        Grid.BeginUpdate();
+        Grid.AutoExpandAllGroupRows = expand;
+        Grid.EndUpdate();
+        expand = !expand;
+    }
+    private string showtextdouble(decimal? d)
+    {
+        if (d == null)
+            return "";
+        return d.Value.ToString("#,0.##");
+    }
+    private string showtextgiaduyet(decimal? d)
+    {
+        if (d == null)
+            return "Giá chưa duyệt";
+        return "Giá duyệt: " + d.Value.ToString("#,0.##");
+    }
+    public string idelement(int serial)
+    {
+        if (serial == null)
+            string.Format("flychucnang_{0}_{1}", random, serial);
+        if (random == null)
+        {
+            random = prs.RandomString(9);
+        }
+        return string.Format("flychucnang_{0}_{1}", random, serial);
+    }
+    void OnCustomizeElement(GridCustomizeElementEventArgs e)
+    {
+        if (e.ElementType == GridElementType.DataRow)
+        {
+            NVLDonDatHangItemShow nvlKeHoachMuaHangItemShow = (NVLDonDatHangItemShow)e.Grid.GetDataItem(e.VisibleIndex);
+            // Console.WriteLine(nvlKeHoachMuaHangItemShow.HuyDatHang);
+            if (nvlKeHoachMuaHangItemShow.TextDuyet == "Không duyệt")
+                e.CssClass = "highlighted-item-linethrough";
+            if (nvlKeHoachMuaHangItemShow.SLHuy>0)
+                e.CssClass = "highlighted-item-linethrough";
+
+        }
+
+    }
+}

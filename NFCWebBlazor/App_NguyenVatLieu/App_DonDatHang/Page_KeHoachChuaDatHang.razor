@@ -1,0 +1,366 @@
+﻿@using BlazorBootstrap
+@using DevExpress.Blazor;
+@using NFCWebBlazor.App_ClassDefine;
+@using System.Data
+@using System.Collections.ObjectModel
+@using NFCWebBlazor.App_NguyenVatLieu.App_KeHoachDeNghi
+@using static NFCWebBlazor.App_NguyenVatLieu.App_DonDatHang.Page_DonDatHang_Master
+@using static NFCWebBlazor.App_NguyenVatLieu.App_KeHoachDeNghi.Page_KeHoachMuaHangMaster
+
+<style>
+    .griditem {
+    max-height: @heightgrid;
+    }
+
+   
+
+    .highlighted-item > td {
+    background-color: var(--bs-danger-border-subtle)
+    }
+
+    .highlighted-item > td:first-child {
+    background-color: transparent;
+    }
+</style>
+@inject Model.ThemeColor themcolor;
+<DxToastProvider Name="Template"
+MaxToastCount="1"
+Width="400px"
+DisplayTime="@TimeSpan.Zero"
+FreezeOnClick="true" />
+<DxToast @ref=toastTextInput
+Title="Chọn số đơn hàng"
+ProviderName="Template">
+    <Template>
+        <div class="row justify-content-center gap-1">
+            <div>
+                <DxComboBox Data=@lstdonhang TextFieldName="@nameof(DataDropDownList.FullName)"
+                ValueFieldName="@nameof(DataDropDownList.Name)"
+                SearchFilterCondition="ListSearchFilterCondition.Contains"
+                ListRenderMode=ListRenderMode.Virtual
+                SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                SearchMode="ListSearchMode.AutoSearch"
+                ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto
+                @bind-Value="@SerialDH"
+                CssClass="cw-480"></DxComboBox>
+            </div>
+            <div class="row justify-content-center gap-1">
+                <DxButton RenderStyle="ButtonRenderStyle.Success" RenderStyleMode="ButtonRenderStyleMode.Outline" Click="@saveAsync" Text="LƯU VÀO ĐƠN HÀNG"></DxButton>
+                <DxButton RenderStyle="ButtonRenderStyle.Primary" RenderStyleMode="ButtonRenderStyleMode.Outline" Click="@btadddonhangAsync" Text="TẠO MỚI ĐƠN HÀNG"></DxButton>
+            </div>
+        </div>
+    </Template>
+</DxToast>
+<NFCWebBlazor.App_Admin.DialogMsg @ref="@dialogMsg"></NFCWebBlazor.App_Admin.DialogMsg>
+
+
+
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup CssClass="widthPopup">
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+<DxGridLayout CssClass="w-100 ch-480">
+
+    <Rows>
+        <DxGridLayoutRow Height="auto" />
+        <DxGridLayoutRow />
+    </Rows>
+    <Items>
+        <DxGridLayoutItem Row="0">
+            <Template>
+                <div id="@randomdivhide" class="p-2 mb-2 bg-white border  rounded-2 rounded-top-0 collapse show">
+
+                    <div>
+
+                        <DxFormLayout CssClass="w-100 mt-3" CaptionPosition="CaptionPosition.Vertical">
+                            <DxFormLayoutItem Caption="Bộ phận mua hàng" ColSpanXs="12" ColSpanSm="12" ColSpanMd="4" ColSpanLg="4" Visible=@(!kehoachvisible) CaptionPosition="CaptionPosition.Vertical">
+
+                                <Template>
+
+                                    <NFCWebBlazor.App_ClassDefine.ComboboxFilteredString CssClass="cw-480"
+                                    SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                    ListRenderMode=ListRenderMode.Virtual
+                                    SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                    SearchMode="ListSearchMode.AutoSearch"
+                                    TextFieldName="@nameof(DataDropDownList.FullName)"
+                                    ValueFieldName="@nameof(DataDropDownList.Name)"
+                                    TypeName="PhongBanMuaHang"
+                                    @bind-Value=dieuKienTimKiem.BoPhanMuaHang
+                                    ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto" />
+
+
+                                </Template>
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem ColSpanXs="12" ColSpanSm="12" ColSpanMd="4" ColSpanLg="4" Caption="Người đề nghị" CaptionPosition="CaptionPosition.Vertical">
+
+                                <Template>
+                                    <DxComboBox TextFieldName="@nameof(Users.TenUser)"
+                                    CssClass="cw-480"
+                                    Data="lstnguoidenghi"
+                                    @bind-Value="@dieuKienTimKiem.NguoiDN"
+                                    SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                    ListRenderMode=ListRenderMode.Virtual
+                                    SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                    SearchMode="ListSearchMode.AutoSearch"
+                                    ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto />
+
+
+                                </Template>
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem Caption="Số đề nghị" ColSpanXs="6" ColSpanSm="6" ColSpanMd="2" ColSpanLg="2">
+
+                                <DxSpinEdit @bind-Value="@dieuKienTimKiem.SerialDN" ShowSpinButtons="false" MinValue="0"></DxSpinEdit>
+
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem Caption="Nhóm vật tư" ColSpanXs="12" ColSpanSm="12" ColSpanMd="4" Visible=@(!kehoachvisible) ColSpanLg="4">
+
+                                <Template>
+                                    <DxTagBoxDefine @ref=dxTagBoxNhomVatTu TextFieldName="@nameof(DataDropDownList.FullName)"
+                                    ValueFieldName="@nameof(DataDropDownList.Name)"
+                                    CssClass="cw-480"
+                                    ListRenderMode="ListRenderMode.Virtual"
+                                    Data="@lstnhomvattu"
+                                    DropDownCssClass="dropdownheight"
+                                    @bind-Values="@nhomvattuselected"
+                                    ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto" />
+
+
+                                </Template>
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem Caption="Từ ngày" ColSpanXs="6" ColSpanSm="6" ColSpanMd="3" ColSpanLg="3">
+
+                                <DxDateEdit @bind-Date="@dieuKienTimKiem.DateBegin" Mask="@DateTimeMask.ShortDate" DisplayFormat="dd-MM-yy" />
+
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem Caption="Đến" ColSpanXs="6" ColSpanSm="6" ColSpanMd="3" ColSpanLg="3">
+
+                                <DxDateEdit @bind-Date="@dieuKienTimKiem.DateEnd" Mask="@DateTimeMask.ShortDate" DisplayFormat="dd-MM-yy" />
+
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem ColSpanSm="12" ColSpanMd="12" ColSpanLg="12" BeginRow="true">
+                                <DxRadioGroup Items="@lsttinhtrang"
+                                Layout="RadioGroupLayout.Horizontal"
+                                @bind-Value="@dieuKienTimKiem.TrangThai"
+                                ValueFieldName="@nameof(DataDropDownList.Name)"
+                                TextFieldName="@nameof(DataDropDownList.FullName)"
+                                CssClass="dx-demo-radio-group">
+
+                                </DxRadioGroup>
+
+                            </DxFormLayoutItem>
+
+
+                        </DxFormLayout>
+
+                    </div>
+
+                </div>
+
+            </Template>
+        </DxGridLayoutItem>
+        <DxGridLayoutItem Row="1">
+            <Template>
+                <div>
+                    <DxLoadingPanel @bind-Visible="@PanelVisible"
+                    IsContentBlocked="true"
+                    ApplyBackgroundShading="true"
+                    IndicatorAreaVisible="false"
+                    Text="Đang xử lý...">
+                        <DxGrid @ref="Grid" Data="@lstdata"
+                        id="customGrid" CssClass="griditem"
+                        AutoExpandAllGroupRows="@expandallgroup"
+                        TextWrapEnabled="false"
+                        ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+                        FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                        VirtualScrollingEnabled=true>
+                            <ToolbarTemplate>
+                                <DxToolbar ItemRenderStyleMode="ToolbarRenderStyleMode.Plain">
+                                    <DxToolbarItem Text="TÌM KIẾM" IconCssClass="bi bi-menu-button-wide" RenderStyle="ButtonRenderStyle.Danger" Click="@(()=>JSRuntime.InvokeVoidAsync(CallNameJson.toggleCollapse.ToString(),string.Format("#{0}",randomdivhide)))">
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="Xem" IconCssClass="bi bi-search" RenderStyle="ButtonRenderStyle.Primary" Click="@searchAsync">
+                                    </DxToolbarItem>
+
+                                    <DxToolbarItem Text="Xuất Excel" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=> Grid.ExportToXlsxAsync("ExportKehoachChuaDatHang"))">
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="Chọn cột" Click="@(()=>Grid.ShowColumnChooser())" IconCssClass="bi bi-layout-text-window-reverse" />
+                                    <DxToolbarItem Text="Đặt hàng" IconCssClass="bi bi-layout-text-window-reverse" RenderStyle="ButtonRenderStyle.Success" Click="@(()=>toastTextInput.Show())" />
+                                    <DxToolbarItem Text="Lưu vào đơn hàng" IconCssClass="bi bi-floppy" RenderStyle="ButtonRenderStyle.Primary" Click="@saveAsync" />
+                                 
+                                </DxToolbar>
+                            </ToolbarTemplate>
+                            <Columns>
+                                <DxGridDataColumn Width="60" Caption=" ">
+                                    <CellDisplayTemplate>
+                                        @{
+                                            var keHoachMuaHang_Show = (KeHoachMuaHang_Show)context.DataItem;
+                                        }
+                                        <DxCheckBox Checked=@keHoachMuaHang_Show.isChanged CheckedChanged="@((bool e)=>checkedchanged(e,context.VisibleIndex,keHoachMuaHang_Show))"></DxCheckBox>
+
+                                    </CellDisplayTemplate>
+                                </DxGridDataColumn>
+                                <DxGridDataColumn DataRowEditorVisible=false FieldName="@nameof(KeHoachMuaHang_Show.Serial)" Width="100" Caption="Số đề nghị">
+                                </DxGridDataColumn>
+
+                                <DxGridDataColumn FieldName="@nameof(KeHoachMuaHang_Show.NguoiDuyet)" Caption="% Hoàn thành" Width="150">
+                                    <CellDisplayTemplate>
+                                        @{
+                                            var keHoachMuaHang_Show = (KeHoachMuaHang_Show)context.DataItem;
+                                        }
+                                        <div>
+                                            <ProgressBarDf value="@keHoachMuaHang_Show.TyLe"></ProgressBarDf>
+                                            @if (!string.IsNullOrEmpty(keHoachMuaHang_Show.NguoiDuyet))
+                                            {
+                                                <span>
+                                                    <a style="text-decoration: none;font-size:10px;color:green" href="javascript:void(0);">Duyệt bởi:@keHoachMuaHang_Show.NguoiDuyet</a>
+                                                </span>
+                                            }
+                                        </div>
+
+                                    </CellDisplayTemplate>
+                                </DxGridDataColumn>
+                                <DxGridDataColumn FieldName="@nameof(KeHoachMuaHang_Show.NguoiDN)" Width=120 Caption="Người đề nghị"></DxGridDataColumn>
+                                <DxGridDataColumn FieldName="@nameof(KeHoachMuaHang_Show.PhongBan)" Width=150 Caption="Bộ phận/ phòng ban"></DxGridDataColumn>
+                                <DxGridDataColumn FieldName="@nameof(KeHoachMuaHang_Show.LyDo)" Caption="Lý do" Width="130" />
+                                <DxGridDataColumn FieldName="@nameof(KeHoachMuaHang_Show.NoiDung)" Caption="Nội dung" />
+                                <DxGridDataColumn FieldName="@nameof(KeHoachMuaHang_Show.NgayMax)" Caption="Ngày giao hàng" Width="120" />
+                                <DxGridDataColumn FieldName="@nameof(KeHoachMuaHang_Show.UserInsert)" Caption="UserInsert" Width="100" />
+                                <DxGridDataColumn FieldName="@nameof(KeHoachMuaHang_Show.NgayInsert)" Caption="NgayInsert" Width="120" DisplayFormat="dd-MM-yy HH:mm" />
+                            </Columns>
+                            <DetailRowTemplate>
+                                @{
+                                    var keHoachMuaHang_Show = (KeHoachMuaHang_Show)context.DataItem;
+                                }
+                                <Urc_KeHoachChuaDatHangDetail keHoachMuaHangcrr="@keHoachMuaHang_Show" SerialDH="@SerialDH"></Urc_KeHoachChuaDatHangDetail>   
+                            </DetailRowTemplate>
+                        </DxGrid>
+                    </DxLoadingPanel>
+                </div>
+            </Template>
+        </DxGridLayoutItem>
+
+
+    </Items>
+</DxGridLayout>
+@code {
+    [Inject] BrowserService browserService { get; set; }
+    [Parameter]
+    public EventCallback<List<NVLDonDatHangItemShow>> GotoMainForm { get; set; }
+    [Parameter]
+    public EventCallback<KeHoachMuaHang_Show> GotoMainFormKeHoach { get; set; }
+    [Parameter]
+    public NVLDonDatHangShow nVLDonDatHangShowcrr{ get; set; }
+    bool PopupVisible { get; set; } = false;
+    DieuKienTimKiem dieuKienTimKiem { get; set; } = new DieuKienTimKiem();
+    private string randomdivhide { get; set; } = string.Format("id{0}", StaticClass.Randomstring(10));//ID của CSS nên bắt đầu bằng chữ, vì nếu bat đầu bằng số dễ bị hẹo lắm
+    bool expandallgroup { get; set; } = false;
+    [Inject] IJSRuntime JSRuntime { get; set; }
+    RenderFragment renderFragment;
+    DialogWindow dxPopup;
+    DialogMsg? dialogMsg { get; set; }
+    public string? random { get; set; }
+    bool kehoachvisible { get; set; } = false;
+    List<DataDropDownList> lstdonhang { get; set; }
+    string donhangselected = "";
+    IEnumerable<DataDropDownList>? lsttinhtrang { get; set; }
+    NFCWebBlazor.App_ClassDefine.ComboboxFilteredString txtbophanmuahang { get; set; }
+    private List<Users> lstnguoidenghi { get; set; }
+    Users nguoidenghiselected { get; set; }
+    DxTagBoxDefine? dxTagBoxNhomVatTu { get; set; }
+    IEnumerable<DataDropDownList>? nhomvattuselected { get; set; }
+    List<DataDropDownList> lstnhomvattu { get; set; }
+    string heightgrid = "500px";
+    string headerform = "";
+    string typeappselected = "Chưa hoàn thành";
+    DateTime? dateTime { get; set; }
+
+    KeHoachMuaHang_Show keHoachMuaHang_Showcrr { get; set; }
+    bool Visilethemchitiet = true, Visilechinhsua = true, Visiledelete = true, Visilethemfile = true;
+    List<KeHoachMuaHang_Show> lstdata { get; set; } = new List<KeHoachMuaHang_Show>();
+    IGrid? Grid { get; set; }
+    DxFlyout? dxFlyoutchucnang { get; set; }
+    public string? idflychucnang { get; set; }
+    bool IsOpenfly { get; set; } = false;
+    DxToast toastTextInput { get; set; }
+    App_ClassDefine.ClassProcess prs = new ClassProcess();
+    bool PanelVisible { get; set; } = false;
+    string SerialDH { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        await loadAsync();
+        // return base.OnInitializedAsync();
+    }
+    public string idelement(int? serial)
+    {
+        if (serial == null)
+            string.Format("flychucnang_{0}_{1}", random, serial);
+        if (random == null)
+        {
+            random = prs.RandomString(9);
+        }
+        return string.Format("flychucnang_{0}_{1}", random, serial);
+    }
+    private async Task loadAsync()
+    {
+
+        var dimension = await browserService.GetDimensions();
+        // var heighrow = await browserService.GetHeighWithID("divcontainer");
+        int height = dimension.Height - 90;
+        heightgrid = string.Format("{0}px", height);
+        CheckQuyen = await phanQuyenAccess.CreateKeHoachMuaHang(Model.ModelAdmin.users);
+
+        await loaddatadropdownAsync();
+        // var query=ModelData.L
+    }
+    private void checkedchanged(bool bl, int visibleIndex, KeHoachMuaHang_Show keHoachMuaHang_Show)
+    {
+
+        if (bl)
+        {
+            toastTextInput.Show();
+            if (string.IsNullOrEmpty(SerialDH))
+            {
+
+                toastService.Notify(new ToastMessage(ToastType.Danger, "Vui lòng chọn đơn hàng trước"));
+                return;
+            }
+        }
+
+        keHoachMuaHang_Show.isChanged = bl;
+        if (keHoachMuaHang_Show.lstitem != null)
+        {
+            foreach (var it in keHoachMuaHang_Show.lstitem)
+            {
+                it.chk = keHoachMuaHang_Show.isChanged;
+                if (it.chk)
+                {
+                    if (it.SLDatHang == 0||it.SLDatHang==null)
+                        it.SLDatHang = it.SLTheoDoi;
+                    it.ThanhTien = it.DonGia * it.SLDatHang;
+
+                }
+                if (it.SLDatHang == 0 || it.SLDatHang == null)
+                {
+                    it.chk = false;
+                }
+            }
+        }
+        Grid.ExpandDetailRow(visibleIndex);
+        // if (keHoachMuaHang_Show.lstitem != null)
+        // {
+        //     foreach (var it in keHoachMuaHang_Show.lstitem)
+        //     {
+        //         it.chk = keHoachMuaHang_Show.isChanged;
+
+        //     }
+
+        // }
+        Grid.Reload();
+        Grid.RefreshSummary();
+    }
+   
+
+
+
+
+}

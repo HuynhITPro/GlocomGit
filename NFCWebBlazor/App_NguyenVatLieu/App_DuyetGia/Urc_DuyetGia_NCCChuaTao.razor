@@ -1,0 +1,251 @@
+﻿@using DevExpress.Blazor;
+@using NFCWebBlazor.App_ModelClass;
+@using Blazored.Modal
+@using Blazored.Modal.Services
+
+@using NFCWebBlazor.App_NguyenVatLieu.App_KeHoachDeNghi;
+@using static NFCWebBlazor.App_NguyenVatLieu.App_DuyetGia.Page_DuyetGiaMaster
+<style>
+    .my-grid {
+        height: @heightgrid;
+    }
+
+
+
+    #customGridnotheader .dxbl-grid-header-row {
+        display: none;
+    }
+
+    .custom-card {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px;
+        max-height: 2.5rem;
+        border-radius: 50px; /* Bo tròn cả thẻ a */
+        border: 1px solid #ccc; /* Viền sát thẻ a */
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+        .custom-card img {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%; /* Bo tròn hình ảnh */
+            margin-right: 10px;
+        }
+
+        .custom-card span {
+            font-size: 10px;
+            color: #333;
+        }
+
+        .custom-card:hover {
+            border-color: #007bff;
+            background-color: #f0f8ff;
+        }
+</style>
+<NFCWebBlazor.App_Admin.DialogMsg @ref="@dialogMsg"></NFCWebBlazor.App_Admin.DialogMsg>
+
+
+
+<DxGridLayout CssClass="w-100 ch-480">
+    <Rows>
+        <DxGridLayoutRow Height="auto" />
+        <DxGridLayoutRow Height="auto" />
+        <DxGridLayoutRow />
+    </Rows>
+    <Items>
+        <DxGridLayoutItem Row="0">
+            <Template>
+                <div class="row p-2 d-flex justify-content-center p-2 mb-2">
+                    <div style="width:90vw;">
+                        @renderFragmentflowchart
+                    </div>
+
+                </div>
+            </Template>
+        </DxGridLayoutItem>
+        <DxGridLayoutItem Row="1">
+            <Template>
+                <div class="p-2 pt-0 mb-2 bg-white border rounded-2">
+
+                    <div>
+
+                        <DxFormLayout CssClass="w-100 mt-3">
+
+
+
+                            <DxFormLayoutItem Caption="Tình trạng" ColSpanSm=12 ColSpanLg="4" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+
+                                <NFCWebBlazor.App_ClassDefine.ComboboxFilteredString
+                                            SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                            ListRenderMode=ListRenderMode.Virtual
+                                            TypeName="NCCChuaTao"
+                                            SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                            SearchMode="ListSearchMode.AutoSearch"
+                                            TextFieldName="@nameof(DataDropDownList.FullName)"
+                                            @bind-Value="@tinhtrangselected"
+                                                                                     ValueFieldName="@nameof(DataDropDownList.Name)"
+                                            ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto
+                                            CssClass="cw-480" />
+
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem Caption="Người đề nghị" ColSpanSm=12 ColSpanLg="4" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+
+                                <DxComboBox Data=@lstnguoidenghi
+                                            SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                            ListRenderMode=ListRenderMode.Virtual
+                                            SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                            SearchMode="ListSearchMode.AutoSearch"
+                                            TextFieldName="@nameof(Users.TenUser)"
+                                            ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto
+                                            @bind-Value="@nguoidenghi"
+                                            CssClass="cw-480" />
+
+                            </DxFormLayoutItem>
+                           
+                            <DxFormLayoutItem Caption="Từ ngày" ColSpanSm=12 ColSpanLg="4" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+
+                                <DxDateEdit @bind-Date="@dtpbegin" Mask="@DateTimeMask.ShortDate" DisplayFormat="dd-MM-yy" />
+
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem Caption="Đến" ColSpanSm=12 ColSpanLg="4" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+
+                                <DxDateEdit @bind-Date="@dtpend" Mask="@DateTimeMask.ShortDate" DisplayFormat="dd-MM-yy" />
+
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem ColSpanMd="12">
+                                <Template>
+                                    <div class="d-flex justify-content-center gap-1">
+
+                                        <DxButton RenderStyle="ButtonRenderStyle.Primary" CssClass="bi bi-search"
+                                                  RenderStyleMode="ButtonRenderStyleMode.Outline" Click="@searchAsync" Text=" XEM ">
+
+                                        </DxButton>
+
+                                    </div>
+
+                                </Template>
+                            </DxFormLayoutItem>
+                        </DxFormLayout>
+
+                    </div>
+
+                </div>
+
+            </Template>
+        </DxGridLayoutItem>
+
+
+
+        <DxGridLayoutItem Row="2">
+            <Template>
+                <DxLoadingPanel @bind-Visible="@PanelVisible"
+                                IsContentBlocked="true"
+                                ApplyBackgroundShading="true"
+                                IndicatorAreaVisible="false"
+                                Text="Đang xử lý...">
+                    <DxGrid @ref="Grid" Data="@lstdata" TextWrapEnabled="false"
+                            ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+                            PageSize="20"
+                            CssClass="my-grid"
+                            VirtualScrollingEnabled=true
+                            PagerPosition="GridPagerPosition.Bottom"
+                            PageSizeSelectorVisible="true"
+                            PageSizeSelectorItems="@(new int[] { 10, 20, 100 })"
+                            PageSizeSelectorAllRowsItemVisible="true"
+                            id="customGridnotheader"
+                            FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                            AutoCollapseDetailRow="true">
+                        <Columns>
+                            <DxGridDataColumn>
+                                <CellDisplayTemplate>
+                                    @{
+                                        var keHoachMuaHang_Show = (NvlDuyetGiaShow)context.DataItem;
+
+                                    }
+
+                                    <div class="container float-start">
+                                        <div class="row">
+                                            <div class="col-sm-12 col-md-6">
+                                                <div class="col d-flex align-items-center">
+                                                    <img style="width:30px;height:30px;" class="rounded-circle shadow-4-strong" src=@keHoachMuaHang_Show.PathImgTao>
+                                                    <div class="ms-1">
+                                                        <span style="color:forestgreen">Tạo bởi: @keHoachMuaHang_Show.NguoiDN</span>
+                                                        <span style="font-size:10px;">@keHoachMuaHang_Show.NgayInsert.Value.ToString("dd/MM/yy HH:mm")</span>
+                                                        <p style="font-size:10px;margin:0px;color:red;">@string.Format("Phòng ban: {0}", keHoachMuaHang_Show.PhongBan)</p>
+                                                    </div>
+                                                </div>
+
+                                                <span style="color: #0074bd;margin-right:10px;">@TextSoDeNghi(keHoachMuaHang_Show)</span>
+                                                <span>@TextNgayDeNghi(keHoachMuaHang_Show)</span>
+
+                                                <br />
+                                                <span style="color:orangered;margin-right:1rem;">@string.Format("Loại đề nghị: {0}", @keHoachMuaHang_Show.LoaiDuyetGia)</span>
+                                                <span>@string.Format("Lý do: {0}, {1}", keHoachMuaHang_Show.LyDo, keHoachMuaHang_Show.GhiChu)</span>
+
+                                                @* <span>@string.Format("Phòng ban: {0}", keHoachMuaHang_Show.PhongBan)</span> *@
+                                                <br />
+                                            </div>
+
+                                            <div class="col-sm-12 col-md-6 d-flex flex-wrap gap-1">
+                                                <View_TaoNhaCungCap nvlDuyetGiaShowcrr="@keHoachMuaHang_Show" listNvlNhaCungCap="@listNvlNhaCungCap"></View_TaoNhaCungCap>
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+
+                                </CellDisplayTemplate>
+
+                            </DxGridDataColumn>
+                        </Columns>
+                      
+                    </DxGrid>
+
+                </DxLoadingPanel>
+
+
+            </Template>
+        </DxGridLayoutItem>
+
+    </Items>
+</DxGridLayout>
+
+@code {
+
+    [Inject] BrowserService browserService { get; set; }
+    RenderFragment renderFragment;
+    bool VisbleTaoDeNghi = true, Visilethemtukehoach = false, Visilethemchitiet = true, Visileprint = true, Visilechinhsua = true, Visiledelete = true, Visilechinhtruocin = true, Visilekyduyet = true, Visilehuykyduyet = true, Visilechonnguoiduyet = true;
+    DialogMsg dialogMsg;
+
+    DialogWindow dxPopup;
+    string tinhtrangselected = "Nhà cung cấp chưa có mã";
+    bool PanelVisible = false;
+    RenderFragment renderFragmentflowchart { get; set; }
+    //bool IsOpenfly = true;
+    DxFlyout dxFlyoutchucnang { get; set; }
+    public string idflychucnang { get; set; }
+    public string random { get; set; }
+    App_ClassDefine.ClassProcess prs = new App_ClassDefine.ClassProcess();
+    public string idelement(int? serial)
+    {
+        if (serial == null)
+            string.Format("flychucnang_{0}_{1}", random, serial);
+        if (random == null)
+        {
+            random = prs.RandomString(9);
+        }
+        return string.Format("flychucnang_{0}_{1}", random, serial);
+    }
+    string heightgrid = "500px";
+
+    private bool isExpanded = false;
+
+    // Hàm xử lý sự kiện click của nút
+
+
+
+}

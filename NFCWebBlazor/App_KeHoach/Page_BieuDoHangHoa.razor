@@ -1,0 +1,309 @@
+﻿@using BlazorBootstrap
+@using DevExpress.Blazor;
+@using NFCWebBlazor.App_ClassDefine;
+@using System.Data
+<style>
+    .my-grid {
+        height: @heightgrid;
+    }
+
+    .highRed {
+        color: red;
+        font-weight: bold
+    }
+
+    .highGreen {
+        color: Green;
+        font-weight: bold
+    }
+
+    .highlighted-item > td {
+        background-color: lightgray;
+        color: #0070ff;
+        font-weight: bold;
+    }
+</style>
+<DxGridLayout CssClass="w-100 ch-480">
+
+    <Rows>
+        <DxGridLayoutRow Height="Auto" />
+        <DxGridLayoutRow Height="Auto" />
+        <DxGridLayoutRow />
+    </Rows>
+
+    <Items>
+
+        <DxGridLayoutItem Row="0">
+            <Template>
+                <div class="shadow-sm p-3 mb-2 bg-white border rounded-bottom-2">
+                    <DxTextBox NullText="Tìm kiếm chi tiết" onclick="@Showdivsearch">
+                        <Buttons>
+                            <DxEditorButton Position=EditorButtonPosition.Left IconCssClass="bi bi-search" Click="@Showdivsearch" />
+                        </Buttons>
+                    </DxTextBox>
+
+                    <div class="@divClass">
+                        <div class="row w-100">
+                            <div class="col-md-6">
+                                <DxFormLayout CssClass="w-100 mt-3">
+
+                                    <DxFormLayoutItem Caption="Chọn nhà máy" CssClass="w-100">
+                                        <ComboboxFilteredTable @ref=txtnhamay ListRenderMode="ListRenderMode.Virtual"
+                                                               FilteringMode="DataGridFilteringMode.Contains"
+                                                               TypeName="NhaMay_NVL"
+                                                               ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                                               TextFieldName="@nameof(DataDropDownList.FullName)"
+                                                               @bind-Value="@nhamayselected"
+                                                               CssClass="cw-480" />
+                                    </DxFormLayoutItem>
+                                    <DxFormLayoutItem Caption="Khách hàng" CssClass="w-100">
+                                        <DxComboBox Data=@lstkhachhang ListRenderMode="ListRenderMode.Virtual"
+                                                    FilteringMode="DataGridFilteringMode.Contains"
+                                                    ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                                    TextFieldName="@nameof(NvlKhachHang.TenKh)"
+                                                    @bind-Value="@khachhangselected"
+                                                    CssClass="cw-480" />
+
+                                    </DxFormLayoutItem>
+
+                                    <DxFormLayoutItem Caption="Sản phẩm" CssClass="w-100">
+
+                                        <DxComboBox Data=@lstsanpham ListRenderMode="ListRenderMode.Virtual"
+                                                    FilteringMode="DataGridFilteringMode.Contains"
+                                                    ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                                    TextFieldName="@nameof(SanPhamDropDown.TenSP)"
+                                                    @bind-Value="@sanphamselected"
+                                                    CssClass="cw-480" />
+                                    </DxFormLayoutItem>
+                                </DxFormLayout>
+                            </div>
+                            <div class="col-md-6">
+                               @*  <div class="p-1 d-flex flex-grow-1 align-items-center">
+                                    <DxCheckBox CssClass="w-100"
+                                                @bind-Checked="@chk_ChuaLP">
+                                        @chk_ChuaLPContent
+                                    </DxCheckBox>
+                                </div>
+                                <div class="p-1 d-flex flex-grow-1 align-items-center">
+                                    <DxCheckBox CssClass="w-100"
+                                                @bind-Checked="@chk_TonKTG">
+                                        @chk_TonKTGContent
+                                    </DxCheckBox>
+                                </div>
+                                <div class="p-1 d-flex flex-grow-1 align-items-center">
+                                    <DxCheckBox CssClass="w-100"
+                                                @bind-Checked="@chk_TonDV">
+                                        @chk_TonDVContent
+                                    </DxCheckBox>
+                                </div>
+                                <div class="p-1 d-flex flex-grow-1 align-items-center">
+                                    <DxCheckBox CssClass="w-100"
+                                                @bind-Checked="@chk_TonKCR">
+                                        @chk_TonKCRContent
+                                    </DxCheckBox>
+                                </div>
+                                <div class="p-1 d-flex flex-grow-1 align-items-center">
+                                    <DxCheckBox CssClass="w-100"
+                                                @bind-Checked="@chk_TonMBLR">
+                                        @chk_TonMBLRContent
+                                    </DxCheckBox>
+                                </div>
+                                <div class="p-1 d-flex flex-grow-1 align-items-center">
+                                    <DxCheckBox CssClass="w-100"
+                                                @bind-Checked="@chk_TonKTam">
+                                        @chk_TonKTamContent
+                                    </DxCheckBox>
+                                </div>
+                                <div class="p-1 d-flex flex-grow-1 align-items-center">
+                                    <DxCheckBox CssClass="w-100"
+                                                @bind-Checked="@chk_TonMBKV4">
+                                        @chk_TonMBKV4Content
+                                    </DxCheckBox>
+                                </div> *@
+                            </div>
+                        </div>
+
+                        <div class="row d-flex justify-content-center m-2">
+                            <div class="col-auto">
+                                <DxButton RenderStyle="ButtonRenderStyle.Primary" CssClass="bi bi-search m-1" Click=@search
+                                          RenderStyleMode="ButtonRenderStyleMode.Outline" Text="XEM">
+                                </DxButton>
+                            </div>
+                           
+                        </div>
+
+
+                    </div>
+                </div>
+
+            </Template>
+        </DxGridLayoutItem>
+        <DxGridLayoutItem Row="1">
+            <Template>
+
+            </Template>
+        </DxGridLayoutItem>
+        <DxGridLayoutItem Row="2">
+            <Template>
+                <DxGrid @ref=dxGrid
+                        CssClass="my-grid"
+                      
+                        ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+                        PageSize="20"
+                        AllowSelectRowByClick="true"
+                        EditMode="GridEditMode.PopupEditForm"
+                        PopupEditFormHeaderText="Chỉnh sửa"
+                        PagerNavigationMode="PagerNavigationMode.InputBox"
+                        PageSizeSelectorVisible="true"
+                        PageSizeSelectorAllRowsItemVisible="true"
+                        PageSizeSelectorItems="@(new int[] { 20,30,50 })"
+                        EditFormButtonsVisible="false"
+                        VirtualScrollingEnabled="true"
+                       
+                      
+                        Data=@lstimg
+                        AutoExpandAllGroupRows="true">
+                    <Columns>
+                        <DxGridDataColumn Caption="ĐVT (bộ)" >
+                           
+                            <CellDisplayTemplate>
+                                @{
+                                    SvgImg svgImg = (SvgImg)context.DataItem;
+                                }
+                                <div class="row">
+                               
+                                    <img src="data:image/svg+xml;base64,@ConvertSvgToBase64(svgImg.Svg)" alt="SVG Image"  onclick="@(()=>showimg64(@ConvertSvgToBase64(svgImg.Svg)))"/>
+
+
+                                </div>
+                            </CellDisplayTemplate>
+                        </DxGridDataColumn>
+
+
+                    </Columns>
+               
+
+                </DxGrid>
+            </Template>
+        </DxGridLayoutItem>
+
+    </Items>
+</DxGridLayout>
+<DxPopup CssClass="w-90"
+         @bind-Visible="@windowVisible"
+         ShowFooter="true"
+         CloseOnEscape="true"
+         Scrollable="true"
+          MaxWidth="90vw"
+         ShowHeader=false
+         CloseOnOutsideClick="false"
+         ShowCloseButton="false">
+    <BodyContentTemplate>
+        <div class="w-90">
+
+       
+        <img  class="rounded" src="data:image/svg+xml;base64,@img64" alt="SVG Image" />
+        </div>
+    </BodyContentTemplate>
+
+    <FooterContentTemplate>
+        @*   <DxButton CssClass="popup-button my-1 ms-2" RenderStyle="ButtonRenderStyle.Primary" Text="OK" Click="@context.CloseCallback" /> *@
+        <DxButton CssClass="popup-button my-1 ms-2" RenderStyle="ButtonRenderStyle.Primary" Text="Đóng" Click="@context.CloseCallback" />
+    </FooterContentTemplate>
+</DxPopup>
+
+@code {
+    [Inject] PreloadService PreloadService { get; set; }
+    [Inject] IJSRuntime JS { get; set; }
+    string heightgrid = "500px";
+    string divClass = "expandable-content";
+    bool visiblechart = false;
+    public int widthtotal = 250;
+    string titlechart = "Đơn hàng chưa xuất";
+    string titlecharttonkho = "Tồn kho";
+    string titlechartthuchien = "Kế hoạch";
+    string img64 = "";
+    ComboboxFilteredTable txtnhamay { get; set; }
+    DataDropDownList nhamayselected { get; set; }
+    List<NvlKhachHang> lstkhachhang { get; set; }
+    List<SanPhamDropDown> lstsanpham { get; set; }
+    NvlKhachHang khachhangselected { get; set; }
+    SanPhamDropDown sanphamselected { get; set; }
+    public DxGrid dxGrid { get; set; }
+    bool windowVisible = false;
+    DataTable dtresultfinal = new DataTable();
+
+    bool chk_ChuaLP { get; set; } = false;
+    bool chk_TonKTG { get; set; } = true;
+    bool chk_TonDV { get; set; } = true;
+    bool chk_TonKCR { get; set; } = true;
+    bool chk_TonMBLR { get; set; } = true;
+    bool chk_TonKTam { get; set; } = true;
+    bool chk_TonMBKV4 { get; set; } = true;
+    string chk_ChuaLPContent = "Chưa lên phiếu";
+    string chk_TonKTGContent { get; set; } = "Tồn kho tinh chế";
+    string chk_TonDVContent { get; set; } = "Tồn định vị";
+    string chk_TonKCRContent { get; set; } = "Tồn Kho chờ ráp";
+    string chk_TonMBLRContent { get; set; } = "Tồn mặt bằng ráp";
+    string chk_TonKTamContent { get; set; } = "Tồn kho nhúng";
+    string chk_TonMBKV4Content { get; set; } = "Tồn mặt bằng đóng gói";
+    List<InitDxGridDataColumn> lstcolumn = new List<InitDxGridDataColumn>();
+    async Task ExportXlsx_Click()
+    {
+        await dxGrid.ExportToXlsxAsync("ExportResult");
+    }
+    async Task ExportCsv_Click()
+    {
+        await dxGrid.ExportToCsvAsync("ExportResult");
+    }
+    void OnCustomizeElement(GridCustomizeElementEventArgs e)
+    {
+
+        if (e.ElementType == GridElementType.DataRow)
+        {
+
+
+        }
+        if (e.ElementType == GridElementType.DataCell)
+        {
+
+        }
+    }
+    private bool isExpanded = false;
+
+    // Hàm xử lý sự kiện click của nút
+    private void hidedivsearch()
+    {
+        isExpanded = false;
+        divClass = "expandable-content";
+    }
+    private void Showdivsearch()
+    {
+        isExpanded = !isExpanded;
+
+        if (isExpanded)
+        {
+
+            divClass = "expandable-content show";
+        }
+        else
+        {
+
+            divClass = "expandable-content";
+        }
+    }
+    public double getdoubleofobject(object ob)
+    {
+        if (ob == null || ob == DBNull.Value)
+            return 0;
+        return double.Parse(ob.ToString());
+    }
+    public void showimg64(string svg)
+    {
+        Console.WriteLine("AAAAAAA");
+        img64 = svg;
+        windowVisible = true;
+        StateHasChanged();
+    }
+
+}

@@ -1,0 +1,707 @@
+﻿using BlazorBootstrap;
+using DevExpress.Blazor;
+using DevExpress.Blazor.Navigation.Internal;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.JSInterop;
+using Newtonsoft.Json;
+using NFCWebBlazor.App_Admin;
+using NFCWebBlazor.App_ClassDefine;
+using NFCWebBlazor.App_ModelClass;
+
+using NFCWebBlazor.Model;
+using NFCWebBlazor.Models;
+using System.Collections.ObjectModel;
+using System.Data;
+
+
+
+namespace NFCWebBlazor.Shared
+{
+    public partial class MainLayout
+    {
+       
+        [Inject] NavigationManager navigationManager { get; set; }
+        [Inject] CallAPI callAPI { get; set; }
+        [Inject] Blazored.SessionStorage.ISessionStorageService session { get; set; }
+        [Inject]
+        ToastService toastService { get; set; }
+        [Inject]IJSRuntime JSRuntime { get; set; }
+        [Inject] HttpClient? Http { get; set; }
+        [Inject] UserGlobal userGlobal { get; set; }
+        [Inject] SignalRConnect signalRConnect { get; set; }
+        [Inject] PopupService PopupService { get; set; }
+        public List<MenuItem> lstmsgshow { get; set; }
+        public string TenUser { get; set; }
+        public bool IsMenuShow { get; set; }
+        List<MenuItem> lstmenuitems { get; set; }
+        private HubConnection? _hubConnection;
+
+        private DotNetObjectReference<MainLayout>? dotNetRef;//Dùng hàm này để bắt sự kiện khi người dùng nhấn nút back
+        protected override async Task OnInitializedAsync()
+        {
+            NavigationManager.LocationChanged += OnLocationChanged;
+            ModelSession modelSession = new ModelSession();
+            Users users = await modelSession.GetUserAsync(session);
+            if (users == null)
+            {
+                IsMenuShow = false;
+                //Console.WriteLine("IsMenuShow is false");
+            }
+            else
+            {
+
+                IsMenuShow = true;
+                userGlobal.users = users;
+                TenUser = userGlobal.users.TenUser;
+                //await loadmenu();
+            }
+            
+            PopupService.OnClosePopup += HandleClosePopup;
+            PopupService.OnOpenPopup += HandleOpenPopup;
+            dotNetRef = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("PopupHelperMain.registerBackEvent", dotNetRef);
+
+            // return base.OnInitializedAsync();
+        }
+       
+        private async void checkloadmenuagain()//Xử dụng nếu form bị render lại
+        {
+          
+            Users users = await modelSession.GetUserAsync(session);
+            if (users != null)
+            {
+                ModelAdmin.users = users;
+                string json = await modelSession.GetMenuAsync(session);
+                if (json != null)
+                {
+
+                    var query = JsonConvert.DeserializeObject<List<MenuItem>>(json);
+                    if(lstmenuitems==null)
+                        lstmenuitems = new List<MenuItem>();
+                    lstmenuitems.Clear();
+                    lstmenuitems.AddRange(query);
+                    query.Clear();
+                    ModelAdmin.lstmenuitems = lstmenuitems.ToList();
+                    ModelAdmin.mainLayout = this;
+                    StateHasChanged();
+                }
+                else
+                {
+                    try
+                    {
+
+                        await loadmenu();
+                        //await ConnectSignalR();
+                        StateHasChanged();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Error.WriteLine("Lỗi load menu: " + ex.Message);
+                    }
+                }
+               
+                await loadMsgShowAsync(ModelAdmin.users.UsersName);
+
+            }
+            
+        }
+        public async void OnMessageReceived(string receivedMessage)
+        {
+            try
+            {
+
+
+                JsonMsgAndroid jsonMsgAndroid = new JsonMsgAndroid();
+                jsonMsgAndroid = jsonMsgAndroid.GetJson(receivedMessage);
+                if (jsonMsgAndroid.typemsg == TypemsgAPI.joingroup.ToString() || jsonMsgAndroid.typemsg == TypemsgAPI.joingrouplist.ToString())
+                {
+                    string[] arr = jsonMsgAndroid.topic.Split(';');
+                    bool check = false;
+                    foreach (string it in arr)
+                    {
+                        check = false;
+                        foreach (string itsub in signalRConnect.lstgroupsubcribe)
+                        {
+                            if (itsub == it)
+                            {
+                                check = true;
+                                break;
+                            }
+                        }
+                        if (!check)
+                        {
+                            signalRConnect.lstgroupsubcribe.Add(it);
+                        }
+                    }
+                }
+                if (jsonMsgAndroid.typemsg != TypemsgAPI.getconnectionid.ToString())
+                {
+                    if (jsonMsgAndroid.message != null)
+                    {
+                        if (jsonMsgAndroid.message.Contains(StaticClass.topickyduyet))//Xử lý nhóm này
+                        {
+                            if (jsonMsgAndroid.typemsg == "print")//Nhóm print này trả ra kết quả có json InPhieuJson
+                            {
+                                InPhieuJson inPhieuJson = JsonConvert.DeserializeObject<InPhieuJson>(jsonMsgAndroid.message);
+                                try
+                                {
+
+
+                                    await showmsgSignalRAsync(inPhieuJson);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.Error.WriteLine("Lỗi OnMessageReceived : " + ex.Message);
+                                }
+
+                            }
+
+
+                        }
+                        else
+                        {
+                            toastService.Notify(new ToastMessage(ToastType.Success, jsonMsgAndroid.message));
+                        }
+
+                    }
+
+                }
+                else//Lấy ID, sử dụng ID này để đăng ký client trong SignalR 
+                {
+                    ModelAdmin.ConnectionID = jsonMsgAndroid.clientid;
+                    Console.WriteLine(jsonMsgAndroid.clientid);
+                    JsonMsgAndroid jsonMsgAndroid1 = new JsonMsgAndroid();
+
+
+                    jsonMsgAndroid1.sendmsgjoingroup(StaticClass.topickyduyet);//Thêm vào topic ký duyệt để nhận tin nhắn
+
+                    _ = signalRConnect.SendMsg(jsonMsgAndroid1);//Tham gia để nhận tin nhắn khi có người gửi thông tin ký duyệt
+                }
+            }
+            catch(Exception ex)
+            {
+                Console.Error.WriteLine("Lỗi OnMessageReceived SignalR: " + ex.Message);
+            }
+               
+
+        }
+        public async Task  ConnectSignalR()
+        {
+            try
+            {
+                if (!signalRConnect.IsConnected)
+                {
+                    Console.WriteLine("PrinterID: " + signalRConnect.PrinterID);
+                    await signalRConnect.ConnectAsync();
+                    signalRConnect.OnMessageReceived = OnMessageReceived;
+                    await signalRConnect.getConnectionID();
+                    //Add nhóm tin nhắn chung
+                    //signalRConnect.lstgroupsubcribe.Add(StaticClass.topickyduyet);
+
+                    
+                    //ModelAdmin
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine("Lỗi connect signalR: " + ex.Message);
+            }
+        }
+        public async void GotoMainForm()
+        {
+            lstmenuitems = new List<MenuItem>();// lsttab = new List<MenuItem>();
+            IsMenuShow = true;
+            TenUser = userGlobal.users.TenUser;
+            try
+            {
+               // await ConnectSignalR();//Tạm thời tắt connect SignalR đi, xem có phải nguyên nhân máy treo là do nó không
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine("Lỗi connect signalR: " + ex.Message);
+            }
+            try
+            {
+                await loadmenu();
+
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine("Lỗi load menu: " + ex.Message);
+            }
+            try
+            {
+                List<string> RequiredFonts = new() {
+            "TimesNewRoman.ttf"};
+                await FontLoader.LoadFonts(Http, RequiredFonts);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine("Lỗi load font Time new roman: " + ex.Message);
+            }
+            await loadMsgShowAsync(ModelAdmin.users.UsersName);
+            StateHasChanged();
+        }
+        ModelSession modelSession = new ModelSession();
+        bool checkloadmenu = false;
+        private async Task<bool> loadmenu()
+        {
+            string[] arr = userGlobal.users.KhuVuc.Split(';');
+            string dieukien = "";
+            if (lstmenuitems != null)
+            {
+                if (lstmenuitems.Count > 0)
+                    return true;
+            }
+            if(lstmenuitems==null)
+                lstmenuitems=new List<MenuItem>();
+            if (ModelAdmin.lstmenuitems != null)
+            {
+                lstmenuitems.AddRange(ModelAdmin.lstmenuitems);
+               // lstmenuitems = new ObservableCollection<MenuItem>(ModelAdmin.lstmenuitems);
+                return true;
+            }
+            
+            if (checkloadmenu)//Tránh gọi lại nhiều lần khi đang thực hiện
+                    return true;
+            foreach (string it in arr)
+            {
+                if (it != "")
+                {
+                    if (dieukien == "")
+                        dieukien += string.Format(" where [UserArea] like '%{0}%'", it);
+                    else
+                        dieukien += string.Format(" or [UserArea] like '%{0}%'", it);
+                }
+
+            }
+            string sql = string.Format(@"SELECT  [Serial],[NameItem]
+      ,[TextItem],[NavigateUrl],[ComponentName]
+      ,[IconCssClass],[UserArea]
+      ,[NodeParent],[Tag],isnull([STT],1000) as STT
+        FROM MenuItemWeb {0} or [UserArea] like '%all%'  order by isnull([STT],1000),Serial", dieukien);
+
+            checkloadmenu = true;
+            List<ParameterDefine> parameters = new List<ParameterDefine>();
+
+            string json = await callAPI.ExcuteQueryEncryptAsync(sql, parameters);
+            if (String.IsNullOrEmpty(json))
+            {
+                checkloadmenu = false;
+                return false;
+            }
+            else
+            {
+                var query = JsonConvert.DeserializeObject<List<MenuItem>>(json);
+                lstmenuitems.AddRange(query);// = new ObservableCollection<MenuItem>(query);
+                //query.Clear();
+
+                ModelAdmin.lstmenuitems = lstmenuitems.ToList();
+                menuMain.refreshmenu(lstmenuitems);
+                ModelAdmin.mainLayout = this;
+
+                modelSession.saveMenu(json, session);
+                //navMenu.shouldrender = false;
+
+            }
+            return true;
+        }
+        public class ItemFragment
+        {
+            public string keytab { get; set; }
+            public string? NameTab { get; set; }
+            public string? IconCss { get; set; }
+            public RenderFragment renderFragment { get; set; }
+        }
+        List<ItemFragment> lsttab = new List<ItemFragment>();
+        App_ClassDefine.ClassProcess prs = new App_ClassDefine.ClassProcess();
+
+        bool RenderTab = false;
+        void RemoveTab(string tab)
+        {
+            RenderTab = true;
+            for (int i = lsttab.Count - 1; i >= 0; i--)
+            {
+                if (lsttab[i].keytab == tab)
+                {
+                    lsttab.RemoveAt(i);
+                    break;
+                }
+            }
+
+
+
+        }
+
+        public void AddTab(MenuItem menuItem)
+        {
+            RenderTab = true;
+            if (lsttab.Count > 5)
+            {
+                toastService.Notify(new ToastMessage(ToastType.Danger, "Đóng bớt form không dùng lại trước", "Chỉ cho phép mở tối đa 5 Form. vui lòng đóng Form nào không sử dụng lại trước"));
+                return;
+            }
+            ItemFragment itemFragment = new ItemFragment();
+            itemFragment.keytab = prs.RandomString(9);
+
+            itemFragment.NameTab = menuItem.TextItem.ToUpper();
+            itemFragment.IconCss = menuItem.IconCssClass;
+            itemFragment.renderFragment = LoadComponent(menuItem.ComponentName);
+            // itemFragment.renderFragment = page_KeHoachMuaHangMaster;
+            lsttab.Add(itemFragment);
+            ModelAdmin.pageclickcurrent = menuItem.NameItem;
+            ActiveTabIndex = lsttab.Count - 1;
+            NavMenuCssClass = "collapse";
+            _isSidebarExpanded = false;
+            navigationManager.NavigateTo("#");
+            StateHasChanged();
+
+
+        }
+        public void AddDirectRenderfagment(MenuItem menuItem, RenderFragment renderFragment)
+        {
+            RenderTab = true;
+            ItemFragment itemFragment = new ItemFragment();
+            itemFragment.keytab = prs.RandomString(9);
+
+            itemFragment.NameTab = menuItem.TextItem.ToUpper();
+            itemFragment.IconCss = menuItem.IconCssClass;
+            itemFragment.renderFragment = renderFragment;
+            // itemFragment.renderFragment = page_KeHoachMuaHangMaster;
+            lsttab.Add(itemFragment);
+            ModelAdmin.pageclickcurrent = menuItem.NameItem;
+            ActiveTabIndex = lsttab.Count - 1;
+            NavMenuCssClass = "collapse";
+            menuMain.refreshmenu(lstmenuitems);
+            _isSidebarExpanded = false;
+            navigationManager.NavigateTo("#");
+            StateHasChanged();
+
+        }
+
+      
+        //public async Task showreportAsync(DevExpress.XtraReports.UI.XtraReport _xtraReport)
+        //{
+        //    windowVisible = true;
+        //    xtraReport = _xtraReport;
+           
+
+        //    await InvokeAsync(StateHasChanged);
+        //}
+
+        bool pdfvisible = false;
+        GetDataFromSql getDataFromSql { get; set; }
+        public async Task showreportpdfAsync(GetDataFromSql _getDataFromSql)
+        {
+            getDataFromSql = _getDataFromSql;
+            renderFragmentpdf = builder =>
+            {
+                builder.OpenComponent<ShowPDF>(0);
+                builder.AddAttribute(1, "getDataFromSql", _getDataFromSql);
+              
+                builder.CloseComponent();
+            };
+
+           await dxPopuppdf.showAsync("BÁO CÁO");
+            await dxPopuppdf.ShowAsync();   
+            await InvokeAsync(StateHasChanged);
+        }
+        public async Task showreportAsync(DevExpress.XtraReports.UI.XtraReport _xtraReport)
+        {
+            xtraReport = _xtraReport;
+            renderFragmentpdf = builder =>
+            {
+                builder.OpenComponent<ReportShow>(0);
+                builder.AddAttribute(1, "IsMobile", IsMobileLayout);
+                builder.AddAttribute(2, "report", xtraReport);
+                builder.CloseComponent();
+            };
+
+            await dxPopuppdf.showAsync("BÁO CÁO");
+            await dxPopuppdf.ShowAsync();
+            await InvokeAsync(StateHasChanged);
+        }
+        public EventCallback eventCallbackuploadfile { get; set; }
+        public void showfileupload(string pathdirectory, FileHoSoAPI fileHoSo, EventCallback eventCallback)
+        {
+            uploadfilevisible = true;
+            fileHoSoAPI = fileHoSo;
+            Pathdirectory = pathdirectory;
+            eventCallbackuploadfile = eventCallback;
+            StateHasChanged();
+        }
+        public void AddTabRp(DevExpress.XtraReports.UI.XtraReport xtraReport)
+        {
+            ItemFragment itemFragment = new ItemFragment();
+            itemFragment.keytab = prs.RandomString(9);
+
+            itemFragment.NameTab = "Báo cáo";
+            itemFragment.IconCss = "bi bi-file-earmark-code";
+
+
+            RenderFragment renderFragment;
+
+            renderFragment = builder =>
+            {
+                builder.OpenComponent<ReportShow>(0);
+                builder.AddAttribute(1, "report", xtraReport);
+                builder.CloseComponent();
+            };
+            // renderFragment.GetType();
+            itemFragment.renderFragment = renderFragment;
+            // itemFragment.renderFragment = page_KeHoachMuaHangMaster;
+            lsttab.Add(itemFragment);
+
+            ActiveTabIndex = lsttab.Count - 1;
+            StateHasChanged();
+
+        }
+        private RenderFragment LoadComponent(string component)
+        {
+            var componentType = Type.GetType(component);
+            RenderFragment renderFragment;
+
+            if (componentType != null)
+            {
+                renderFragment = builder =>
+                {
+
+                    builder.OpenComponent(0, componentType);
+                    builder.CloseComponent();
+                };
+            }
+            else
+            {
+                renderFragment = builder =>
+                {
+                    builder.AddContent(0, "Không tìm thấy Component");
+                };
+            }
+
+            return renderFragment;
+
+        }
+      
+        private async Task loadMsgShowAsync(string username)
+        {
+           
+            
+            try
+            {
+                lstmsgshow = new List<MenuItem>();
+                CallAPI callAPI = new CallAPI();
+                string sql = "NVLDB.dbo.MsgShowBegin";
+                List<ParameterDefine> lstpara = new List<ParameterDefine>();
+                lstpara.Add(new ParameterDefine("@UserDuyet", username));
+                string json = await callAPI.ProcedureEncryptAsync(sql, lstpara);
+                if (json != "")
+                {
+                    var query = JsonConvert.DeserializeObject<List<MenuItem>>(json);
+                    if (query != null)
+                    {
+                        if (query.Any())
+                        {
+                            //MenuItem item = new MenuItem();
+                            lstmsgshow = query;
+                            if(header!=null)
+                            {
+                                header.setDataCallBack(lstmsgshow);
+                            }
+                        }
+                      
+                    }
+                    else
+                    {
+                       
+                        toastService.Notify(new ToastMessage(ToastType.Warning, "Lỗi: Load thông báo"));
+
+
+                    }
+                    //Grid.Data = lstDonDatHangSearchShow;
+                }
+            }
+            catch (Exception ex)
+            {
+                toastService.Notify(new ToastMessage(ToastType.Warning, "Lỗi: " + ex.Message));
+               
+            }
+
+            //for (int i = 0; i < 10; i++)
+            //{
+            //    ShowMsgInbox showMsgInbox = new ShowMsgInbox();
+            //    showMsgInbox.ComponentName = "";
+            //    showMsgInbox.DienGiai = "Bạn có 10 đề nghị mua hàng chưa duyệt";
+            //    showMsgInbox.PathImg = IconImg.Sign;
+            //    lstmsgshow.Add(showMsgInbox);
+            //}
+        }
+
+        private Timer _timer;
+        public string  txtpublish = "";
+        public MqttService mqttService;
+
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (firstRender)
+            {
+                //await InitMQTTAsync();
+                //mqttService = new MqttService();
+                //await mqttService.ConnectAsync();
+                //await mqttService.SubscribeAsync(texttopic);
+                // mqttService.getMsgFromMQTT = actionstringfrommqtt;
+                _timer = new Timer(ReconnectSignalR, null, 0, 60000);
+
+            }
+            //return base.OnAfterRenderAsync(firstRender);
+        }
+        public async Task ScrollBottom()
+        {
+
+
+            // Đợi UI render xong để DOM sẵn sàng
+            await Task.Delay(100);
+            await JSRuntime.InvokeVoidAsync("scrollFunctions.scrollToBottom", "scrollContainer");
+        }
+        private async Task InitMQTTAsync()
+        {
+            try
+            {
+                mqttService = new MqttService();
+                await mqttService.ConnectAsync();
+                await mqttService.SubscribeAsync(StaticClass.topickyduyet);
+                mqttService.getMsgFromMQTT = actionstringfrommqtt;
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine("Lỗi: " + ex.Message);
+            }
+        }
+
+
+        public async void actionstringfrommqtt(string jsonmessage)
+        {
+            //Console.WriteLine("Call ở đây: " + jsonmessage);
+            try
+            {
+                if (ModelAdmin.users == null)
+                    return;
+                var json = JsonConvert.DeserializeObject<JsonMsgAndroid>(jsonmessage);
+                if (json != null)
+                {
+                    bool checkuser = false;
+                    foreach (var it in json.lstuserrecive)
+                    {
+                        if (it == ModelAdmin.users.UsersName)
+                        {
+                            checkuser = true;
+                            break;
+                        }
+                    }
+                    if (checkuser)
+                    {
+                        toastService.Notify(new ToastMessage(ToastType.Success, json.message));
+                        await loadMsgShowAsync(ModelAdmin.users.UsersName);
+                        header.IsRead = false;
+                        StateHasChanged();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine("Lỗi: " + ex.Message);
+            }
+        }
+
+        private async void Reconnect(object state)
+        {
+            //if (!mqttService._mqttClient.IsConnected)
+            //{
+            //    mqttService._mqttClient.Dispose();
+            //    await InitMQTTAsync();
+            //}
+
+        }
+
+        [JSInvokable]
+        public async Task OnBrowserBack()
+        {
+            Console.WriteLine("OnBrowserBack được gọi ở main");
+            //Chuyển đến tabindex phía trước
+            //await JSRuntime.InvokeVoidAsync("PopupHelperMain.unregisterBackEvent");
+            try
+            {
+                if (PopupService.HasPopup())
+                {
+                    PopupService.CloseTopPopup();
+                }
+                else
+                {
+                    toastService.Notify(new ToastMessage(ToastType.Danger, "Nhấn Back nhiều sẽ làm thoát chương trình"));
+                }
+            }
+            catch(Exception ex)
+            {
+                toastService.Notify(new ToastMessage(ToastType.Danger, "Lỗi ở JS Back trong form main "+ex.Message));
+            }
+
+           
+        }
+        private void HandleClosePopup(string popupId)
+        {
+            // Logic để đóng popup, ví dụ: ẩn popup
+            Console.WriteLine($"Popup {popupId} đã được đóng.");
+        }
+        private void HandleOpenPopup(string popupId)
+        {
+            Console.WriteLine($"Popup {popupId} đã được mở.");
+        }
+        //Xử lý nội dung nhận được từ SignalR
+        private async Task showmsgSignalRAsync(InPhieuJson inPhieuJson)
+        {
+            if (inPhieuJson == null)
+                return;
+            if (inPhieuJson.id == "kyduyet")//Tin nhắn gửi ký duyệt
+            {
+                DataTable dtsource = inPhieuJson.dtsource;
+                if (dtsource != null)
+                {
+                    if (dtsource.Rows.Count > 0)
+                    {
+                        DataRow? row = dtsource.Select(string.Format("UserDuyet='{0}'", ModelAdmin.users.UsersName)).FirstOrDefault(); 
+                        if(row!=null)
+                        {
+                            toastService.Notify(new ToastMessage(ToastType.Light, string.Format("Bạn có 1 đề nghị cần {0}", row["LoaiDuyet"])));
+                            await loadMsgShowAsync(ModelAdmin.users.UsersName);
+                            StateHasChanged();
+                        }
+
+                    }
+                }
+            }
+        }
+        #region Xử lý kết nôi SignalR
+
+        private async void ReconnectSignalR(object state)
+        {
+            try
+            {
+
+                if (signalRConnect != null)
+                {
+                    if (header != null)
+                    {
+                        header.UpdateStatus();
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                Console.Error.WriteLine("Lỗi ReconnectSignalR :" + ex.ToString());
+            }
+
+        }
+        
+        #endregion
+    }
+}

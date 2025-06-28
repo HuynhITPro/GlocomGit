@@ -1,0 +1,127 @@
+﻿@using DevExpress.Blazor
+@using static NFCWebBlazor.App_NguyenVatLieu.App_DonDatHang.Page_DonDatHang_Master
+
+<style>
+
+</style>
+
+
+<EditForm EditContext="@editContext" Context="EditFormContext" style="max-width:800px;">
+    <DataAnnotationsValidator />
+
+    <div class="d-flex justify-content-center">
+       
+        <DxFormLayout CssClass="sizelayout">
+            <DxFormLayoutItem Caption="Phòng ban*" ColSpanSm="12" ColSpanMd="6" ColSpanLg="6" CaptionPosition="CaptionPosition.Vertical">
+                <Template>
+                    <NFCWebBlazor.App_ClassDefine.ComboboxFilteredString CssClass="cw-480"
+                                                                         TypeName="NVLPhongBan"
+                                                                         SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                                                         ListRenderMode=ListRenderMode.Virtual
+                                                                         SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                                                         SearchMode="ListSearchMode.AutoSearch"
+                                                                         TextFieldName="@nameof(DataDropDownList.FullName)"
+                                                                         ValueFieldName="@nameof(DataDropDownList.Name)"
+                                                                         ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                                                         @bind-Value=@nVLDonDatHangcrr.PhongBan />
+
+                    <div class="text-danger">
+                        <ValidationMessage For="@(() => nVLDonDatHangcrr.PhongBan)" />
+                    </div>
+                </Template>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Ngày đặt hàng*" ColSpanXs=6 ColSpanSm="6" ColSpanMd="4" ColSpanLg="4" CaptionPosition="CaptionPosition.Vertical">
+
+                <DxDateEdit @bind-Date="@nVLDonDatHangcrr.NgayDatHang" Mask="@DateTimeMask.ShortDate" DisplayFormat="dd-MM-yy" />
+                <div class="text-danger">
+                    <ValidationMessage For="@(() => @nVLDonDatHangcrr.NgayDatHang)" />
+                </div>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Ngày giao hàng*" ColSpanXs=6 ColSpanSm="6" ColSpanMd="4" ColSpanLg="4" CaptionPosition="CaptionPosition.Vertical">
+
+                <DxDateEdit @bind-Date="@nVLDonDatHangcrr.NgayMax" Mask="@DateTimeMask.ShortDate" DisplayFormat="dd-MM-yy" />
+
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Nhà cung cấp*" ColSpanSm="12" ColSpanMd="12" ColSpanLg="12" CaptionPosition="CaptionPosition.Vertical">
+                <Template>
+                    <NFCWebBlazor.App_ClassDefine.ComboboxFilteredString Data=@lstnhacungcap
+                                                                         SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                                                         ListRenderMode=ListRenderMode.Virtual
+                                                                         SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                                                         SearchMode="ListSearchMode.AutoSearch"
+                                                                         TextFieldName="@nameof(DataDropDownList.FullName)"
+                                                                         ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                                                         ValueFieldName="@nameof(DataDropDownList.Name)"
+                                                                         @bind-Value="@nVLDonDatHangcrr.MaNCC"
+                                                                         CssClass="cw-480"></NFCWebBlazor.App_ClassDefine.ComboboxFilteredString>
+                    <div class="text-danger">
+                        <ValidationMessage For="@(() =>nVLDonDatHangcrr.MaNCC)" />
+                    </div>
+                </Template>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Đơn vị thanh toán*" ColSpanXs=6 ColSpanSm="6" ColSpanMd="4" ColSpanLg="4" CaptionPosition="CaptionPosition.Vertical">
+                <Template>
+                    <NFCWebBlazor.App_ClassDefine.ComboboxFilteredString CssClass="cw-480"
+                                                                         SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                                                         ListRenderMode=ListRenderMode.Virtual
+                                                                         SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                                                         SearchMode="ListSearchMode.AutoSearch"
+                                                                         TypeName="DonViTien"
+                                                                         TextFieldName="@nameof(DataDropDownList.FullName)"
+                                                                         ValueFieldName="@nameof(DataDropDownList.Name)"
+                                                                         ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                                                         @bind-Value="@nVLDonDatHangcrr.DVTT" />
+                    <div class="text-danger">
+                        <ValidationMessage For="@(() =>nVLDonDatHangcrr.DVTT)" />
+                    </div>
+                </Template>
+            </DxFormLayoutItem>
+            
+            <DxFormLayoutItem Caption="Ghi chú" ColSpanSm="12" ColSpanMd="12" ColSpanLg="12" CaptionPosition="CaptionPosition.Vertical">
+
+                <DxMemo @bind-Text=@nVLDonDatHangcrr.GhiChu></DxMemo>
+
+            </DxFormLayoutItem>
+
+            <DxFormLayoutItem ColSpanSm="12" ColSpanMd="12">
+                <div class="d-flex justify-content-center mt-2 gap-2">
+                    <DxButton RenderStyle="ButtonRenderStyle.Primary" IconCssClass="bi bi-floppy" Text="Lưu" Visible=@(!EnableEdit) Click="@saveAsync" />
+                    <DxButton RenderStyle="ButtonRenderStyle.Success" IconCssClass="bi bi-file-earmark m-1" Text="Làm lại" Visible=@(!EnableEdit) Click="@reset" />
+                    <DxButton RenderStyle="ButtonRenderStyle.Info" IconCssClass="bi bi-pencil" CssClass="ms-2" Text="Sửa" Visible=@EnableEdit Click="@updateAsync" />
+                </div>
+
+            </DxFormLayoutItem>
+
+        </DxFormLayout>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public string title { get; set; }
+    [Parameter]
+    public NVLDonDatHangShow nVLDonDatHangcrr { get; set; }
+    [Parameter]
+    public EventCallback<NVLDonDatHangShow> AfterEdit { get; set; }
+    [Parameter]
+    public EventCallback<int> CallBackAfterSave { get; set; }
+    private EditContext? editContext;
+    List<DataDropDownList> lstnhacungcap { get; set; }
+    DataDropDownList nhacungcapselected { get; set; }
+    DateTime? dtpngaydenghi { get; set; } = DateTime.Now;
+    DateTime? dtpngaymax { get; set; }
+    List<Users> lstnguoidenghi { get; set; }
+    Users? NguoiDeNghiSelected { get; set; }
+    string NoiDung { get; set; } = "";
+    bool IsOpenfly;
+    string GhiChu { get; set; } = "";
+
+    bool checkvat = true;
+    string noidungghichu = "Lập dự trù: " + Environment.NewLine + "Đơn vị thực hiện: P. Vật tư" + Environment.NewLine + "Thời gian hoàn thành: ";
+    bool EnableEdit { get; set; } = false;
+
+    DxFlyout dxFlyoutchucnang { get; set; }
+
+
+
+}

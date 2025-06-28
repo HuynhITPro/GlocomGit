@@ -1,0 +1,141 @@
+﻿@using BlazorBootstrap
+@using NFCWebBlazor.Model
+@using Newtonsoft.Json
+
+<EditForm Model=@dataDropDownList Context="formuser" onkeydown="return handleF11Submit(event)">
+    <DxFormLayout CssClass="w-100" @onkeydown=@Onkeydown>
+        <DxFormLayoutItem ColSpanMd="12" Caption="ID">
+            <Template>
+                <DxTextBox @ref=txtName @bind-Text="@dataDropDownList.Name" />
+                <div class="text-danger">
+                    @namecheck
+                </div>
+            </Template>
+
+        </DxFormLayoutItem>
+        <DxFormLayoutItem ColSpanMd="12"  Caption ="Diễn giải">
+            <Template>
+                <DxTextBox @ref=txtFullName @bind-Text="@dataDropDownList.FullName" />
+                <div class="text-danger">
+                    @fullnamecheck
+                </div>
+            </Template>
+        </DxFormLayoutItem>
+        <DxFormLayoutItem  ColSpanMd=12  Caption="Nhóm">
+            <Template>
+                <DxComboBox Data=@lsttype
+                            ListRenderMode="ListRenderMode.Virtual"
+                            FilteringMode="DataGridFilteringMode.Contains"
+                            ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                            ValueFieldName="@nameof(DataDropDownList.Name)"
+                            TextFieldName="@nameof(DataDropDownList.FullName)"
+                            @bind-Value="@dataDropDownList.TypeName"
+                            CssClass="cw-480" />
+                <div class="text-danger">
+                    @typenamecheck
+                </div>
+            </Template>
+
+        </DxFormLayoutItem>
+
+        <DxFormLayoutItem ColSpanMd="12">
+            <Template>
+                <div class="d-flex justify-content-center mt-2">
+                    <DxButton RenderStyle="ButtonRenderStyle.Primary" IconCssClass="bi bi-floppy" Text="Lưu (nhấn F11)" Visible=@(!visibleedit) Click="@(()=>saveAsync(dataDropDownList))" />
+                    <DxButton RenderStyle="ButtonRenderStyle.Info" IconCssClass="bi bi-pencil" CssClass="ms-2" Text="Sửa" Visible=@visibleedit Click="@updateAsync" />
+                </div>
+            </Template>
+        </DxFormLayoutItem>
+    </DxFormLayout>
+</EditForm>
+@code {
+    [Parameter]
+    public DataDropDownList? dataDropDownList { get; set; }
+    [Parameter]
+    public List<DataDropDownList> lsttype { get; set; }
+    [Inject]
+    ToastService ToastService{ get; set; }
+    DxTextBox txtName, txtFullName;
+    bool visibleedit = false;
+    string namecheck, fullnamecheck, typenamecheck;
+    private bool checklogic(DataDropDownList dataDropDownList)
+    {
+        if (dataDropDownList == null)
+            return false;
+        namecheck = "";
+        fullnamecheck = "";
+        typenamecheck = "";
+        if (String.IsNullOrEmpty(dataDropDownList.Name))
+        {
+            namecheck = "Vui lòng nhập ID";
+            return false;
+        }
+        if (String.IsNullOrEmpty(dataDropDownList.FullName))
+        {
+            fullnamecheck = "Vui lòng nhập Diễn giải";
+            return false;
+        }
+        if (String.IsNullOrEmpty(dataDropDownList.TypeName))
+        {
+            typenamecheck = "Vui lòng chọn Nhóm";
+            return false;
+        }
+        return true;
+    }
+    private async void Onkeydown(KeyboardEventArgs e)
+    {
+        if (e.Key == "F11")
+        {
+            saveAsync(dataDropDownList);
+        }
+    }
+    private async void  saveAsync(DataDropDownList dataDropDownList)
+    {
+        if (!checklogic(dataDropDownList))
+            return;
+        CallAPI callAPI = new CallAPI();
+        string sql = "DataDropDownList_Insert";
+        List<ParameterDefine> lstpara = new List<ParameterDefine>();
+        lstpara.Add(new ParameterDefine("@Name", dataDropDownList.Name));
+        lstpara.Add(new ParameterDefine("@FullName", dataDropDownList.FullName));
+        lstpara.Add(new ParameterDefine("@TypeName", dataDropDownList.TypeName));
+
+        try
+        {
+            string json = await callAPI.ProcedureEncryptAsync(sql, lstpara);
+            if (json != "")
+            {
+                var query = JsonConvert.DeserializeObject<List<Ketqua>>(json);
+                if (query[0].ketqua == "OK")
+                {
+                    ToastService.Notify(new ToastMessage(ToastType.Success, $"Lưu thành công"));
+                    reset();
+                }
+                else
+                {
+                    ToastService.Notify(new ToastMessage(ToastType.Warning, "Lỗi: " + query[0].ketqua));
+
+
+                }
+                //Grid.Data = lstDonDatHangSearchShow;
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.Notify(new ToastMessage(ToastType.Warning, "Lỗi: " + ex.Message));
+        }
+        return;
+    }
+    private void reset()
+    {
+        dataDropDownList.Name = "";
+        dataDropDownList.FullName = "";
+        StateHasChanged();
+        txtName.FocusAsync();
+
+    }
+    private void updateAsync()
+    {
+
+    }
+}

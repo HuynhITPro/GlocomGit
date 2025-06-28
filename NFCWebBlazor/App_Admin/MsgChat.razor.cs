@@ -1,0 +1,105 @@
+﻿using BlazorBootstrap;
+using DevExpress.Blazor;
+using Microsoft.AspNetCore.Components;
+using Newtonsoft.Json;
+using NFCWebBlazor.App_ModelClass;
+using NFCWebBlazor.Model;
+using NFCWebBlazor.Pages;
+using SkiaSharp;
+using static NFCWebBlazor.App_NguyenVatLieu.App_DonDatHang.Urc_DonHang_AddKeHoach;
+
+namespace NFCWebBlazor.App_Admin
+{
+    public partial class MsgChat
+    {
+        [Inject ] ToastService toastService { get; set; }
+        private async Task saveAsync()
+        {
+            nvlMsg.UserInsert = ModelAdmin.users.UsersName;
+            string sql = "NVLDB.dbo.NvlMsg_Insert";
+            List<ParameterDefine> lstpara = new List<ParameterDefine>();
+            lstpara.Add(new ParameterDefine("@Serial", nvlMsg.Serial));
+            lstpara.Add(new ParameterDefine("@Msg", nvlMsg.Msg));
+            lstpara.Add(new ParameterDefine("@SerialParent", nvlMsg.SerialParent));
+            lstpara.Add(new ParameterDefine("@SerialLink", nvlMsg.SerialLink));
+            lstpara.Add(new ParameterDefine("@TableName", nvlMsg.TableName));
+            lstpara.Add(new ParameterDefine("@UserInsert", nvlMsg.UserInsert));
+
+            CallAPI callAPI = new CallAPI();
+          
+          
+            string json = await callAPI.ProcedureEncryptAsync(sql, lstpara);
+            if (json != "")
+            {
+                var query = JsonConvert.DeserializeObject<List<Ketqua>>(json);
+                if (query[0].ketqua == "OK")
+                {
+                    //toastService.Notify(new ToastMessage(ToastType.Success, "LƯU THÀNH CÔNG"));
+                    SendMessage();
+                    nvlMsg.Msg = "";
+                }
+                else
+                {
+                    toastService.Notify(new ToastMessage(ToastType.Success, string.Format("Lỗi:{0}, {1} ", query[0].ketqua, query[0].ketquaexception)));
+                    //reset();
+                    // msgBox.Show(string.Format("Lỗi:{0}, {1} " + query[0].ketqua, query[0].ketquaexception), IconMsg.iconssuccess);
+
+                }
+                //Grid.Data = lstDonDatHangSearchShow;
+            }
+        }
+        private void SendMessage()
+        {
+            if (!string.IsNullOrWhiteSpace(nvlMsg.Msg))
+            {
+                Messages.Add(nvlMsg.CopyClass());
+                // Simulate a reply
+                StateHasChanged();
+                ScrollToBottom();
+            }
+            //ScrollToBottom();
+        }
+        private async Task loadAsync()
+        {
+            string sql = "";
+            if (nvlMsg.SerialLink != null)
+            {
+                sql = string.Format(@"
+                                 use NVLDB
+                                SELECT  [Serial],[Msg],[SerialParent],[SerialLink],[TableName],[UserInsert],[NgayInsert],usr.PathImg,usr.TenUser
+                              FROM [NVLDB].[dbo].[NvlMsg] msg
+                              inner join DBMaster.dbo.Users usr on msg.UserInsert=usr.UsersName
+                              where msg.SerialLink='{0}' and TableName='{1}'
+                    ", nvlMsg.SerialLink,nvlMsg.TableName);
+                try
+                {
+                    CallAPI callAPI = new CallAPI();
+                    List<ParameterDefine> parameterDefineList = new List<ParameterDefine>();
+                    //parameterDefineList.Add(new ParameterDefine("@Serial", keHoachSP_Showcrr.Serial));
+                    string json = await callAPI.ExcuteQueryEncryptAsync(sql, parameterDefineList);
+                    if (json != "")
+                    {
+                        var query = JsonConvert.DeserializeObject<List<NvlMsg>>(json);
+                        if (query.Count > 0)
+                        {
+                            Messages.AddRange(query);
+                            query.Clear();
+                           
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+
+                    toastService.Notify(new ToastMessage(ToastType.Warning, "Lỗi:" + ex.Message));
+                }
+                finally
+                {
+                    //PanelVisible = false;
+                    StateHasChanged();
+                }
+            }
+           
+        }
+    }
+}

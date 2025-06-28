@@ -1,0 +1,367 @@
+﻿@using System.Collections.ObjectModel
+@using NFCWebBlazor.App_ClassDefine
+@using static NFCWebBlazor.App_NguyenVatLieu.App_DuyetGia.Page_DuyetGiaMaster
+
+
+<style>
+    .griddetail {
+    }
+
+    #gridaddkehoach .dxbl-grid-header-row {
+        display: contents !important;
+    }
+
+    .highlighted-item-linethrough > td {
+        background-color: pink;
+        text-decoration: line-through;
+    }
+</style>
+<DxFlyout @ref=dxFlyoutchucnang
+          PositionTarget="@idflychucnang"
+          @bind-IsOpen=IsOpenfly
+          RestrictionTarget="#Navigation-Flyout-Customization"
+          AnimationType=FlyoutAnimationType.Fade
+          PreventCloseOnPositionTargetClick="true"
+          Width="min(95vw,800px)"
+          Position=@(FlyoutPosition.BottomStart | FlyoutPosition.TopStart)>
+    <BodyTextTemplate>
+
+        <div class="container">
+            <div class="row">
+
+                <div class="col-auto d-flex flex-wrap gap-1">
+
+
+                    @if (PhanQuyenCheck)
+                    {
+                        <DxButton IconCssClass="bi bi-plus-circle" RenderStyle="ButtonRenderStyle.Primary" Text="THÊM VẬT TƯ" Click="@addItem" RenderStyleMode="ButtonRenderStyleMode.Outline">
+                        </DxButton>
+                        <DxButton Text="CHỈNH SỬA" IconCssClass="bi bi-pencil" RenderStyle="ButtonRenderStyle.Warning" RenderStyleMode="ButtonRenderStyleMode.Outline" Click="@(()=>EditItemAsync(nvlDuyetGiaItemShowcrr))">
+                        </DxButton>
+                        <DxButton Text="XÓA" IconCssClass="oi oi-x" RenderStyle="ButtonRenderStyle.Danger" Click="@(()=>DeleteItemAsync(nvlDuyetGiaItemShowcrr))" RenderStyleMode="ButtonRenderStyleMode.Outline">
+                        </DxButton>
+                    }
+                    @if (CheckDuyet)
+                    {
+                        <DxButton IconCssClass="bi bi-ban" Text="Không Duyệt" Click="@showmsg" RenderStyle="ButtonRenderStyle.Danger" RenderStyleMode="ButtonRenderStyleMode.Outline">
+                        </DxButton>
+                    }
+                </div>
+
+            </div>
+
+
+        </div>
+    </BodyTextTemplate>
+
+</DxFlyout>
+<NFCWebBlazor.App_Admin.DialogMsg @ref="@dialogMsg"></NFCWebBlazor.App_Admin.DialogMsg>
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+<DxLoadingPanel @bind-Visible="@PanelVisible"
+                IsContentBlocked="true"
+                ApplyBackgroundShading="true"
+                IndicatorAreaVisible="false"
+                Text="Đang xử lý...">
+    @if (showtextload)
+    {
+        <span style="color:orangered;font-size:2rem;">Dữ liệu đã được chỉnh sửa, vui lòng nhấn Tải Lại để xem</span>
+    }
+    <DxGrid @ref="Grid" Data="@lstdata"
+            AutoExpandAllGroupRows="true"
+            CssClass="griddetail"
+            ShowAllRows=true
+            TextWrapEnabled="true"
+            AllowSort="false"
+            id="gridaddkehoach"
+            ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+            CustomizeElement="OnCustomizeElement"
+            FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+            VirtualScrollingEnabled=true
+            ShowFilterRow=true>
+        <ToolbarTemplate>
+            <DxToolbar ItemRenderStyleMode="ToolbarRenderStyleMode.Plain">
+                <DxToolbarItem Text="Tải lại" IconCssClass="bi bi-arrow-clockwise" RenderStyle="ButtonRenderStyle.Primary" Click="@refreshdata">
+                </DxToolbarItem>
+                <DxToolbarItem Text="Xuất excel" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=>Grid.ExportToXlsxAsync("ExporDeNghi"))">
+                </DxToolbarItem>
+                <DxToolbarItem Context="AAAa">
+                    <Template>
+                        <div class="row">
+                            <div class="col m-1">
+                                <DxDateEdit @bind-Date="@nvlDuyetGiaShowcrr.NgayApDung" NullText="Áp dụng từ ngày" ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto" Mask="@DateTimeMask.ShortDate" DisplayFormat="dd-MM-yy" />
+                            </div>
+                            <div class="col m-1">
+                                <DxDateEdit @bind-Date="@nvlDuyetGiaShowcrr.NgayKetThuc" NullText="Đến ngày" ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto" Mask="@DateTimeMask.ShortDate" DisplayFormat="dd-MM-yy" />
+                            </div>
+                            <div class="col m-1">
+                                <DxButton Text="Áp dụng" IconCssClass="bi bi-spellcheck" Visible="@CheckDuyet" RenderStyle="ButtonRenderStyle.Primary" RenderStyleMode="ButtonRenderStyleMode.Outline" Click="@ApDungSetAsync"></DxButton>
+                            </div>
+                        </div>
+                    </Template>
+                </DxToolbarItem>
+            </DxToolbar>
+        </ToolbarTemplate>
+        <Columns>
+            @*  <DxGridCommandColumn Width="90" ShowInColumnChooser=false Visible=@PhanQuyenCheck>
+            <HeaderTemplate>
+            <a class="oi oi-plus" style="text-decoration: none;" href="javascript:void(0);"></a>
+            </HeaderTemplate>
+            <CellDisplayTemplate>
+            @{
+            NvlDuyetGiaItemShow nvlDuyetGiaItemShow = (NvlDuyetGiaItemShow)context.DataItem;
+            }
+            <a class="oi oi-x" @onclick="@(() => DeleteItemAsync(nvlDuyetGiaItemShow))" style="text-decoration: none;margin-left:10px;color:red" href="javascript:void(0);"></a>
+            </CellDisplayTemplate>
+            </DxGridCommandColumn> *@
+            <DxGridDataColumn Width="100">
+
+                <CellDisplayTemplate>
+                    @{
+                        NvlDuyetGiaItemShow nvlDuyetGiaItemShow = (NvlDuyetGiaItemShow)context.DataItem;
+                    }
+                    <a href="#" class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"
+                       id=@idelement(nvlDuyetGiaItemShow.Serial) @onclick="@(()=>ShowFlyout(nvlDuyetGiaItemShow))"><i class="bi bi-list-stars me-1"></i>Chức năng</a>
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn Caption="STT" Width="50">
+                <CellDisplayTemplate>@(context.VisibleIndex + 1)</CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="Serial" Caption="Serial" Visible=false Width="100" />
+            <DxGridDataColumn FieldName="TenHang" Caption="Tên hàng" MinWidth="240"></DxGridDataColumn>
+            <DxGridDataColumn FieldName="TenNCC" Caption="Chọn Nhà cung cấp" Width="140">
+                <CellDisplayTemplate>
+                    @{
+                        NvlDuyetGiaItemShow nvlDuyetGiaItemShow = (NvlDuyetGiaItemShow)context.DataItem;
+                    }
+                    @if (nvlDuyetGiaItemShow.TenNCC != null)
+                    {
+                        <span style="color:forestgreen">@nvlDuyetGiaItemShow.TenNCC</span>
+                        @if (CheckDuyet)
+                        {
+                            <a class="oi oi-x ms-2" @onclick="@(()=>HuyDuyetItemAsync(nvlDuyetGiaItemShow))" style="text-decoration: none;color:red;font-size:0.7rem;" href="#">Hủy chọn</a>
+                        }
+                        <br />
+                        <span style="color:orangered;font-size:0.6rem">@showdongia(nvlDuyetGiaItemShow.DonGia)</span>
+
+                    }
+                    else
+                    {
+                        if (nvlDuyetGiaItemShow.TinhTrangDuyet == "Không duyệt")
+                        {
+                            <span style="color:orangered">
+                                @string.Format("Không duyệt vì:{0}", nvlDuyetGiaItemShow.MsgKhongDuyet)
+                            </span>
+                        }
+                    }
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="XuatXu" Caption="Xuất xứ" Width="150" />
+            <DxGridDataColumn FieldName="DVT" Caption="ĐVT" Width="80">
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="SLDuToan" DisplayFormat="#,#.#" Caption="Số lượng dự toán" Width="90" />
+            <DxGridDataColumn FieldName="DinhMuc" DisplayFormat="#,#.###" Caption="Định mức" Width="90" />
+            @for (int index = 0; index < 10; index++)
+            {
+                int currentIndex = index;
+                <DxGridDataColumn FieldName=@string.Format("NCC{0}",currentIndex) DisplayFormat="#,#.##" Visible="false" ShowInColumnChooser="false" Width="140">
+                    <HeaderCaptionTemplate>
+                        <div>
+                            <a href="#" class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" @onclick="@(()=>ShowNhaCungCapViewAsync(@showtextheader(string.Format("NCC{0}", currentIndex))))">
+                                @showtextheader(string.Format("NCC{0}", currentIndex))
+                            </a>
+                            @if (nvlDuyetGiaShowcrr.lstheaderbinding[currentIndex].DaMua=="")
+                            {
+                                <img style="width:30px;height:30px;margin-left:10px;" src=@IconImg.New>
+                            }
+                            @if(phanQuyenAccess.CheckDelete(nvlDuyetGiaShowcrr.UserInsert,Model.ModelAdmin.users))
+                            {
+                                <a class="bi bi-pencil-fill ms-2" @onclick="@(()=>SuaNhaCungCapAsync(nvlDuyetGiaShowcrr,nvlDuyetGiaShowcrr.lstheaderbinding[currentIndex].Text))" style="text-decoration: none;color:red;font-size:0.7rem;" href="#"></a>
+                            }
+                        </div>
+                    </HeaderCaptionTemplate>
+                    <CellDisplayTemplate>
+                        @{
+                            NvlDuyetGiaItemShow nvlDuyetGiaItemShow = (NvlDuyetGiaItemShow)context.DataItem;
+                            int i = currentIndex;
+                        }
+                        <div class="row">
+                            <div class="col">
+
+                                @if ((bool)nvlDuyetGiaItemShow[string.Format("DuyetNCC{0}", i)])
+                                {
+                                    <span class="bi bi-check2-circle text-success ms-1" style="font-size:1.5rem"></span>
+                                }
+                            </div>
+                            <div class="col" style="text-align:end">
+                                <a href="#" @onclick="@(()=>DuyetItem(string.Format("NCC{0}",i),nvlDuyetGiaItemShow))">
+                                    @showdongia((decimal?)nvlDuyetGiaItemShow[string.Format("NCC{0}", i)])
+                                </a>
+                                <br />
+                                <span class="text-danger" style="font-size:0.6rem">@showtextm2((decimal?)nvlDuyetGiaItemShow[string.Format("DinhMuc")], (decimal?)nvlDuyetGiaItemShow[string.Format("NCC{0}", i)])</span>
+                            </div>
+                        </div>
+
+
+                    </CellDisplayTemplate>
+                </DxGridDataColumn>
+            }
+           
+            <DxGridDataColumn FieldName="GiaDangMua" DisplayFormat="#,#.##" Caption="Giá đang mua" Width="90" />
+
+        </Columns>
+
+    </DxGrid>
+
+</DxLoadingPanel>
+
+@code {
+    [Inject] BrowserService browserService { get; set; }
+
+    [Parameter]
+    public NvlDuyetGiaShow nvlDuyetGiaShowcrr { get; set; }
+    [Parameter]
+    public EventCallback GotoMasterGrid { get; set; }
+    DateTime? dtpbegin { get; set; }
+    DateTime? dtpend { get; set; }
+    ObservableCollection<NvlDuyetGiaItemShow> lstdata { get; set; }
+    bool VisbleTaoDeNghi = true, Visilethemtukehoach = false, Visilethemchitiet = true, Visileprint = true, Visilechinhsua = true, Visiledelete = true, Visilechinhtruocin = true, Visilekyduyet = true, Visilehuykyduyet = true, Visilechonnguoiduyet = true;
+    bool IsOpenfly = false;
+    NvlDuyetGiaItemShow nvlDuyetGiaItemShowcrr { get; set; }
+    bool checkAddItem = true;
+    bool showtextload = false;
+    bool PanelVisible { get; set; }
+    bool VisibleKeHoachMuaHang = false;
+    IGrid? Grid { get; set; }
+
+    bool PopupVisible { get; set; } = false;
+    DialogWindow? dxPopup { get; set; }
+    RenderFragment? renderFragment { get; set; }
+    DialogMsg? dialogMsg { get; set; }
+    public string? random { get; set; }
+    string heightgrid = "500px";
+    string headerform = "";
+
+    void Grid_CustomizeSummaryDisplayText(GridCustomizeSummaryDisplayTextEventArgs e)
+    {
+
+    }
+    private string showtextm2(decimal? dinhmuc, decimal? dongia)
+    {
+        if (dinhmuc == 0 || dinhmuc == null || dongia == null)
+            return "";
+        return string.Format("{0}/ m2", (dongia.Value * dinhmuc.Value).ToString("#,##.##"));
+    }
+    private string showdongia(decimal? dongia)
+    {
+        if (dongia == null)
+        {
+            return "";
+        }
+        return dongia.Value.ToString("#,#.##");
+    }
+    private string shownguoikiem(string textkiem)
+    {
+        if (textkiem == "")
+        {
+            return "";
+        }
+        return "Kiểm bởi: " + textkiem;
+    }
+    private string shownguoiduyet(string textduyet)
+    {
+        if (textduyet == "")
+        {
+            return "Chưa duyệt";
+        }
+        return "Duyệt bởi: " + textduyet;
+    }
+    private string pathimgduyet(string textduyet)
+    {
+        if (textduyet == "")
+        {
+            return IconImg.NotCheck;
+        }
+        return IconImg.CheckMark;
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        await loadAsync();
+        // return base.OnInitializedAsync();
+    }
+    App_ClassDefine.ClassProcess prs = new ClassProcess();
+
+
+    DxFlyout dxFlyoutchucnang { get; set; }
+    public string idflychucnang { get; set; }
+    public string idelement(int? serial)
+    {
+        if (serial == null)
+            string.Format("flychucnang_{0}_{1}", random, serial);
+        if (random == null)
+        {
+            random = prs.RandomString(9);
+        }
+        return string.Format("flychucnang_{0}_{1}", random, serial);
+    }
+    private async Task loadAsync()
+    {
+
+        var dimension = await browserService.GetDimensions();
+        // var heighrow = await browserService.GetHeighWithID("divcontainer");
+        int height = dimension.Height - 150;
+        heightgrid = string.Format("{0}px", height);
+
+
+    }
+    void OnCustomizeElement(GridCustomizeElementEventArgs e)
+    {
+        if (e.ElementType == GridElementType.DataRow)
+        {
+            NvlDuyetGiaItemShow nvlKeHoachMuaHangItemShow = (NvlDuyetGiaItemShow)e.Grid.GetDataItem(e.VisibleIndex);
+            // Console.WriteLine(nvlKeHoachMuaHangItemShow.HuyDatHang);
+            if (nvlKeHoachMuaHangItemShow.TinhTrangDuyet == "Không duyệt")
+                e.CssClass = "highlighted-item-linethrough";
+
+        }
+
+    }
+    void Grid_CustomizeEditModel(GridCustomizeEditModelEventArgs e)
+    {
+        var dataItem = (NvlDuyetGiaItemShow)e.DataItem;
+        if (dataItem == null)
+            e.EditModel = new NvlDuyetGiaItemShow { };
+        else
+        {
+            e.EditModel = dataItem.CopyClass();
+        }
+    }
+    async Task OnEditModelSaving(GridEditModelSavingEventArgs e)
+    {
+        var editModel = (NvlDuyetGiaItemShow)e.EditModel;
+        // Assign changes from the edit model to the data item.
+        if (e.IsNew)
+        {
+            // DataRow rownew = lstdata.NewRow();
+            // lstdata.Rows.Add(rownew);
+        }
+        else
+        {
+            // Console.WriteLine(((DonHangItem)e.DataItem).SLDatHang);
+            e.CopyChangesToDataItem();
+            // Post changes to the database.
+        }
+    }
+
+    bool expand = true;
+    private void expandall()
+    {
+        Grid.BeginUpdate();
+        Grid.AutoExpandAllGroupRows = expand;
+        Grid.EndUpdate();
+        expand = !expand;
+    }
+}

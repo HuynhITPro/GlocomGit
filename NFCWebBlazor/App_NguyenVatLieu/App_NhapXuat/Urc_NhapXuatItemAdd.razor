@@ -1,0 +1,488 @@
+﻿@using BlazorBootstrap
+@using NFCWebBlazor.App_ClassDefine
+@using static NFCWebBlazor.App_NguyenVatLieu.App_KeHoachDeNghi.Page_KeHoachMuaHangMaster
+@using static NFCWebBlazor.App_NguyenVatLieu.App_NhapXuat.Page_NhapXuat_Master
+<style>
+    .dxbl-scroll-viewer-content {
+    white-space: normal;
+    }
+
+
+    .dxbl-list-box-render-container {
+    max-height: 300px;
+    }
+
+    .my-grid-max {
+    max-height: 500px;
+    }
+</style>
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+<div>
+    <DxFlyout @ref=dxFlyoutchucnang
+    PositionTarget="#idtextxemtonkho_button"
+    @bind-IsOpen=IsOpenfly
+    RestrictionTarget="#Navigation-Flyout-Customization"
+    AnimationType=FlyoutAnimationType.Fade
+    PreventCloseOnPositionTargetClick="true"
+    MaxWidth="500px"
+    Position=@(FlyoutPosition.BottomStart | FlyoutPosition.TopStart)>
+        <ChildContent>
+            <DxGrid @ref=dxGridTK
+            TextWrapEnabled="false"
+            ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+            CssClass="my-grid-max"
+            ShowFilterRow="false"
+            VirtualScrollingEnabled=true
+            FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+            Data=@lstdataitem
+            AutoExpandAllGroupRows=true>
+                <ToolbarTemplate>
+
+                    <DxToolbar AdaptivityAutoCollapseItemsToIcons="false" ItemRenderStyleMode="ToolbarRenderStyleMode.Plain" SizeMode="SizeMode.Small">
+
+
+
+                        <DxToolbarItem Text="Xuất excel" BeginGroup="true" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=>dxGridTK.ExportToXlsxAsync("ExporBangKeTK"))">
+
+                        </DxToolbarItem>
+
+                        <DxToolbarItem Text="Chọn cột" BeginGroup="true" Click="@(()=>dxGridTK.ShowColumnChooser())" IconCssClass="bi bi-layout-text-window-reverse" />
+                    </DxToolbar>
+                </ToolbarTemplate>
+                <Columns>
+                    @if (Ismobile)
+                    {
+                        <DxGridDataColumn FieldName="TenHang" Caption="">
+                            <CellDisplayTemplate>
+                                @{
+                                    NvlNhapXuatItemTemTK nvlNhapXuatItemTemTK=(NvlNhapXuatItemTemTK)context.DataItem;
+                                }
+                                <div class="row d-flex">
+                                    <div>
+
+                                        <span style="color:forestgreen;margin-right:10px;font-size:20px;">@StaticClass.showdecimal(nvlNhapXuatItemTemTK.SLTon)</span>
+                                        <span>@nvlNhapXuatItemTemTK.DVT</span>
+                                    </div>
+                                   <div>
+                                      
+                                        <DxButton RenderStyle="ButtonRenderStyle.Primary" RenderStyleMode="ButtonRenderStyleMode.Outline" Text="@((nvlNhapXuatItemTemTK.SerialLink!=null)?string.Format("ID tem: {0}",nvlNhapXuatItemTemTK.SerialLink.ToString()):"")" Click="@(()=>setSerialClick(nvlNhapXuatItemTemTK.SerialLink.ToString()))">
+                                        </DxButton>
+                                   </div>
+                                </div>
+                              
+                            </CellDisplayTemplate>
+                        </DxGridDataColumn>
+                    }
+                    else
+                    {
+                        <DxGridDataColumn FieldName="SerialLink" Caption="ID tem" Width="90">
+                            <CellDisplayTemplate>
+
+                                <DxButton RenderStyle="ButtonRenderStyle.Secondary" RenderStyleMode="ButtonRenderStyleMode.Text" Text="@context.Value.ToString()" Click="@(()=>setSerialClick(context.Value.ToString()))">
+
+                                </DxButton>
+                            </CellDisplayTemplate>
+                        </DxGridDataColumn>
+                        <DxGridDataColumn FieldName="TenHang" Caption="Tên hàng" Width="230">
+                        </DxGridDataColumn>
+                        <DxGridDataColumn FieldName="DVT" Caption="ĐVT" Width="80" />
+                        <DxGridDataColumn FieldName="SLTon" Caption="SL Tồn" Width="75" DisplayFormat="#,0.##;-#,0.##;''" />
+
+                    }
+                </Columns>
+
+            </DxGrid>
+        </ChildContent>
+    </DxFlyout>
+    <div>
+
+
+        <div class="d-flex justify-content-center mb-2 gap-2">
+            <div>
+
+                <span style="font-size:1.5rem;color:forestgreen">@((nvlNhapXuatKhoShowcrr == null) ? "" : nvlNhapXuatKhoShowcrr.Serial.ToString())</span>
+            </div>
+            <DxButton RenderStyle="ButtonRenderStyle.Primary"  IconCssClass="bi bi-floppy" Text="Lưu (nhấn F11)" Visible=@(!EnableEdit) Click="@saveAsync" />
+            <DxButton RenderStyle="ButtonRenderStyle.Success" IconCssClass="bi bi-file-earmark m-1" Text="Làm lại" Visible=@(!EnableEdit) Click="@reset" />
+            <DxButton RenderStyle="ButtonRenderStyle.Info" IconCssClass="bi bi-pencil" CssClass="ms-2" Text="Sửa" Visible=@EnableEdit Click="@updateAsync" />
+            <DxButton RenderStyle="ButtonRenderStyle.Secondary" IconCssClass="bi bi-card-image" CssClass="ms-2" Text="Ảnh nhận diện" Click="@ShowimgAsync" />
+        </div>
+        <div>
+            <EditForm EditContext="@editContext" Context="EditFormContext" style="max-width:700px;" onkeydown="return handleF11Submit(event)">
+                <DataAnnotationsValidator />
+                <div class="d-flex justify-content-center">
+
+                    <DxFormLayout CaptionPosition="CaptionPosition.Vertical" onkeydown="@Onkeydown">
+                        @if (CheckDuplicate)
+                        {
+                            <DxFormLayoutItem ColSpanMd="12">
+                                <div class="text-danger">
+                                    <span>Dồn hàng vào tem có sẵn, hệ thống sẽ bỏ qua lỗi trùng tem</span>
+                                </div>
+                            </DxFormLayoutItem>
+                        }
+
+                        <DxFormLayoutItem ColSpanMd="12" Enabled="@EnableSerial">
+                            <CaptionTemplate>
+                                <span style="color:green">Quét tem/Nhập ID*</span>
+                            </CaptionTemplate>
+                            <Template>
+                                <View_BarcodeScan @ref=view_BarcodeScan StrBarcode="@((nvlNhapXuatItemShowcrr.SerialLink==null)?"":nvlNhapXuatItemShowcrr.SerialLink.ToString())" GetStrBarcode="@checkSerialAsync" BindingStrBarcode="@bindingStrBarcode" lstidtem="@lstIDTem"></View_BarcodeScan>
+                                <div class="text-danger">
+                                    <ValidationMessage For="@(() => nvlNhapXuatItemShowcrr.SerialLink)" />
+                                </div>
+                            </Template>
+                        </DxFormLayoutItem>
+                        <DxFormLayoutItem Caption="Tên vật tư" ColSpanMd="12">
+                            <CaptionTemplate>
+                                <span style="color:green">Tên vật tư*</span><span style="color:blue;margin-left:15px">@string.Format("Tồn kho: {0}", showdecimal(nvlNhapXuatItemShowcrr.SLTon))</span>
+                                <DxButton CssClass="bi bi-search ms-2" id="idtextxemtonkho_button" RenderStyleMode="ButtonRenderStyleMode.Text" RenderStyle="ButtonRenderStyle.Success" Click="@ShowFlyout">Xem tồn kho</DxButton>
+                            </CaptionTemplate>
+                            <Template>
+                                <ComboboxMaHang @ref=txtMaHang
+                                TextFieldName="@nameof(NvlHangHoaDropDown.TenHang)"
+                                ValueFieldName="@nameof(NvlHangHoaDropDown.MaHang)"
+                                SelectedItemChanged="@((e)=>SelectedItemChanged((NvlHangHoaDropDown)e))"
+                                SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                Enabled="@EnableSerial"
+                                ListRenderMode=ListRenderMode.Virtual
+                                SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                SearchMode="ListSearchMode.AutoSearch"
+                                @bind-Value=@nvlNhapXuatItemShowcrr.MaHang
+                                ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto />
+                                <div class="text-danger">
+                                    <ValidationMessage For="@(() => nvlNhapXuatItemShowcrr.MaHang)" />
+                                </div>
+                            </Template>
+                        </DxFormLayoutItem>
+
+
+                        <DxFormLayoutItem ColSpanXs="12" ColSpanMd="12" ColSpanLg="12" Enabled="@EnableSerial">
+                            <CaptionTemplate>
+                                <div class="row">
+                                    <div class="col-auto">
+                                        <span style="color:green">@(CheckChungTuNhap(nvlNhapXuatKhoShowcrr) ? "Đơn hàng được chọn*" : "Kế hoạch được chọn*")</span>
+                                        <br />
+                                        <span style="color:red;font-size:0.5rem">@string.Format("Tổng chọn: {0}", tongdonhangselect.Value.ToString("#,0.######"))</span>
+
+                                    </div>
+                                    <div class="col-auto text-end">
+                                        <DxCheckBox @bind-Checked="@chkNgoaiKeHoach"
+                                        Alignment="CheckBoxContentAlignment.Center"
+                                        LabelPosition="LabelPosition.Right">
+                                            Ngoài kế hoạch
+                                        </DxCheckBox>
+
+                                    </div>
+                                    <div class="col-auto" style="display:@displaycapvuot">
+                                        <DxCheckBox @bind-Checked="@chkVuotDeNghi"
+                                        Alignment="CheckBoxContentAlignment.Center"
+                                        LabelPosition="LabelPosition.Right">
+                                            Cấp vượt và ghi nợ
+                                        </DxCheckBox>
+                                    </div>
+
+                                </div>
+
+                            </CaptionTemplate>
+                            <Template>
+                                <DxTagBox Data="@lstdonhang"
+                                Enabled="@(!chkNgoaiKeHoach)"
+                                @ref=dxTagBoxdonhang
+                                SelectedItemsChanged="@((IEnumerable<DonHangSelect>e)=>SelectDonHangclick(e))"
+                                SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                ReadOnly="@(!EnableSerial)"
+                                ListRenderMode=ListRenderMode.Virtual
+                                SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                SearchMode="ListSearchMode.AutoSearch"
+                                TextFieldName="SerialDN"
+                                ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto
+
+                                @bind-Values=@donhangselected>
+                                    <TagDisplayTemplate Context="contextdisplay">
+                                        @{
+                                            DonHangSelect donHangSelect = (DonHangSelect)contextdisplay.DataItem;
+                                        }
+                                        <div class="gap-1">
+                                            <img style="height:24px;width:24px" class="rounded-circle shadow-4-strong" src="@donHangSelect.PathImg">
+                                            <span style="color:forestgreen;">@string.Format("Đề nghị số: {0}", donHangSelect.SerialDN)</span>
+                                            <DxButton Click="@contextdisplay.RemoveTagAction"
+                                            @onclick:stopPropagation
+                                            aria-label="Remove Tag"
+                                            IconCssClass="bi bi-x-circle"
+                                            RenderStyle="ButtonRenderStyle.None" RenderStyleMode="ButtonRenderStyleMode.Text">
+                                            </DxButton>
+                                        </div>
+                                    </TagDisplayTemplate>
+                                    <ItemDisplayTemplate Context="contextitem">
+                                        @{
+                                            DonHangSelect donHangSelect = (DonHangSelect)contextitem.DataItem;
+                                        }
+                                        <div class="col d-flex align-items-center">
+                                            <img style="width:30px;height:30px;" class="rounded-circle shadow-4-strong" src="@donHangSelect.PathImg">
+                                            <div class="ms-1">
+                                                <span style="color:forestgreen">@string.Format("Đề nghị số: {0}", donHangSelect.SerialDN)</span>
+
+                                                <p style="font-size:10px;margin:0px;">
+                                                    @string.Format("Tạo bởi: {0}", donHangSelect.TenUser)
+                                                    <span style="font-size:10px;color:red">@string.Format("Còn lại: {0}", donHangSelect.SLTheoDoi.Value.ToString("#,0.#####"))</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </ItemDisplayTemplate>
+
+                                </DxTagBox>
+                                <div class="text-danger">
+                                    <ValidationMessage For="@(() => nvlNhapXuatItemShowcrr.SerialKHDH)" />
+                                </div>
+                            </Template>
+
+                        </DxFormLayoutItem>
+                        <DxFormLayoutItem ColSpanXs="12" ColSpanMd="12" Visible="@visibleTheoDoiNo">
+                            <Template>
+                                <div class="d-flex justify-content-start align-content-center p-1  border  rounded-2" style="background-color:yellow;color:#800000">
+                                    <span style="margin-right:10px">Còn nợ: <a href="#">@showdecimal(nvlNhapXuatItemShowcrr.SLNo)</a></span>
+                                    <a href="#" class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" @onclick="@showchitietnoAsync"><i class="bi bi-list-stars me-1"></i>Xem chi tiết nợ</a>
+                                    <DxButton RenderStyle="ButtonRenderStyle.Warning" Visible="@visibleTheoDoiNo"
+                                    IconCssClass="bi bi-dash-square-dotted" Text="Cấn trừ nợ" Click="@saveCanTruNoAsync" />
+                                </div>
+                            </Template>
+                        </DxFormLayoutItem>
+                        <DxFormLayoutItem ColSpanXs="6" ColSpanMd="6" ColSpanLg="6">
+                            <CaptionTemplate>
+                                <span style="color:green">@(CheckChungTuNhap(nvlNhapXuatKhoShowcrr) ? "SL Nhập*" : "SL Xuất*")</span>
+                            </CaptionTemplate>
+                            <Template>
+
+                                <DxSpinEdit @bind-Value=@(nvlNhapXuatItemShowcrr.SoLuong) ShowSpinButtons="false" Enabled="@EnableSerial" DisplayFormat="#,0.#####"></DxSpinEdit>
+                                <div class="text-danger">
+                                    <ValidationMessage For="@(() => @nvlNhapXuatItemShowcrr.SoLuong)" />
+                                </div>
+
+                            </Template>
+                        </DxFormLayoutItem>
+                        <DxFormLayoutItem ColSpanXs="6" ColSpanMd="6" ColSpanLg="6" CaptionPosition="CaptionPosition.Vertical">
+                            <Template>
+                                <DxTextBox @bind-Text=@nvlNhapXuatItemShowcrr.DVT Enabled="false"></DxTextBox>
+                                <div class="text-danger">
+                                    <ValidationMessage For="@(() => @nvlNhapXuatItemShowcrr.DVT)" />
+                                </div>
+                            </Template>
+
+                        </DxFormLayoutItem>
+                        @if (nvlNhapXuatKhoShowcrr.LyDo == "ĐÓNG VỈ / RÁP")
+                        {
+                            <DxFormLayoutItem ColSpanSm="12" ColSpanMd="12" ColSpanLg="12" CaptionPosition="CaptionPosition.Vertical">
+                                <CaptionTemplate>
+                                    Tên sản phẩm
+                                </CaptionTemplate>
+                                <Template>
+                                    <DxComboBox TextFieldName="@nameof(SanPhamDropDown.TenSP)"
+                                    ValueFieldName="@nameof(SanPhamDropDown.MaSP)"
+                                    CssClass="cw-480"
+                                    Data="lstsanphamfilter"
+                                    @bind-Value=@nvlNhapXuatItemShowcrr.MaSP
+                                    SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                    ListRenderMode=ListRenderMode.Virtual
+                                    SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                    SearchMode="ListSearchMode.AutoSearch"
+                                    ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto />
+                                    <div class="text-danger">
+                                        <ValidationMessage For="@(() => nvlNhapXuatItemShowcrr.MaSP)" />
+                                    </div>
+                                </Template>
+                            </DxFormLayoutItem>
+                        }
+                        <DxFormLayoutItem Caption="Dấu tuần" ColSpanXs="12" ColSpanMd="6" ColSpanLg="6" CaptionPosition="CaptionPosition.Vertical">
+
+                            <NFCWebBlazor.App_ClassDefine.DxTagBoxDefine Data="@lstdautuan" @ref="txtDauTuan" TextFieldName="@nameof(DataDropDownList.FullName)"
+                            ValueFieldName="@nameof(DataDropDownList.Name)"
+                            SearchFilterCondition="ListSearchFilterCondition.Contains"
+                            ListRenderMode=ListRenderMode.Virtual
+                            SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                            SearchMode="ListSearchMode.AutoSearch"
+                            ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto
+                            @bind-Values=@dautuanselected />
+
+                        </DxFormLayoutItem>
+                        <DxFormLayoutItem Caption="Chọn vị trí" ColSpanXs="6" ColSpanMd="6" ColSpanLg="6">
+                            <CaptionTemplate>
+                                <span>Vị trí</span><a href="#" class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover ms-1"
+                                @onclick="@(()=>loadlaivitriAsync())"><i class="bi bi-list-stars me-1"></i>Tải lại</a>
+                            </CaptionTemplate>
+                            <Template>
+                                <DxComboBox Data="@lstViTri"
+                                SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                ListRenderMode=ListRenderMode.Virtual
+                                SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                SearchMode="ListSearchMode.AutoSearch"
+                                TextFieldName="@nameof(NvlViTri.ViTri)"
+                                ValueFieldName="@nameof(NvlViTri.ViTri)"
+                                ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                @bind-Value=@nvlNhapXuatItemShowcrr.ViTri />
+                                <div class="text-danger">
+                                    <ValidationMessage For="@(() => @nvlNhapXuatItemShowcrr.ViTri)" />
+                                </div>
+                            </Template>
+
+
+                        </DxFormLayoutItem>
+                        <DxFormLayoutItem Caption="Đơn giá" ColSpanXs="6" ColSpanMd="6" ColSpanLg="6">
+                            <CaptionTemplate>
+                                <a @onclick="@(()=>dongiaclick())">
+                                    <span>Giá tham khảo: </span><span class="text-danger">@showdecimal(giathamkhao)</span>
+
+                                    <a class="bi bi-pencil-fill text-info"></a>
+                                </a>
+
+                            </CaptionTemplate>
+                            <Template>
+                                <DxSpinEdit ShowSpinButtons="false" @bind-Value=@nvlNhapXuatItemShowcrr.DonGia AllowMouseWheel="false" DisplayFormat="#,0.####" MinValue="1">
+                                </DxSpinEdit>
+                            </Template>
+                        </DxFormLayoutItem>
+                        <DxFormLayoutItem Caption="Ngày sản xuất" ColSpanXs="6" ColSpanMd="6" ColSpanLg="6">
+                            <DxDateEdit @bind-Date="@nvlNhapXuatItemShowcrr.NgaySanXuat" Mask="@DateTimeMask.ShortDate" DisplayFormat="dd-MM-yy" ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto />
+                        </DxFormLayoutItem>
+                        <DxFormLayoutItem Caption="Ngày hết hạn" ColSpanXs="6" ColSpanMd="6" ColSpanLg="6">
+                            <DxDateEdit @bind-Date="@nvlNhapXuatItemShowcrr.NgayHetHan" Mask="@DateTimeMask.ShortDate" DisplayFormat="dd-MM-yy" ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto />
+                        </DxFormLayoutItem>
+
+                        <DxFormLayoutItem Caption="Số lô" ColSpanXs="6" ColSpanMd="6" ColSpanLg="6">
+                            <DxTextBox @bind-Text=@nvlNhapXuatItemShowcrr.SoLo />
+                        </DxFormLayoutItem>
+                        <DxFormLayoutItem Caption="Xuất xứ" ColSpanXs="6" ColSpanMd="6" ColSpanLg="6" CaptionPosition="CaptionPosition.Vertical">
+
+                            <DxTextBox @ref=dxTextBoxMaKien @bind-Text=@nvlNhapXuatItemShowcrr.KhachHang_XuatXu />
+
+                        </DxFormLayoutItem>
+                        <DxFormLayoutItem Caption="Mã kiện" ColSpanXs="6" ColSpanMd="6" ColSpanLg="6" CaptionPosition="CaptionPosition.Vertical">
+
+                            <DxTextBox  @bind-Text=@nvlNhapXuatItemShowcrr.MaKien />
+
+                        </DxFormLayoutItem>
+
+                        <DxFormLayoutItem Caption="Ghi chú" ColSpanXs="12" ColSpanMd="12" ColSpanLg="12" CaptionPosition="CaptionPosition.Vertical">
+                            <DxComboBox SearchFilterCondition="ListSearchFilterCondition.Contains"
+                            ListRenderMode=ListRenderMode.Virtual
+                            Data="@lstghichu"
+                            SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                            ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                            SearchMode="ListSearchMode.AutoSearch"
+                            TextFieldName="@nameof(DataDropDownList.FullName)"
+                            AllowUserInput="true"
+                            @bind-Text=@nvlNhapXuatItemShowcrr.GhiChu
+                            @bind-Value=@Value
+                            CssClass="cw-480">
+                            </DxComboBox>
+
+                            @*   <DxMemo @bind-Text=@nvlNhapXuatItemShowcrr.GhiChu NullText="Ghi chú" /> *@
+                        </DxFormLayoutItem>
+
+                        <DxFormLayoutItem ColSpanXs="12" ColSpanMd="12" ColSpanLg="12" CaptionPosition="CaptionPosition.Vertical">
+                            <div class="d-flex justify-content-center mb-2 gap-2">
+                                <DxButton RenderStyle="ButtonRenderStyle.Primary" IconCssClass="bi bi-floppy" Text="Lưu" Visible=@(!EnableEdit) Click="@saveAsync" />
+                                <DxButton RenderStyle="ButtonRenderStyle.Warning" Visible="@visibleTheoDoiNo"
+                                IconCssClass="bi bi-dash-square-dotted" Text="Cấn trừ nợ" Click="@saveCanTruNoAsync" />
+                            </div>
+                        </DxFormLayoutItem>
+
+                    </DxFormLayout>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+@code {
+
+    [Parameter]
+    public NvlNhapXuatKhoShow nvlNhapXuatKhoShowcrr { get; set; }
+    [Parameter]
+    public NvlNhapXuatItemShow nvlNhapXuatItemShowcrr { get; set; }
+    [Parameter]
+    public string LoaiNhapXuat { get; set; }
+    [Parameter]
+    public bool CheckDuplicate { get; set; } = false;//Không cho phép trùng tem
+    [Parameter]
+    public EventCallback<NvlNhapXuatItemShow> AfterEdit { get; set; }
+    [Parameter]
+    public List<NvlViTri> lstViTri { get; set; }
+
+     [Inject] IJSRuntime JSRuntime { get; set; }
+
+    DxTextBox dxTextBoxMaKien { get; set; }
+    DxButton btsave{get;set;}
+    List<SanPhamDropDown> lstsanpham { get; set; }
+    List<SanPhamDropDown> lstsanphamfilter { get; set; } = new List<SanPhamDropDown>();
+    private EditContext? editContext;
+    bool EnableSerial = true;
+
+    string textgiaonhan { get; set; }
+    decimal? tongdonhangselect { get; set; } = 0;
+    List<DataDropDownList> lstghichu { get; set; }
+    string Value { get; set; }
+    View_BarcodeScan view_BarcodeScan { get; set; }
+    ComboboxMaHang txtMaHang { get; set; }
+    RenderFragment renderFragment { get; set; }
+    DialogWindow dxPopup { get; set; }
+    bool IsOpenfly;
+    bool EnableEdit { get; set; } = false;
+    bool visibleTheoDoiNo { get; set; }
+    IGrid? dxGridTK { get; set; }
+
+    public string idflychucnang { get; set; } = "idtextxemtonkho_button";
+    List<NvlNhapXuatItemTemTK> lstdataitem { get; set; } = new List<NvlNhapXuatItemTemTK>();
+
+    bool VisibleDonHang { get; set; }
+    bool _chkngoaikehoach { get; set; }
+    string displaycapvuot { get; set; } = "none";
+    bool chkNgoaiKeHoach
+    {
+        get { return _chkngoaikehoach; }
+        set
+        {
+            _chkngoaikehoach = value;
+            if (_chkngoaikehoach)
+            {
+                donhangselected = null;
+
+            }
+        }
+    }
+    bool chkVuotDeNghi { get; set; }
+    bool Ismobile { get; set; } = false;
+    bool editprice { get; set; } = false;
+    private string showdecimal(decimal? value) => value.HasValue ? value.Value.ToString("#,#.####") : "";
+    DxFlyout dxFlyoutchucnang { get; set; }
+    List<DataDropDownList> lstdautuan { get; set; } = new List<DataDropDownList>();
+    List<DonHangSelect> lstdonhang { get; set; } = new List<DonHangSelect>();
+    DxTagBoxDefine txtDauTuan { get; set; }
+    DxTagBox<DonHangSelect, DonHangSelect> dxTagBoxdonhang { get; set; }
+
+    IEnumerable<DataDropDownList> dautuanselected { get; set; }
+    List<DonHangSelect> lstdonhangkeep { get; set; }=new  List<DonHangSelect>();
+    IEnumerable<DonHangSelect> donhangselected { get; set; }
+    public void bindingStrBarcode(string barcode)
+    {
+        if(string.IsNullOrEmpty(barcode))
+        {
+            nvlNhapXuatItemShowcrr.SerialLink = null;
+            return;
+        }
+        else
+        {
+            if (!int.TryParse(barcode, out int serialout))
+            {
+                toastService.Notify(new ToastMessage(ToastType.Danger, "Giá trị nhập phải là số"));
+                return;
+            }
+            nvlNhapXuatItemShowcrr.SerialLink = serialout;
+        }
+    }
+
+   
+}

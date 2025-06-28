@@ -1,0 +1,87 @@
+﻿@using NFCWebBlazor.Model
+@using Newtonsoft.Json
+@using static NFCWebBlazor.App_ThongTin.Page_DinhMucNVLMaster
+<div style="width:700px;">
+<DxGrid @ref="dxGrid" Data="@lstdata"
+CssClass="my-grid"
+TextWrapEnabled="true"
+FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+VirtualScrollingEnabled=true
+ShowFilterRow=true>
+    <ToolbarTemplate>
+        <DxToolbar ItemRenderStyleMode="ToolbarRenderStyleMode.Plain">
+            <DxToolbarItem Text="Xem" IconCssClass="bi bi-search" RenderStyle="ButtonRenderStyle.Primary" Click="@search">
+            </DxToolbarItem>
+                <DxToolbarItem Text="Xuất file excel mẫu" IconCssClass="bi bi-box-arrow-up-right" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=>dxGrid.ExportToXlsxAsync("ExporKeHoach"))">
+            </DxToolbarItem>
+
+
+        </DxToolbar>
+    </ToolbarTemplate>
+    <Columns>
+        <DxGridDataColumn Caption="STT" Width="60">
+            <CellDisplayTemplate>@(context.VisibleIndex + 1)</CellDisplayTemplate>
+        </DxGridDataColumn>
+            <DxGridDataColumn FieldName="KhachHang" Width="130" Caption="KhachHang">
+            </DxGridDataColumn>
+        <DxGridDataColumn FieldName="MaSP" Width="130" Caption="MaSP" >
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="TenSP" Width="240" Caption="TenSP" />
+        <DxGridDataColumn FieldName="MaMau" Caption="MaMau" Width="130" />
+            <DxGridDataColumn FieldName="TenMau" Caption="TenMau" Width="210">
+            <CellDisplayTemplate>
+                @{
+                    SanPhamShow sanPhamShow=(SanPhamShow)context.DataItem;
+                }
+                    <div class="row d-flex ms-2">
+                        <div class="col-auto card p-1" style="background-color:@sanPhamShow.Colorhex;width:200px;">
+                            <span style="color:@StaticClass.GetContrastColor(sanPhamShow.Colorhex)">@(string.IsNullOrEmpty(sanPhamShow.TenMau) ? "Không có màu" : sanPhamShow.TenMau)</span>
+                        </div>
+                    </div>
+            </CellDisplayTemplate>
+        </DxGridDataColumn>
+            <DxGridDataColumn FieldName="SLSP" Caption="SLSP" Width="90" />
+            <DxGridDataColumn FieldName="Ngay" Caption="Ngay" DisplayFormat="dd-MM-yyyy" Width="90" />
+    </Columns>
+
+</DxGrid>
+</div>
+@code {
+
+
+    [Inject] IJSRuntime jSRuntime { get; set; }
+    public List<SanPhamShow> lstdata { get; set; } = new List<SanPhamShow>();
+    DxGrid dxGrid{ get; set; }
+    protected override void OnInitialized()
+    {
+        search();
+        //base.OnInitialized();
+    }
+    private async void search()
+    {
+        string sql = @"select dms.MaSP,sp.KhachHang,sp.TenSP,mm.MaMau,mm.Color,mm.TenMau,cast(getdate() as Date) as Ngay from
+                    (SELECT [MaSP],[MauSP]
+                     FROM DataBase_ScansiaPacific2014.[dbo].[DinhMucSon]  group by MaSP,MauSP) dms
+                      inner join DataBase_ScansiaPacific2014.dbo.MaMau mm on dms.MauSP=mm.MaMau
+                      inner join DataBase_ScansiaPacific2014.dbo.SanPham sp on dms.MaSP=sp.MaSP order by sp.KhachHang";
+        sql = @"select *
+                         from OpenQuery(SP,'" + sql + "')";
+        CallAPI callAPI = new CallAPI();
+        string json = await callAPI.ExcuteQueryEncryptAsync(sql, new List<ParameterDefine>());
+        if (json != "")
+        {
+            var query = JsonConvert.DeserializeObject<List<SanPhamShow>>(json);
+            if (query != null)
+            {
+                lstdata.AddRange(query);
+            }
+            dxGrid.Reload();
+            StateHasChanged();
+            //var query = JsonConvert.DeserializeObject<List<KeHoachThang_Show>>(json);
+            //lstdata.AddRange(query);
+        }
+
+
+    }
+
+}

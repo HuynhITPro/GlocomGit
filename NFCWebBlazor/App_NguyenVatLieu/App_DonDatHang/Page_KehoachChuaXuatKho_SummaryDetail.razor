@@ -1,0 +1,238 @@
+﻿@using System.Collections.ObjectModel
+@using static NFCWebBlazor.App_NguyenVatLieu.App_DonDatHang.Page_KeHoachChuaXuatKho
+@using static NFCWebBlazor.App_NguyenVatLieu.App_DonDatHang.Page_KehoachChuaXuatKho_Summary
+@using static NFCWebBlazor.App_NguyenVatLieu.App_KeHoachDeNghi.Page_KeHoachMuaHangMaster
+<style>
+    .griddetail {
+    max-height: @heightgrid;
+    }
+
+
+
+    .highlighted-item-linethrough > td {
+    background-color: pink;
+    text-decoration: line-through;
+    }
+</style>
+
+<NFCWebBlazor.App_Admin.DialogMsg @ref="@dialogMsg"></NFCWebBlazor.App_Admin.DialogMsg>
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+
+
+<DxLoadingPanel @bind-Visible="@PanelVisible"
+IsContentBlocked="true"
+ApplyBackgroundShading="true"
+IndicatorAreaVisible="false"
+Text="Đang xử lý...">
+
+    <DxGrid @ref="Grid" Data="@lstdata"
+    AutoExpandAllGroupRows="true"
+    TextWrapEnabled="false"
+    CssClass="griddetail"
+    FocusedRowEnabled="false"
+    ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+
+    CustomizeElement="OnCustomizeElement"
+    FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+    VirtualScrollingEnabled=true
+    ShowAllRows=false
+    ShowFilterRow=false>
+
+        <Columns>
+
+            <DxGridDataColumn Caption="STT"  Width="60">
+                <CellDisplayTemplate>@(context.VisibleIndex + 1)</CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="SerialDN" Caption="Đề nghị số" Width="100" DisplayFormat="#">
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="TenHang" Caption="Tên hàng" Width="250">
+            </DxGridDataColumn>
+           
+            <DxGridDataColumn FieldName="DVT" Caption="ĐVT" Width="80" />
+            <DxGridDataColumn FieldName="TyLe" Width="140" Caption="Hoàn thành">
+                <CellDisplayTemplate>
+                    <NFCWebBlazor.App_ClassDefine.ProgressBarDf value=@(((NvlKeHoachMuaHangItemShow)context.DataItem).TyLe)></NFCWebBlazor.App_ClassDefine.ProgressBarDf>
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="SoLuong" DisplayFormat="#,0.####" Caption="SL Đề nghị" Width="95" />
+
+            <DxGridDataColumn FieldName="SLTheoDoi" DisplayFormat="#,0.####" Caption="SL còn nợ" Width="100"/>
+            <DxGridDataColumn FieldName="SLHuy" DisplayFormat="#,0.####" Caption="SL hủy" Width="100" />
+            <DxGridDataColumn FieldName="GhiChu" Caption="Ghi chú" Width="120" />
+            <DxGridDataColumn FieldName="UserInsert" Width="120" Caption="UserInsert" Visible="!Ismobile" />
+            <DxGridDataColumn FieldName="NgayInsert" Width="120" Caption="NgayInsert" DisplayFormat="dd-MM-yy HH:mm" Visible="!Ismobile" />
+
+        </Columns>
+        <TotalSummary>
+
+            <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+                               FieldName="SoLuong"
+                               Name="SoLuong"
+                               DisplayText="{0}"
+                               FooterColumnName="SoLuong" />
+            <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+                               FieldName="SLTheoDoi"
+                               Name="SLTheoDoi"
+                               DisplayText="{0}"
+                               FooterColumnName="SLTheoDoi" />
+        </TotalSummary>
+    </DxGrid>
+
+</DxLoadingPanel>
+
+@code {
+    [Inject] BrowserService browserService { get; set; }
+    [Parameter]
+    public DieuKienTimKiem dieuKienTimKiem { get; set; }
+    [Parameter]
+    public NvlKeHoachMuaHangItemSummary nvlKeHoachMuaHangItemSummarycrr { get; set; }
+  
+    [Parameter]
+    public string ListSerialDN { get; set; } //ListSerialDN
+    List<NvlKeHoachMuaHangItemShow> lstdata { get; set; }
+    bool Ismobile = false;
+    int count = 0;
+
+    bool checkAddItem = true;
+    bool PanelVisible { get; set; }
+    bool VisibleKeHoachMuaHang = false;
+    IGrid? Grid { get; set; }
+    IGrid? dxGridTK { get; set; }
+    DxFlyout dxFlyoutchucnang { get; set; }
+    public string idflychucnang { get; set; }
+    bool IsOpenfly = false;
+
+    string idgrid = "griddetaikehoach";
+    bool PopupVisible { get; set; } = false;
+    DialogWindow? dxPopup { get; set; }
+    RenderFragment? renderFragment { get; set; }
+    DialogMsg? dialogMsg { get; set; }
+    public string? random { get; set; }
+    string heightgrid = "500px";
+    string headerform = "";
+    string showfooterthanhtien = "ThanhTien";
+
+    // void Grid_CustomizeSummaryDisplayText(GridCustomizeSummaryDisplayTextEventArgs e)
+    // {
+    //     if (e.Item.Name == "ThanhTienShow")
+    //         e.DisplayText = string.Format("{0:#,#}", e.Value);
+    //     if (e.Item.Name == "SoLuong")
+    //         e.DisplayText = string.Format("{0:#,#.###}", e.Value);
+    // }
+    private string shownguoikiem(string textkiem)
+    {
+        if (textkiem == "")
+        {
+            return "";
+        }
+        return "Kiểm bởi: " + textkiem;
+    }
+    private string shownguoiduyet(string textduyet)
+    {
+        if (textduyet == "")
+        {
+            return "Chưa duyệt";
+        }
+        return "Duyệt bởi: " + textduyet;
+    }
+    private string pathimgduyet(string textduyet)
+    {
+        if (textduyet == "")
+        {
+            return IconImg.NotCheck;
+        }
+        return IconImg.CheckMark;
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        await loadAsync();
+
+    }
+    int countrender = 0;
+    private string showArt(string Art)
+    {
+        countrender++;
+        Console.WriteLine("Countrender:" + countrender);
+        return Art;
+    }
+    private string showdouble(double? d)
+    {
+        if (d == null)
+        {
+            return "";
+        }
+        return d.Value.ToString("#,#.#");
+    }
+    private string showdecimal(double? d)
+    {
+        if (d == null)
+        {
+            return "";
+        }
+        return d.Value.ToString("#,#.#");
+    }
+    private async Task loadAsync()
+    {
+
+        var dimension = await browserService.GetDimensions();
+        // var heighrow = await browserService.GetHeighWithID("divcontainer");
+        int height = dimension.Height - 90;
+        heightgrid = string.Format("{0}px", height);
+        int width = dimension.Width;
+        if (width < 768)
+        {
+            Ismobile = true;
+            idgrid = "customGridnotheader";
+            showfooterthanhtien = "UserInsert";//Hiển thị tổng ở cột này
+        }
+        else
+            Ismobile = false;
+       
+    }
+    bool expand = true;
+    private void expandall()
+    {
+        Grid.BeginUpdate();
+        Grid.AutoExpandAllGroupRows = expand;
+        Grid.EndUpdate();
+        expand = !expand;
+    }
+    void OnCustomizeElement(GridCustomizeElementEventArgs e)
+    {
+        if (e.ElementType == GridElementType.DataRow)
+        {
+            NvlKeHoachMuaHangItemShow nvlKeHoachMuaHangItemShow = (NvlKeHoachMuaHangItemShow)e.Grid.GetDataItem(e.VisibleIndex);
+            // Console.WriteLine(nvlKeHoachMuaHangItemShow.HuyDatHang);
+            if (nvlKeHoachMuaHangItemShow.HuyDatHang == "Hủy")
+                e.CssClass = "highlighted-item-linethrough";
+
+        }
+
+    }
+    private string showtexthuy(NvlKeHoachMuaHangItemShow nvlKeHoachMuaHangItem)
+    {
+        if (string.IsNullOrEmpty(nvlKeHoachMuaHangItem.HuyDatHang))
+        {
+            return "Hủy cấp hàng";
+        }
+
+        return "Tiếp tục cấp hàng";
+    }
+
+    public string idelement(int? serial)
+    {
+        if (serial == null)
+            string.Format("flychucnang_{0}_{1}", random, serial);
+        if (random == null)
+        {
+            random = StaticClass.Randomstring(9);
+        }
+        return string.Format("flychucnang_{0}_{1}", random, serial);
+    }
+
+
+}

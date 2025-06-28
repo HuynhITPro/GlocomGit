@@ -1,0 +1,242 @@
+﻿@using BlazorBootstrap
+@using DevExpress.Blazor;
+@using NFCWebBlazor.App_ClassDefine;
+@using System.Data
+@using System.Collections.ObjectModel
+@using NFCWebBlazor.Model
+@using static NFCWebBlazor.App_KeHoach.Page_KeHoachThang_Master
+
+
+
+
+<style>
+    .my-grid {
+        height: @heightgrid;
+    }
+
+    .dxbl-modal {
+        --dxbl-popup-max-width: 900px;
+    }
+
+
+    .highlighted-item > td {
+        background-color: var(--bs-danger-border-subtle)
+    }
+
+        .highlighted-item > td:first-child {
+            background-color: transparent;
+        }
+</style>
+
+
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+
+<DxGridLayout CssClass="w-100 ch-480">
+
+    <Rows>
+
+        <DxGridLayoutRow Height="auto" />
+        <DxGridLayoutRow />
+    </Rows>
+    <Items>
+        <DxGridLayoutItem Row="0">
+            <Template>
+
+            </Template>
+        </DxGridLayoutItem>
+        <DxGridLayoutItem Row="1">
+            <Template>
+                <div class="row">
+                    <DxLoadingPanel @bind-Visible="@PanelVisible"
+                                    IsContentBlocked="true"
+                                    ApplyBackgroundShading="true"
+                                    IndicatorAreaVisible="false"
+                                    Text="Đang xử lý...">
+                        <DxGrid @ref="Grid" Data="@lstdata"
+                                TextWrapEnabled=false
+                                ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+                                FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                                EditMode="GridEditMode.EditCell"
+                                VirtualScrollingEnabled="true"
+                                KeyFieldName="Serial"
+                                KeyboardNavigationEnabled=true
+                                EditModelSaving="OnEditModelSaving"
+                                CustomizeElement="Grid_CustomizeElement"
+                                ShowFilterRow=true>
+                            <ToolbarTemplate>
+                                <DxToolbar ItemRenderStyleMode="ToolbarRenderStyleMode.Plain">
+                                    <DxToolbarItem Text="Nạp file excel" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Primary" Click="@ImportExcelAsync">
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="Kiểm tra lại" IconCssClass="bi bi-check2-all" RenderStyle="ButtonRenderStyle.Success" Click="@checkagain">
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="File mẫu" IconCssClass="bi bi-file-earmark-spreadsheet" RenderStyle="ButtonRenderStyle.Secondary" Click="@Downloadfilemau" Enabled=@enabledownload>
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="Lưu" IconCssClass="bi bi-floppy" Enabled="@enablesave" Click="@saveAsync" />
+                                    <DxToolbarItem Text="Xuất Excel" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=> Grid.ExportToXlsxAsync("ExportImportHangHoa"))">
+                                    </DxToolbarItem>
+                                </DxToolbar>
+                            </ToolbarTemplate>
+                            <Columns>
+
+
+                                <DxGridDataColumn FieldName="Serial" Width="100" Caption=" " DataRowEditorVisible="false" ReadOnly=true ShowInColumnChooser=false Visible="@CheckQuyen" VisibleIndex="0">
+                                    <CellDisplayTemplate>
+                                        @{
+                                            KeHoachThangItem_Show dataDropDownList = (KeHoachThangItem_Show)context.DataItem;
+                                        }
+                                        <div class="d-flex gap-4">
+                                            <span><a href="#" class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" @onclick="@(()=>deleteAsync(dataDropDownList))">XÓA</a></span>
+
+                                        </div>
+                                    </CellDisplayTemplate>
+                                </DxGridDataColumn>
+
+                                @buildrender()
+                            </Columns>
+
+                        </DxGrid>
+                    </DxLoadingPanel>
+                </div>
+            </Template>
+        </DxGridLayoutItem>
+
+
+    </Items>
+</DxGridLayout>
+@code {
+
+    [Inject] BrowserService browserService { get; set; }
+    [Inject] ToastService toastService { get; set; }
+    [Inject] PhanQuyenAccess phanQuyenAccess { get; set; }
+    [Inject] IJSRuntime JS { get; set; }
+
+    [Parameter]
+    public KeHoachSP_Show keHoachSP_Showcrr { get; set; }
+    bool PopupVisible { get; set; } = false;
+    DialogWindow? dxPopup { get; set; }
+    RenderFragment? renderFragment { get; set; }
+    string pathfilemau = "FileMau/FileImportKeHoachThang.xlsx";
+    public string? random { get; set; }
+    string heightgrid = "500px";
+    List<DataDropDownList>? lstart { get; set; } = new List<DataDropDownList>();
+    DxTagBoxDefine dxTagBoxArt { get; set; }
+    IEnumerable<DataDropDownList>? Artselected { get; set; }
+    string headerform = "";
+    string msgerr = "";
+    bool enabledownload = true;
+    bool enablesave { get; set; } = false;
+    bool Visilethemchitiet = false, Visilechinhsua = true, Visiledelete = true, Visilethemfile = true;
+    List<KeHoachThangItem_Show> lstdata { get; set; }
+    IGrid? Grid { get; set; }
+
+    bool PanelVisible { get; set; } = false;
+    protected override async Task OnInitializedAsync()
+    {
+        await loadAsync();
+        // return base.OnInitializedAsync();
+    }
+    private bool CheckQuyen { get; set; }
+    private async Task loadAsync()
+    {
+        var dimension = await browserService.GetDimensions();
+        // var heighrow = await browserService.GetHeighWithID("divcontainer");
+        int height = dimension.Height - 90;
+        heightgrid = string.Format("{0}px", height);
+        CheckQuyen = await phanQuyenAccess.CreateMaHang(Model.ModelAdmin.users);
+        // await loaddatadropdownAsync();
+        // var query=ModelData.L
+    }
+    private async void deleteAsync(KeHoachThangItem_Show rowView)
+    {
+
+        var query = lstdata.Where(p => p.Serial == rowView.Serial).FirstOrDefault();
+        if (query != null)
+        {
+            lstdata.Remove(query);
+
+            await Grid.SaveChangesAsync();
+        }
+    }
+    public RenderFragment buildrender()
+    {
+        return BuildColumns(lstcolumn);
+    }
+    public static RenderFragment BuildColumns(List<InitDxGridDataColumn> _lstcolumn)
+    {
+        RenderFragment columns = b =>
+        {
+            int counter = 0;
+            foreach (InitDxGridDataColumn col in _lstcolumn.OrderBy(p => p.Index))
+            {
+
+
+                b.OpenComponent(counter, typeof(DxGridDataColumn));
+                b.AddAttribute(0, "FieldName", col.FieldName);
+
+                b.AddAttribute(0, "Caption", col.Caption);
+                if (col.gridTextAlignment != null)
+                    b.AddAttribute(0, "TextAlignment", col.gridTextAlignment);
+                if (col.DisplayFormat != null)
+                {
+                    b.AddAttribute(0, "DisplayFormat", col.DisplayFormat);
+                }
+                if (col.Width != null)
+                    b.AddAttribute(0, "Width", string.Format("{0}px", col.Width));
+                else
+                if (col.Width != null)
+                    b.AddAttribute(0, "MinWidth", string.Format("90px"));
+                if (col.GroupIndex != null)
+                {
+                    b.AddAttribute(0, "GroupIndex", col.GroupIndex.Value);
+                }
+                b.CloseComponent();
+
+                counter++;
+            }
+
+        };
+        return columns;
+    }
+    void Grid_CustomizeElement(GridCustomizeElementEventArgs e)
+    {
+        if (e.ElementType == GridElementType.DataRow)
+        {
+            if (e.Grid.GetRowValue(e.VisibleIndex, "Err") != null && e.Grid.GetRowValue(e.VisibleIndex, "Err") != DBNull.Value)
+            {
+                //Console.WriteLine(e.Grid.GetRowValue(e.VisibleIndex, "Err").ToString());
+                if (!String.IsNullOrEmpty(e.Grid.GetRowValue(e.VisibleIndex, "Err").ToString()))
+                    e.CssClass = "highlighted-item";
+            }
+
+        }
+
+    }
+    async Task OnEditModelSaving(GridEditModelSavingEventArgs e)
+    {
+        //var editModel = (DataRowView)e.EditModel;
+        // Assign changes from the edit model to the data item.
+        if (e.IsNew)
+        {
+            // DataRow rownew = lstdata.NewRow();
+            // lstdata.Rows.Add(rownew);
+        }
+
+        else
+            e.CopyChangesToDataItem();
+        // Post changes to the database.
+
+    }
+    private async void Downloadfilemau()
+    {
+        FTPFile fTPFile = new FTPFile();
+        await fTPFile.DownloadFile(JS, Path.Combine(ModelAdmin.pathhostdocumnet, pathfilemau), ModelAdmin.userhost, ModelAdmin.passwordhost, Path.GetFileName(pathfilemau));
+        enabledownload = false;
+    }
+
+
+
+}

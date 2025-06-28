@@ -1,0 +1,351 @@
+﻿@using BlazorBootstrap
+@using DevExpress.Blazor;
+@using NFCWebBlazor.App_ClassDefine;
+@using System.Data
+@using System.Collections.ObjectModel
+@using NFCWebBlazor.Model
+@using static NFCWebBlazor.App_ThongTin.Page_DinhMucHangHoaMaster
+
+<style>
+    .my-grid {
+    }
+
+    .dxbl-modal {
+        --dxbl-popup-max-width: 900px;
+    }
+
+</style>
+@inject Model.ThemeColor themcolor;
+<NFCWebBlazor.App_Admin.DialogMsg @ref="@dialogMsg"></NFCWebBlazor.App_Admin.DialogMsg>
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+
+<DxGridLayout CssClass="w-100 ch-480">
+    <Rows>
+        <DxGridLayoutRow Height="auto" />
+        <DxGridLayoutRow />
+    </Rows>
+    <Items>
+        <DxGridLayoutItem Row="0">
+            <Template>
+                @if (!visibleedit)
+                {
+                    <div class="p-2 pt-0 mb-2 bg-white border rounded-bottom-2">
+                        <div class="row">
+                        <h3><strong class="text-primary">@sanPhamShowcrr.TenSP</strong></h3>
+                        <span><strong style="color:orangered">Nhóm dùng chung</strong> có nghĩa là khai báo tất cả các nguyên vật liệu của sản phẩm sẽ sử dụng chung</span>
+                        <span><strong style="color:orangered">Nhóm ArtcileNumber </strong> có nghĩa là khai báo những nguyên vật liệu sẽ khác nhau theo từng Art: ví dụ như sơn, tem nhãn</span>
+                    </div>
+
+                </div>
+                }
+            </Template>
+        </DxGridLayoutItem>
+        <DxGridLayoutItem Row="1">
+            <Template>
+                <div class="container" onkeydown="return handleEnterSubmit(event)">
+                    <div class="row">
+                   
+                            <div class="col-sm-12 col-md-6 p-0">
+                            <DxLoadingPanel @bind-Visible="@PanelVisible"
+                                            IsContentBlocked="true"
+                                            ApplyBackgroundShading="true"
+                                            IndicatorAreaVisible="false"
+                                            Text="Đang xử lý...">
+                                <DxGrid @ref="Grid" Data="@lstdata"
+                                        AutoExpandAllGroupRows="false"
+                                        FocusedRowEnabled="false"
+                                        ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+                                        FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                                        VirtualScrollingEnabled=true
+                                        TextWrapEnabled=true
+                                        PagerPosition="GridPagerPosition.Bottom"
+                                        PageSizeSelectorVisible="true"
+                                        CustomizeElement="Grid_CustomizeElement"
+                                        ShowFilterRow=true>
+                                    
+                                    <Columns>
+                                        
+                                        <DxGridDataColumn FieldName="@nameof(SanPhamShow.Serial)" Caption=" " Width="140" Visible=!visibleedit ShowInColumnChooser=false>
+                                            <CellDisplayTemplate>
+                                                @{
+                                                    SanPhamShow sanPhamShow = (SanPhamShow)context.DataItem;
+                                                }
+                                                <div class="row">
+                                                    <span>
+                                                        <a href="#" class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"
+                                                           id="@idelement(sanPhamShow.Serial)" @onclick="@(()=>AddItemAsync(sanPhamShow))"><i class="bi bi-list-stars me-1"></i>Thêm từng mã</a>
+                                                    </span>
+                                                    <span>
+                                                        <a href="#" class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"
+                                                            @onclick="@(()=>ImportExcelAsync(sanPhamShow))"><i class="bi bi-list-stars me-1"></i>Import từ excel</a>
+                                                    </span>
+                                                </div>
+                                               
+                                            </CellDisplayTemplate>
+                                        </DxGridDataColumn>
+                                        <DxGridDataColumn FieldName="@nameof(SanPhamShow.Serial)" Caption="Serial" Visible=false />
+                                        <DxGridDataColumn FieldName="@nameof(SanPhamShow.MaSP)" Caption="Mã SP" Width="100" Visible=false />
+                                        <DxGridDataColumn FieldName="@nameof(SanPhamShow.TenSP)" Caption="Tên sản phẩm" Width="240" Visible=false />
+                                        <DxGridDataColumn FieldName="@nameof(SanPhamShow.ArticleNumber)" Caption="ArticleNumber" Width="140">
+
+                                        </DxGridDataColumn>
+                                        <DxGridDataColumn FieldName="@nameof(SanPhamShow.Colorhex)" Caption="colorhex" Width="140" Visible=false>
+                                        </DxGridDataColumn>
+                                        <DxGridDataColumn FieldName="@nameof(SanPhamShow.TenMau)" Caption="Tên màu" Width="140">
+                                            <CellDisplayTemplate>
+                                                @{
+                                                    SanPhamShow sanPhamShow;
+                                                    if (context.DataItem != null)
+                                                        sanPhamShow = (SanPhamShow)context.DataItem;
+                                                    else
+                                                        sanPhamShow = new SanPhamShow();
+                                                }
+                                                <div class="row" style="background-color:@sanPhamShow.Colorhex">
+                                                    <span>@sanPhamShow.TenMau</span>
+                                                  
+                                                </div>
+
+                                            </CellDisplayTemplate>
+                                        </DxGridDataColumn>
+                                    </Columns>
+
+                                </DxGrid>
+                            </DxLoadingPanel>
+                        </div>
+                        
+                        <div class="col-sm-12 col-md-6" style="display:@showinput">
+                            <div class="bg-white p-2 border rounded-2">
+                                <DxFormLayout @onkeydown=Onkeydown>
+
+                                    <DxFormLayoutItem ColSpanSm="12" ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+                                        <CaptionTemplate>
+                                            ArticleNumber <span class="text-danger">*</span>
+                                        </CaptionTemplate>
+                                        <Template>
+                                            <DxTagBoxDefine Data="@lstart" @ref=dxTagBoxArt TextFieldName="@nameof(DataDropDownList.FullName)"
+                                                            ValueFieldName="@nameof(DataDropDownList.Name)"
+                                                            @bind-Values=@Artselected
+                                                            CssClass="cw-480"
+                                                            TypeName="User_Group"
+                                                            DropDownCssClass="dropdownheight"
+                                                            ListRenderMode="ListRenderMode.Virtual"
+                                                            ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"></DxTagBoxDefine>
+                                        </Template>
+                                    </DxFormLayoutItem>
+                                    <DxFormLayoutItem Caption="Khu vực" ColSpanSm="12" ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+                                        <ComboboxFilteredString @ref=txtKhuVuc
+                                                                TextFieldName="@nameof(DataDropDownList.FullName)"
+                                                                ValueFieldName="@nameof(DataDropDownList.Name)"
+                                                                CssClass="cw-480"
+                                                                TypeName="TypeKhuVucDinhMuc"
+                                                                SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                                                ListRenderMode=ListRenderMode.Virtual
+                                                                SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                                                SearchMode="ListSearchMode.AutoSearch"
+                                                                ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto
+                                                                @bind-Value=@hangHoaItemcrr.KhuVuc />
+                                    </DxFormLayoutItem>
+                                    <DxFormLayoutItem ColSpanSm="12" ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+                                        <CaptionTemplate>
+                                            Mã hàng <span class="text-danger">*</span>
+                                        </CaptionTemplate>
+                                        <Template>
+                                            <ComboboxMaHang @ref=txtMaHang 
+                                            TextFieldName="@nameof(NvlHangHoaDropDown.TenHang)"
+                                                            ValueFieldName="@nameof(NvlHangHoaDropDown.MaHang)"
+                                                            CssClass="cw-480"
+                                                            SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                                            ListRenderMode=ListRenderMode.Virtual
+                                                            SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                                            SearchMode="ListSearchMode.AutoSearch"
+                                                           
+                                                            @bind-Value=@hangHoaItemcrr.MaHang
+                                                            ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto />
+
+                                        </Template>
+
+                                    </DxFormLayoutItem>
+                                    <DxFormLayoutItem ColSpanSm="12" ColSpanMd="4" CaptionPosition="CaptionPosition.Vertical">
+                                        <CaptionTemplate>
+                                            Số lượng/bộ <span class="text-danger">*</span>
+                                        </CaptionTemplate>
+                                        <Template>
+                                            <DxSpinEdit MinValue="0" @bind-Value=@hangHoaItemcrr.SLQuyDoi></DxSpinEdit>
+
+                                        </Template>
+
+                                    </DxFormLayoutItem>
+                                    <DxFormLayoutItem ColSpanSm="12" ColSpanMd="4" CaptionPosition="CaptionPosition.Vertical" Visible="false">
+                                        <CaptionTemplate>
+                                            Định mức mua hàng
+                                        </CaptionTemplate>
+                                        <Template>
+                                            <DxSpinEdit MinValue="0" @bind-Value=@hangHoaItemcrr.DinhMucHaoHut></DxSpinEdit>
+                                        </Template>
+
+                                    </DxFormLayoutItem>
+
+                                    <DxFormLayoutItem Caption="Chất lượng" ColSpanSm="12" ColSpanMd="4" CaptionPosition="CaptionPosition.Vertical">
+                                        <ComboboxFilteredString @ref=txtChatLuong
+                                                                TextFieldName="@nameof(DataDropDownList.FullName)"
+                                                                ValueFieldName="@nameof(DataDropDownList.Name)"
+                                                                CssClass="cw-480"
+                                                                TypeName="NVL_ChatLuong"
+                                                                SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                                                ListRenderMode=ListRenderMode.Virtual
+                                                                SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                                                SearchMode="ListSearchMode.AutoSearch"
+                                                                ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto
+                                                                @bind-Value=@hangHoaItemcrr.ChatLuong />
+                                    </DxFormLayoutItem>
+                                    <DxFormLayoutItem Caption="Ghi chú" ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+                                        <DxMemo @bind-Text="@hangHoaItemcrr.GhiChu" />
+                                    </DxFormLayoutItem>
+                                    <DxFormLayoutItem ColSpanMd="12">
+
+                                        <div class="text-danger">
+                                            @msgerr
+                                        </div>
+                                    </DxFormLayoutItem>
+                                    <DxFormLayoutItem ColSpanMd="12">
+                                        <Template>
+                                            <div class="d-flex justify-content-center mt-2 gap-2">
+                                                <DxButton RenderStyle="ButtonRenderStyle.Primary" IconCssClass="bi bi-floppy" Text="Lưu (nhấn F11)" Visible=@(!visibleedit) Click="@saveAsync" />
+                                                <DxButton RenderStyle="ButtonRenderStyle.Success" IconCssClass="bi bi-file-earmark m-1" Text="Làm lại" Visible=@(!visibleedit) Click="@reset" />
+                                                <DxButton RenderStyle="ButtonRenderStyle.Info" IconCssClass="bi bi-pencil" CssClass="ms-2" Text="Sửa" Visible=@visibleedit Click="@updateAsync" />
+                                            </div>
+                                        </Template>
+                                    </DxFormLayoutItem>
+                                </DxFormLayout>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </Template>
+        </DxGridLayoutItem>
+
+
+    </Items>
+</DxGridLayout>
+@code {
+    [Inject] BrowserService browserService { get; set; }
+    [Parameter]
+    public List<SanPhamShow> lstdata { get; set; }
+    [Parameter]
+    public SanPhamShow sanPhamShowcrr { get; set; }
+   
+
+    [Parameter]
+    public EventCallback<HangHoaItem> GotoMainForm { get; set; }
+    [Parameter]
+    public HangHoaItem hangHoaItemcrr { get; set; } = new HangHoaItem();
+
+    List<DataDropDownList> lstitem { get; set; }
+    List<DataDropDownList>? lstart { get; set; } = new List<DataDropDownList>();
+    DxTagBoxDefine dxTagBoxArt { get; set; }
+    IEnumerable<DataDropDownList>? Artselected { get; set; }
+    string showinput = "none";
+
+    ComboboxMaHang txtMaHang { get; set; }
+
+    bool visibleedit = false;
+    bool PopupVisible { get; set; } = false;
+    DialogWindow? dxPopup { get; set; }
+    RenderFragment? renderFragment { get; set; }
+    DialogMsg? dialogMsg { get; set; }
+    public string? random { get; set; }
+    ComboboxFilteredString txtChatLuong, txtKhuVuc;// { get; set; }
+    string msgerr = "";
+    string heightgrid = "500px";
+    string headerform = "";
+    bool Visilethemchitiet = true, Visilechinhsua = true, Visiledelete = true, Visilethemfile = true;
+    IGrid? Grid { get; set; }
+    DxFlyout? dxFlyoutchucnang { get; set; }
+    public string? idflychucnang { get; set; }
+    bool IsOpenfly { get; set; } = false;
+    App_ClassDefine.ClassProcess prs = new ClassProcess();
+    bool PanelVisible { get; set; } = false;
+    protected override async Task OnInitializedAsync()
+    {
+        await loadAsync();
+        // return base.OnInitializedAsync();
+    }
+    public string idelement(int? serial)
+    {
+        if (serial == null)
+            string.Format("flychucnang_{0}_{1}", random, serial);
+        if (random == null)
+        {
+            random = prs.RandomString(9);
+        }
+        return string.Format("flychucnang_{0}_{1}", random, serial);
+    }
+    private void textchanged()
+    {
+        Console.WriteLine(txtMaHang.Value);
+    }
+    private async Task loadAsync()
+    {
+
+        var dimension = await browserService.GetDimensions();
+        // var heighrow = await browserService.GetHeighWithID("divcontainer");
+        int height = dimension.Height - 90;
+        heightgrid = string.Format("{0}px", height);
+        try
+        {
+            CheckQuyen = await phanQuyenAccess.CreateDinhMucVatTu(Model.ModelAdmin.users);
+            lstitem = await ModelData.GetDataDropDownListsAsync("TypeKhuVucDinhMuc");
+            foreach (var it in lstdata)
+            {
+                string[] arr = it.ArticleNumber.Split(';');
+                foreach (var item in arr)
+                {
+                    DataDropDownList dataDropDownList = new DataDropDownList();
+                    dataDropDownList.FullName = item;
+                    dataDropDownList.Name = item;
+                    dataDropDownList.TypeName = "art";
+                    lstart.Add(dataDropDownList);
+                }
+                dxTagBoxArt.SetSelectedValue = sanPhamShowcrr.ArticleNumber;
+
+                // lstart.Add(new DataDropDownList());
+            }
+        }
+        catch (Exception ex)
+        {
+            toastService.Notify(new ToastMessage(ToastType.Warning, "Lỗi:" + ex.Message));
+        }
+        finally
+        {
+            //PanelVisible = false;
+        }
+    }
+
+    void Grid_CustomizeElement(GridCustomizeElementEventArgs e)
+    {
+        if (e.ElementType == GridElementType.DataCell)
+        {
+            var dataColumn = (IGridDataColumn)e.Column;
+            string s = dataColumn.FieldName;
+            if (s == "TenMau")
+            {
+                if (e.Grid.GetRowValue(e.VisibleIndex, "Colorhex") != null)
+                {
+                    var colorhex = e.Grid.GetRowValue(e.VisibleIndex, "Colorhex");
+                    if (colorhex != null)
+                    {
+                        e.Style = string.Format("background-color:{0}", colorhex.ToString());
+                    }
+                }
+            }
+
+        }
+
+    }
+
+}

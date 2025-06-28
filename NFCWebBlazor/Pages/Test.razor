@@ -1,0 +1,58 @@
+﻿@page "/test"
+@using DevExpress.Blazor;
+<DxGridLayout>
+    <!-- Cột bên trái -->
+    <DxGridLayoutItem ColSpanMd="6" RowSpanMd="4">
+        <DxFormLayout>
+            <DxFormLayoutItem>
+                <Template>
+                    <span>Dòng 1</span>
+                </Template>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem>
+                <Template>
+                    <span>Dòng 2</span>
+                </Template>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem >
+                <Template>
+                    <span>Dòng 3</span>
+                </Template>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem>
+                <Template>
+                    <span>Dòng 4</span>
+                </Template>
+            </DxFormLayoutItem>
+        </DxFormLayout>
+    </DxGridLayoutItem>
+
+    <!-- Cột bên phải -->
+    <DxGridLayoutItem ColSpanMd="6" RowSpanMd="3">
+        <DxFormLayout>
+            <DxFormLayoutItem>
+                <Template>
+                    <span>Dòng 5</span>
+                </Template>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem>
+                <Template>
+                    <span>Dòng 6</span>
+                </Template>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem>
+                <Template>
+                    <span>Dòng 7</span>
+                </Template>
+            </DxFormLayoutItem>
+        </DxFormLayout>
+    </DxGridLayoutItem>
+</DxGridLayout>
+@code {
+    private void btclick()
+    {
+        string s = "";
+        s = "1";
+    }
+
+}

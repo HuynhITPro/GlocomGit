@@ -1,0 +1,253 @@
+﻿@using BlazorBootstrap
+@using NFCWebBlazor.App_NguyenVatLieu.Report
+@using NFCWebBlazor.Model
+@using Newtonsoft.Json
+@using System.Data
+@using static NFCWebBlazor.App_NguyenVatLieu.App_KeHoachDeNghi.Page_KeHoachMuaHangMaster
+@using static NFCWebBlazor.App_NguyenVatLieu.App_NhapXuat.Page_NhapXuat_Master
+<style>
+    .my-grid-max {
+    max-height: @heightgrid;
+    }
+
+</style>
+<DxLoadingPanel @bind-Visible="@PanelVisible"
+IsContentBlocked="true"
+ApplyBackgroundShading="true"
+IndicatorAreaVisible="false"
+Text="Đang xử lý...">
+    <DxGrid @ref=dxGrid
+    TextWrapEnabled="false"
+    ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+   
+    CssClass="my-grid-max"
+    ShowFilterRow="false"
+    VirtualScrollingEnabled=true
+    FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+    Data=@lstdata
+    AutoExpandAllGroupRows=true>
+        <ToolbarTemplate>
+            <DxToolbar AdaptivityAutoCollapseItemsToIcons="false" ItemRenderStyleMode="ToolbarRenderStyleMode.Plain" SizeMode="SizeMode.Small">
+
+                <DxToolbarItem Text="In đề nghị" BeginGroup="true" IconCssClass="bi bi-printer m-1" RenderStyle="ButtonRenderStyle.Primary" Click="@printDeNghi">
+                </DxToolbarItem>
+
+                <DxToolbarItem Text="Xuất excel" BeginGroup="true" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=>dxGrid.ExportToXlsxAsync("ExporBangKe"))">
+
+                </DxToolbarItem>
+
+                <DxToolbarItem Text="Chọn cột" BeginGroup="true" Click="@(()=>dxGrid.ShowColumnChooser())" IconCssClass="bi bi-layout-text-window-reverse" />
+            </DxToolbar>
+        </ToolbarTemplate>
+        <Columns>
+            <DxGridDataColumn FieldName="SerialLink" Caption="ID tem" Width="90" DisplayFormat="#" />
+            <DxGridDataColumn FieldName="TenHang" Caption="Tên hàng" GroupIndex="0" Width="240">
+                <GroupRowTemplate>
+                    @{
+                        NvlNhapXuatItemTemTK nvlNhapXuatItemTemTK = (NvlNhapXuatItemTemTK)context.Grid.GetDataItem(context.VisibleIndex);
+                    }
+                    <div class="d-flex">
+                        <span>@nvlNhapXuatItemTemTK.TenHang</span>
+                        <span style="color:forestgreen;margin-left:10px">@string.Format(" Đề nghị: {0} {1}", nvlNhapXuatItemTemTK.SLDeNghi.ToString("#,0.##"),nvlNhapXuatItemTemTK.DVT)</span>
+                    </div>
+                </GroupRowTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="DVT" Caption="ĐVT" Width="70" />
+            <DxGridDataColumn FieldName="SLTon" Caption="SL Tồn" Width="110" DisplayFormat="#,0.##;-#,0.##;''" />
+            <DxGridDataColumn FieldName="ViTri" Caption="ViTri"  />
+
+        </Columns>
+
+    </DxGrid>
+</DxLoadingPanel>
+@code {
+    [Inject] ToastService toastService { get; set; }
+    [Inject] IJSRuntime JSRuntime { get; set; }
+    [Inject] BrowserService browserService { get; set; }
+    [Parameter] public KeHoachMuaHang_Show keHoachMuaHang_Show { get; set; }
+    public bool Ismobile { get; set; }
+    public DxGrid dxGrid { get; set; }
+    bool PanelVisible { get; set; } = false;
+    List<NvlNhapXuatItemTemTK> lstdata { get; set; }
+    string heightgrid = "500px";
+    private string showtextdouble(decimal? d)
+    {
+        if (d == null)
+            return "";
+        if (d == 0)
+            return "";
+        return d.Value.ToString("#,0.####");
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        var dimension = await browserService.GetDimensions();
+        // var heighrow = await browserService.GetHeighWithID("divcontainer");
+        int height = dimension.Height - 70;
+        heightgrid = string.Format("{0}px", height);
+
+        //// var heighrow = await browserService.GetHeighWithID("divcontainer");
+        //int height = dimension.Height - 120;
+        int width = dimension.Width;
+        if (width < 768)
+        {
+            Ismobile = true;
+        }
+        else
+        {
+            Ismobile = false;
+        }
+        await searchAsync();
+        //randomdivhide = prs.RandomString(10);
+        //return base.OnInitializedAsync();
+    }
+
+    private async Task searchAsync()
+    {
+        if (keHoachMuaHang_Show.lsttemtonkho == null)
+        {
+            List<ParameterDefine> lstpara = new List<ParameterDefine>();
+            string dieukien = " ";
+
+
+            dieukien = " where SerialKHDH=@SerialKHDH";
+            lstpara.Add(new ParameterDefine("@SerialKHDH", keHoachMuaHang_Show.Serial));
+            string sqlSearch = "";
+
+
+            //string[] arrshow = new string[] { "MaHang", "TenHang", "SerialCT", "SLNhap", "SLXuat", "DVT", "LyDo", "TenSP", "MaKien", "DauTuan", "SoLo", "TenGN", "SoXe", "GhiChu", "DonGia", "NgayHetHan", "SerialLink", "KhachHang_XuatXu", "UserInsert", "SerialKHDH", "SerialDN", "NguoiDeNghi", "TenLienKet", "NhaMay", "NgayInsert" };
+            bool checkshow = false;
+
+            sqlSearch = string.Format(@"use NVLDB
+
+                                declare @SerialDN int={0}
+                                declare @MaKhoEx nvarchar(100)=N'K011'
+
+                                declare @tblserialdn table(MaHang nvarchar(100) primary key,SLDeNghi decimal(18,6))
+                                insert into @tblserialdn(MaHang,SLDeNghi)
+                                select MaHang,sum(SoLuong) as SLDeNghi from NvlKeHoachMuaHangItem where SerialDN=@SerialDN group  by MaHang
+
+                                declare @tbltonkho Table(MaHang nvarchar(100),SLTon decimal(18,6),SerialLink int,Serial int primary key)
+                                insert @tbltonkho (MaHang,SLTon,SerialLink,Serial)
+
+                                select qry.MaHang,SLTon,SerialLink, Serial
+                                from
+                                (select MaHang,sum(SLNhap-SLXuat) as SLTon,SerialLink,min(case when SLNhap>0 then Serial end) as Serial
+                                from NvlNhapXuatItem
+                                where MaHang  in (select MaHang from @tblserialdn)
+                                and SerialCT in (select Serial from NvlNhapXuat where MaKho<>@MaKhoEx)
+                                group by MaHang,SerialLink) as qry where SLTon<>0
+
+                                select tbl.*,hh.TenHang,hh.DVT,item.ViTri,tbldn.SLDeNghi from @tbltonkho tbl
+                                inner join dbo.NvlNhapXuatItem item on tbl.Serial=item.Serial
+                                inner join dbo.NvlHangHoa hh on tbl.MaHang=hh.MaHang
+                                inner join @tblserialdn tbldn on tbl.MaHang=tbldn.MaHang
+                                order by ViTri
+
+
+                     ", keHoachMuaHang_Show.Serial);
+            CallAPI callAPI = new CallAPI();
+            try
+            {
+
+
+                PanelVisible = true;
+                string json = await callAPI.ExcuteQueryEncryptAsync(sqlSearch, lstpara);
+                if (json != "")
+                {
+                    var query = JsonConvert.DeserializeObject<List<NvlNhapXuatItemTemTK>>(json);
+
+                    if (query.Any())
+                    {
+                        keHoachMuaHang_Show.lsttemtonkho = new List<NvlNhapXuatItemTemTK>();
+                        keHoachMuaHang_Show.lsttemtonkho.AddRange(query);
+                        lstdata = keHoachMuaHang_Show.lsttemtonkho;
+                    }
+
+
+
+                    // await GotoMainForm.InvokeAsync();
+                }
+                else
+                    toastService.Notify(new ToastMessage(ToastType.Danger, "Không có dữ liệu"));
+            }
+            catch (Exception ex)
+            {
+                toastService.Notify(new ToastMessage(ToastType.Danger, "Lỗi:" + ex.Message));
+            }
+            finally
+            {
+                PanelVisible = false;
+                dxGrid.Reload();
+                StateHasChanged();
+            }
+        }
+        else
+        {
+            lstdata = keHoachMuaHang_Show.lsttemtonkho;
+            StateHasChanged();
+        }
+
+
+    }
+    private DataTable ConvertToDataTable(List<NvlNhapXuatItemTemTK> list)
+    {
+        DataTable dt = new DataTable();
+        dt.Columns.Add("TenHang", typeof(string));
+        dt.Columns.Add("DVT", typeof(string));
+        dt.Columns.Add("SLDeNghi", typeof(decimal));
+        dt.Columns.Add("SerialLink", typeof(int));
+        dt.Columns.Add("SerialLink1", typeof(int));
+        dt.Columns.Add("ViTri", typeof(string));
+        dt.Columns.Add("ViTri1", typeof(string));
+        dt.Columns.Add("SLTon", typeof(decimal));
+        dt.Columns.Add("SLTon1", typeof(decimal));
+     
+
+        int half = (list.Count + 1) / 2; // Chia đôi danh sách
+        var firstHalf = list.Take(half).ToList();
+        var secondHalf = list.Skip(half).ToList();
+
+        for (int i = 0; i < half; i++)
+        {
+            DataRow row = dt.NewRow();
+            row["TenHang"] = firstHalf[i].TenHang;
+            row["DVT"] = firstHalf[i].DVT;
+            row["SLDeNghi"] = firstHalf[i].SLDeNghi;
+            row["SerialLink"] = firstHalf[i].SerialLink;
+            row["ViTri"] = firstHalf[i].ViTri;
+            row["SLTon"] = firstHalf[i].SLTon;
+            //row["SLDeNghi"] = firstHalf[i].SLDeNghi;
+
+            if (i < secondHalf.Count)
+            {
+                row["SerialLink1"] = secondHalf[i].SerialLink;
+
+                row["ViTri1"] = secondHalf[i].ViTri;
+                row["SLTon1"] = secondHalf[i].SLTon;
+               // row["SLDeNghi1"] = secondHalf[i].SLDeNghi;
+            }
+
+            dt.Rows.Add(row);
+        }
+
+        return dt;
+    }
+    private void printDeNghi()
+    {
+       
+        if (!lstdata.Any())
+        {
+            toastService.Notify(new ToastMessage(ToastType.Danger, "Không có dữ liệu"));
+            return;
+        }
+        XtraRp_DeNghiCapVatTuViTri xtraRp_DeNghiCapVatTu1 = new XtraRp_DeNghiCapVatTuViTri();
+
+        xtraRp_DeNghiCapVatTu1.DataSource = ConvertToDataTable(lstdata);
+        xtraRp_DeNghiCapVatTu1.setNoidung((keHoachMuaHang_Show.NoiDung == null) ? "" : keHoachMuaHang_Show.NoiDung.TrimEnd(Environment.NewLine.ToCharArray()));
+        xtraRp_DeNghiCapVatTu1.setMaDeNghi(keHoachMuaHang_Show.Serial.ToString());
+        xtraRp_DeNghiCapVatTu1.setNguoiDuyet(keHoachMuaHang_Show.PhongBan, keHoachMuaHang_Show.LoaiKeHoach, keHoachMuaHang_Show.NguoiDN, keHoachMuaHang_Show.NguoiKiem, keHoachMuaHang_Show.NguoiDuyet, keHoachMuaHang_Show.DaDuyet, keHoachMuaHang_Show.NoiDungDeNghi, keHoachMuaHang_Show.NgayDN);
+        //parameters.Add("report", xtra_KTGTonKho);
+        //modal.Show<ReportShow>("", parameters, options);
+        ModelAdmin.mainLayout.showreportAsync(xtraRp_DeNghiCapVatTu1);
+    }
+}

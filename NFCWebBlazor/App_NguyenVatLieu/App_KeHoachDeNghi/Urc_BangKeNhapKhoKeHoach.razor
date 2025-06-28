@@ -1,0 +1,69 @@
+﻿@using static NFCWebBlazor.App_NguyenVatLieu.App_NhapXuat.Page_NhapXuat_Master
+<style>
+    .my-grid {
+        height: 80vh;
+        width:90vw;
+    }
+</style>
+<DxGrid @ref=dxGrid
+        TextWrapEnabled="false"
+        ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+        AutoCollapseDetailRow="true"
+        CssClass="my-grid"
+        ShowFilterRow="true"
+        VirtualScrollingEnabled=true
+        FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+        Data=@lstdata
+        AutoExpandAllGroupRows=true>
+    <ToolbarTemplate>
+        <DxToolbar AdaptivityAutoCollapseItemsToIcons="false" ItemRenderStyleMode="ToolbarRenderStyleMode.Plain" SizeMode="SizeMode.Small">
+            <DxToolbarItem Text="Xuất excel" BeginGroup="true" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=>dxGrid.ExportToXlsxAsync("ExporBangKe"))">
+            </DxToolbarItem>
+            
+        </DxToolbar>
+    </ToolbarTemplate>
+    <Columns>
+       
+            
+            <DxGridDataColumn FieldName="Ngay" Caption="Ngày C.Từ" Width="120" />
+            <DxGridDataColumn FieldName="MaCT" Caption="Mã CT" Width="120" />
+            <DxGridDataColumn FieldName="GhiChu" Caption="Kế hoạch" Width="130" />
+            <DxGridDataColumn FieldName="Serial" Caption="Serial" Width="110" DisplayFormat="#" />
+            <DxGridDataColumn FieldName="SerialCT" Caption="Serial CT" Width="110" DisplayFormat="#" />
+            <DxGridDataColumn FieldName="SerialLink" Caption="ID tem" Width="100" DisplayFormat="#" />
+            <DxGridDataColumn FieldName="TenKho" Caption="Tên Kho" Width="200" />
+            <DxGridDataColumn FieldName="TenGN" Caption="Nơi giao nhận" Width="240" />
+            <DxGridDataColumn FieldName="TenNhom" Caption="Tên nhóm" Width="140" />
+            <DxGridDataColumn FieldName="MaHang" Caption="Mã hàng" Width="110" />
+            <DxGridDataColumn FieldName="TenHang" Caption="Tên hàng" Width="240" />
+            <DxGridDataColumn FieldName="DVT" Caption="ĐVT" Width="80" />
+            <DxGridDataColumn FieldName="SLNhap" Caption="SL nhập" Width="110" DisplayFormat="#,0.##;-#,0.##;''" />
+            <DxGridDataColumn FieldName="SLXuat" Caption="SL xuất" Width="110" DisplayFormat="#,0.##;-#,0.##;''" />
+            <DxGridDataColumn FieldName="DonGia" Caption="Đơn giá" Width="110" DisplayFormat="#,0.##;-#,0.##;''" />
+            <DxGridDataColumn FieldName="ThanhTien" Caption="Thành tiền" Width="120" DisplayFormat="#,0.##;-#,0.##;''" />
+       
+            <DxGridDataColumn FieldName="LyDo" Caption="Lý do" Width="140" />
+            <DxGridDataColumn FieldName="SerialKHDH" DisplayFormat="#" Caption="Serial KH/ĐH" Width="120" Visible=false />
+            <DxGridDataColumn FieldName="SerialDN" Caption="Đề nghị số" Width="120" DisplayFormat="#" />
+            <DxGridDataColumn FieldName="NguoiDN" Caption="Đề nghị bởi" Width="140" />
+            <DxGridDataColumn FieldName="SoLo" Caption="Số lô" Width="110" />
+           
+            <DxGridDataColumn FieldName="UserInsert" Caption="UserInsert" Width="110" />
+            <DxGridDataColumn FieldName="NgayInsert" Caption="Ngày Insert" Width="130" DisplayFormat="dd-MM-yy HH:mm" />
+            <DxGridDataColumn FieldName="NgaySanXuat" Caption="Ngày sản xuất" Width="110" Visible="false" />
+            <DxGridDataColumn FieldName="NgayHetHan" Caption="Ngày hết hạn" Width="110" Visible="false" />
+            <DxGridDataColumn FieldName="DauTuan" Caption="Dấu tuần" Width="110" />
+            
+
+        
+        
+    </Columns>
+
+</DxGrid>
+
+@code {
+    [Inject] BrowserService browserService { get; set; }
+    public DxGrid dxGrid { get; set; }
+    [Parameter]
+    public List<NvlNhapXuatItemShow> lstdata { get; set; }
+}

@@ -1,0 +1,131 @@
+﻿@using NFCWebBlazor.App_ClassDefine
+@using static NFCWebBlazor.App_NguyenVatLieu.App_NhapXuat.Page_NhapXuat_Master
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+<EditForm EditContext="@editContext" Context="EditFormContext" style="max-width:700px;">
+    <DataAnnotationsValidator />
+    <div class="d-flex justify-content-center">
+
+        <DxFormLayout CaptionPosition="CaptionPosition.Vertical">
+            <DxFormLayoutItem Caption="Nhà máy" ColSpanXs="12" ColSpanSm="12" ColSpanMd="6" ColSpanLg="6" CaptionPosition="CaptionPosition.Vertical">
+
+                <NFCWebBlazor.App_ClassDefine.ComboboxFilteredString SearchFilterCondition="ListSearchFilterCondition.Contains"
+                ListRenderMode=ListRenderMode.Virtual
+                TypeName="NhaMay_NVL"
+                SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                SearchMode="ListSearchMode.AutoSearch"
+                TextFieldName="@nameof(DataDropDownList.FullName)"
+                ValueFieldName="@nameof(DataDropDownList.Name)"
+                @bind-Value="@nvlNhapXuatItemShowcrr.NhaMay"
+                CssClass="cw-480" />
+                <div class="text-danger">
+                    <ValidationMessage For="@(() => nvlNhapXuatItemShowcrr.NhaMay)" />
+                </div>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Kho" ColSpanXs="12" ColSpanSm="12" ColSpanMd="6" ColSpanLg="6">
+                <Template>
+                    <DxComboBox SearchFilterCondition="ListSearchFilterCondition.Contains"
+                    ListRenderMode=ListRenderMode.Virtual
+                    SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                    SearchMode="ListSearchMode.AutoSearch"
+                    Data=@lstkhonvl
+                    ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto
+                    TextFieldName="@nameof(DataDropDownList.FullName)"
+                    ValueFieldName="@nameof(DataDropDownList.Name)"
+                    SelectedItemChanged="@((DataDropDownList selected)=>khoselected(selected))"
+                    @bind-Value="@nvlNhapXuatItemShowcrr.MaKho"
+                    CssClass="cw-480" />
+                    <div class="text-danger">
+                        <ValidationMessage For="@(() => nvlNhapXuatItemShowcrr.MaKho)" />
+                    </div>
+                </Template>
+            </DxFormLayoutItem>
+
+
+            <DxFormLayoutItem ColSpanXs="6" Caption="Quét tem/Nhập ID" ColSpanSm="6" ColSpanMd="6" ColSpanLg="6">
+
+                <Template>
+                    <View_BarcodeScan @ref=view_BarcodeScan StrBarcode="@((nvlNhapXuatItemShowcrr.SerialLink==null)?"":nvlNhapXuatItemShowcrr.SerialLink.ToString())" GetStrBarcode="@checkSerialAsync"></View_BarcodeScan>
+                    <div class="text-danger">
+                        <ValidationMessage For="@(() => nvlNhapXuatItemShowcrr.SerialLink)" />
+                    </div>
+                </Template>
+            </DxFormLayoutItem>
+
+
+            <DxFormLayoutItem Caption="Chọn vị trí" ColSpanXs="6" ColSpanSm="6" ColSpanMd="6" ColSpanLg="6">
+                <DxComboBox Data="@lstViTri"
+                SearchFilterCondition="ListSearchFilterCondition.Contains"
+                ListRenderMode=ListRenderMode.Virtual
+                SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                SearchMode="ListSearchMode.AutoSearch"
+                TextFieldName="@nameof(NvlViTri.ViTri)"
+                ValueFieldName="@nameof(NvlViTri.ViTri)"
+                ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                @bind-Value=@nvlNhapXuatItemShowcrr.ViTri />
+                <div class="text-danger">
+                    <ValidationMessage For="@(() => nvlNhapXuatItemShowcrr.ViTri)" />
+                </div>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Gợi ý (click để chọn)" ColSpanXs="12" ColSpanSm="12" ColSpanMd="12" ColSpanLg="12">
+               <CaptionTemplate>
+                    <p style="color:orangered;font-size:12px;">Gợi ý (click để chọn)</p>
+               </CaptionTemplate>
+               <Template>
+                    <DxTagBox TextFieldName="@nameof(ViTriGoiY.ViTri)"
+                              ValueFieldName="@nameof(ViTriGoiY.ViTri)"
+                              CssClass="cw-480"
+                              Data="@lstgoiyvitri"
+                              DropDownCssClass="dropdownheight"
+                              AllowCustomTags="true"
+                              ListRenderMode="ListRenderMode.Virtual"
+                              @bind-Values="@goiyselected"
+                              ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto">
+                        <TagDisplayTemplate Context="tagContext">
+                            @{
+                                <DxButton RenderStyle="ButtonRenderStyle.Secondary" Context="btcontext"
+                                          RenderStyleMode="ButtonRenderStyleMode.Outline"
+                                          Text="@tagContext.DisplayText" Click="@(()=>clickgoiy(tagContext.DisplayText))">
+                                    @tagContext.DisplayText
+                                    <span @onclick="@tagContext.RemoveTagAction" style="display:inline-block; width: 1em; margin-left: 0.5em">
+                                        &times;
+                                    </span>
+                                </DxButton>
+                            }
+                        </TagDisplayTemplate>
+                    </DxTagBox>
+               </Template>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="12">
+                <div class="d-flex justify-content-center mt-2 gap-2">
+                    <DxButton RenderStyle="ButtonRenderStyle.Primary" IconCssClass="bi bi-floppy" Text="Lưu"  Click="@saveAsync" />
+                    <DxButton RenderStyle="ButtonRenderStyle.Success" IconCssClass="bi bi-file-earmark m-1" Text="Làm lại"  Click="@reset" />
+                    <DxButton RenderStyle="ButtonRenderStyle.Info" IconCssClass="bi bi-list-task" CssClass="ms-2" Text="Bảng kê" />
+                </div>
+            </DxFormLayoutItem>
+
+        </DxFormLayout>
+    </div>
+</EditForm>
+
+
+@code {
+    [Parameter]
+    public NvlNhapXuatItemShow nvlNhapXuatItemShowcrr { get; set; }
+
+    View_BarcodeScan? view_BarcodeScan { get; set; }
+    ComboboxMaHang? txtMaHang { get; set; }
+    RenderFragment? renderFragment { get; set; }
+    DialogWindow? dxPopup { get; set; }
+    IEnumerable<ViTriGoiY> goiyselected { get; set; }
+
+    List<ViTriGoiY>lstgoiyvitri{get;set;}=new List<ViTriGoiY>();
+    List<NvlViTri>? lstViTri { get; set; } = new List<NvlViTri>();
+    List<DataDropDownList>? lstkhonvl { get; set; }
+    private EditContext? editContext;
+   
+}

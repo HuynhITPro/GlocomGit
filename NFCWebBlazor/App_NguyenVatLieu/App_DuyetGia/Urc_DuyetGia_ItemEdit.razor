@@ -1,0 +1,249 @@
+﻿@using DevExpress.Blazor;
+@using NFCWebBlazor.App_ClassDefine
+@using NFCWebBlazor.App_ModelClass;
+@using Blazored.Modal
+@using Blazored.Modal.Services
+
+@using NFCWebBlazor.App_NguyenVatLieu.App_KeHoachDeNghi;
+@using static NFCWebBlazor.App_NguyenVatLieu.App_DuyetGia.Page_DuyetGiaMaster
+<style>
+    .my-grid {
+    }
+
+
+
+
+
+    .custom-card {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px;
+        max-height: 2.5rem;
+        border-radius: 50px; /* Bo tròn cả thẻ a */
+        border: 1px solid #ccc; /* Viền sát thẻ a */
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+        .custom-card img {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%; /* Bo tròn hình ảnh */
+            margin-right: 10px;
+        }
+
+        .custom-card span {
+            font-size: 10px;
+            color: #333;
+        }
+
+        .custom-card:hover {
+            border-color: #007bff;
+            background-color: #f0f8ff;
+        }
+
+    .sizeformduyetgia {
+        max-width: 600px;
+    }
+</style>
+<NFCWebBlazor.App_Admin.DialogMsg @ref="@dialogMsg"></NFCWebBlazor.App_Admin.DialogMsg>
+
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+
+<DxGridLayout CssClass="sizeformduyetgia">
+
+    <Rows>
+
+        <DxGridLayoutRow Height="auto" />
+        <DxGridLayoutRow Height="auto" />
+        <DxGridLayoutRow />
+    </Rows>
+
+    <Items>
+        <DxGridLayoutItem Row="0">
+            <Template>
+                <div class="row p-2 d-flex justify-content-center p-2 mb-2">
+                    <div style="width:90vw;">
+                        @renderFragment
+                    </div>
+
+                </div>
+            </Template>
+        </DxGridLayoutItem>
+        <DxGridLayoutItem Row="1">
+            <Template>
+                <div class="p-2 pt-0 mb-2 bg-white border rounded-2">
+
+                    <div>
+                        <EditForm EditContext="@editContext" Context="EditFormContext" style="max-width:700px;">
+                            <DataAnnotationsValidator />
+                            <DxFormLayout CssClass="w-100 mt-3">
+
+                                <DxFormLayoutItem Caption="Tên hàng" ColSpanSm=12 ColSpanLg="6" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+                                    <ComboboxMaHang TextFieldName="@nameof(NvlHangHoaDropDown.TenHang)"
+                                                    ValueFieldName="@nameof(NvlHangHoaDropDown.MaHang)"
+                                                    CssClass="cw-480"
+                                                    SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                                    ListRenderMode=ListRenderMode.Virtual
+                                                    SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                                    SearchMode="ListSearchMode.AutoSearch"
+                                                    @bind-Value="@nvlDuyetGiaItemShowcrr.MaHang"
+                                                    ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto />
+                                    <div class="text-danger">
+                                        <ValidationMessage For="@(() =>nvlDuyetGiaItemShowcrr.MaHang)" />
+                                    </div>
+
+                                </DxFormLayoutItem>
+                                <DxFormLayoutItem Caption="Xuất xứ" ColSpanSm=12 ColSpanLg="6" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+                                    <DxTextBox @bind-Text=@nvlDuyetGiaItemShowcrr.XuatXu></DxTextBox>
+                                </DxFormLayoutItem>
+                                <DxFormLayoutItem Caption="Số lượng dự toán" ColSpanSm=12 ColSpanLg="6" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+                                    <DxSpinEdit @bind-Value=@nvlDuyetGiaItemShowcrr.SLDuToan Increment="0" MinValue="0"></DxSpinEdit>
+                                    <div class="text-danger">
+                                        <ValidationMessage For="@(() =>nvlDuyetGiaItemShowcrr.SLDuToan)" />
+                                    </div>
+                                </DxFormLayoutItem>
+                                <DxFormLayoutItem Caption="Định mức" ColSpanSm=12 ColSpanLg="6" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+                                    <DxSpinEdit @bind-Value=@nvlDuyetGiaItemShowcrr.DinhMuc Increment="0" MinValue="0"></DxSpinEdit>
+                                </DxFormLayoutItem>
+                                <DxFormLayoutItem Caption="Ghi chú" ColSpanSm=12 ColSpanLg="12" ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+                                    <DxMemo @bind-Text=@nvlDuyetGiaItemShowcrr.GhiChu></DxMemo>
+                                </DxFormLayoutItem>
+                                <DxFormLayoutItem ColSpanMd="12">
+                                    <Template>
+                                        <div class="d-flex justify-content-center gap-1">
+
+
+                                            <DxButton RenderStyle="ButtonRenderStyle.Warning"
+                                                      CssClass="bi bi-pencil" style="margin-left:10px;"
+                                                      Click="@UpdateMasterAsync"
+                                                      RenderStyleMode="ButtonRenderStyleMode.Outline" Text="SỬA">
+                                            </DxButton>
+
+
+                                        </div>
+
+                                    </Template>
+                                </DxFormLayoutItem>
+                            </DxFormLayout>
+                        </EditForm>
+                    </div>
+
+                </div>
+
+            </Template>
+        </DxGridLayoutItem>
+
+
+
+        <DxGridLayoutItem Row="2">
+            <Template>
+
+                <DxLoadingPanel @bind-Visible="@PanelVisible"
+                                IsContentBlocked="true"
+                                ApplyBackgroundShading="true"
+                                IndicatorAreaVisible="false"
+                                Text="Đang xử lý...">
+                    <DxGrid @ref="Grid" Data="@lstdata" TextWrapEnabled="false"
+                            ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+                            PageSize="20"
+                            EditModelSaving="OnEditModelSaving"
+                            CustomizeEditModel="Grid_CustomizeEditModel"
+                            EditMode="GridEditMode.EditCell"
+                            VirtualScrollingEnabled=true
+                            PagerPosition="GridPagerPosition.Bottom"
+                            PageSizeSelectorVisible="true"
+                            PageSizeSelectorItems="@(new int[] { 10, 20, 100 })"
+                            PageSizeSelectorAllRowsItemVisible="true"
+                            FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                            AutoCollapseDetailRow="true">
+                        <Columns>
+                            <DxGridDataColumn DataRowEditorVisible="false" FieldName="Serial" Width="100" Caption="">
+                                <CellDisplayTemplate>
+                                    @{
+                                        NvlDuyetGiaItemShow_Detail nvlDuyetGiaItemShow_Detail = (NvlDuyetGiaItemShow_Detail)context.DataItem;
+                                    }
+                                    <a class="bi bi-pencil" @onclick="@(()=>UpdateItemAsync(nvlDuyetGiaItemShow_Detail))" style="text-decoration: none;color:gold" href="#">Sửa</a>
+                                    <a class="oi oi-x ms-2" @onclick="@(()=>DeleteItemAsync(nvlDuyetGiaItemShow_Detail))" style="text-decoration: none;color:red" href="#">Xóa</a>
+                                </CellDisplayTemplate>
+                            </DxGridDataColumn>
+                            <DxGridDataColumn DataRowEditorVisible="false" FieldName="TenNCC" Caption="Tên nhà cung cấp" />
+                            <DxGridDataColumn FieldName="DonGia" Width="100" Caption="Đơn giá">
+                                <CellEditTemplate>
+                                    @{
+                                        NvlDuyetGiaItemShow_Detail nvlDuyetGiaItemShow_Detail = (NvlDuyetGiaItemShow_Detail)context.EditModel;
+                                    }
+                                    <DxSpinEdit Increment="0" @bind-Value=@nvlDuyetGiaItemShow_Detail.DonGia MinValue="0"></DxSpinEdit>
+                                </CellEditTemplate>
+                            </DxGridDataColumn>
+                        </Columns>
+
+                    </DxGrid>
+
+                </DxLoadingPanel>
+
+
+            </Template>
+        </DxGridLayoutItem>
+
+    </Items>
+</DxGridLayout>
+
+@code {
+    [Parameter]
+    public NvlDuyetGiaItemShow nvlDuyetGiaItemShowcrr { get; set; }
+    [Parameter]
+    public EventCallback<string> GotoMainForm { get; set; }
+    private EditContext? editContext;
+    RenderFragment renderFragment;
+    List<NvlDuyetGiaItemShow_Detail> lstdata { get; set; }
+    DialogMsg dialogMsg;
+    DxGrid Grid { get; set; }
+    DialogWindow dxPopup;
+    string texttaomoi = "TẠO ĐỀ NGHỊ";
+    bool PanelVisible = false;
+
+    //bool IsOpenfly = true;
+    DxFlyout dxFlyoutchucnang { get; set; }
+    public string idflychucnang { get; set; }
+    public string random { get; set; }
+    App_ClassDefine.ClassProcess prs = new App_ClassDefine.ClassProcess();
+    void Grid_CustomizeEditModel(GridCustomizeEditModelEventArgs e)
+    {
+        var dataItem = (NvlDuyetGiaItemShow_Detail)e.DataItem;
+        if (dataItem == null)
+            e.EditModel = new NvlDuyetGiaItemShow_Detail { };
+        else
+        {
+            e.EditModel = dataItem.CopyClass();
+        }
+    }
+    async Task OnEditModelSaving(GridEditModelSavingEventArgs e)
+    {
+        var editModel = (NvlDuyetGiaItemShow_Detail)e.EditModel;
+        // Assign changes from the edit model to the data item.
+        if (e.IsNew)
+        {
+            // DataRow rownew = lstdata.NewRow();
+            // lstdata.Rows.Add(rownew);
+        }
+        else
+        {
+            // Console.WriteLine(((DonHangItem)e.DataItem).SLDatHang);
+            e.CopyChangesToDataItem();
+            // Post changes to the database.
+
+        }
+
+    }
+
+
+    // Hàm xử lý sự kiện click của nút
+
+
+
+}

@@ -1,0 +1,122 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <link rel="stylesheet" href="_content/DevExpress.Blazor.Reporting.Viewer/css/dx-blazor-reporting-components.css">
+    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+
+    <link href="_content/DevExpress.Blazor.Themes/bootstrap-external.bs5.css" rel="stylesheet" />
+    <link href="NFCWebBlazor.styles.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <link href="css/materialicon.css" rel="stylesheet" />
+    <link href="css/app.css" rel="stylesheet" />
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <style>
+        .form-icon {
+            width: 1.5rem;
+            margin-right: 0.5rem;
+        }
+
+        .form-control {
+            margin-bottom: 1rem;
+        }
+
+        .btn-save {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-edit {
+            background-color: #f8e6a0;
+            color: #000;
+        }
+
+            .btn-edit svg {
+                fill: #000;
+            }
+
+        .form-container {
+            max-width: 500px;
+            margin: 2rem auto;
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="container form-container">
+        <form>
+            <div class="mb-2">
+                <label for="username" class="form-label">
+                    <img src="https://img.icons8.com/ios-filled/50/000000/user-male-circle.png" alt="User Icon" class="form-icon">User Name
+                </label>
+                <input type="text" class="form-control" id="username" placeholder="Enter username">
+            </div>
+
+            <div class="mb-2">
+                <label for="password" class="form-label">
+                    <img src="https://img.icons8.com/ios-filled/50/000000/lock.png" alt="Password Icon" class="form-icon">Tạo mật khẩu
+                </label>
+                <input type="password" class="form-control" id="password" placeholder="Create password">
+            </div>
+
+            <div class="mb-2">
+                <label for="displayName" class="form-label">
+                    <img src="https://img.icons8.com/ios-filled/50/000000/contacts.png" alt="Display Name Icon" class="form-icon">Tên thể hiện
+                </label>
+                <input type="text" class="form-control" id="displayName" placeholder="Enter display name">
+            </div>
+
+            <div class="mb-2">
+                <label for="department" class="form-label">Chọn phòng ban/Nhà máy</label>
+                <select class="form-select" id="department">
+                    <option selected>Choose department/factory</option>
+                    <option value="1">Department 1</option>
+                    <option value="2">Department 2</option>
+                </select>
+            </div>
+
+            <div class="mb-2">
+                <label for="roleGroup" class="form-label">Chọn nhóm quyền</label>
+                <select class="form-select" id="roleGroup">
+                    <option selected>Choose role group</option>
+                    <option value="1">Admin</option>
+                    <option value="2">User</option>
+                </select>
+            </div>
+
+            <div class="mb-2">
+                <label for="email" class="form-label">
+                    <img src="https://img.icons8.com/ios-filled/50/000000/email.png" alt="Email Icon" class="form-icon">Email
+                </label>
+                <input type="email" class="form-control" id="email" placeholder="Enter email">
+            </div>
+
+            <div class="d-flex justify-content-center">
+                <button type="submit" class="btn btn-save me-2">
+                    <img src="https://img.icons8.com/ios-filled/50/ffffff/save.png" alt="Save Icon" class="form-icon"> Lưu
+                </button>
+                <button type="button" class="btn btn-edit">
+                    <img src="https://img.icons8.com/ios-filled/50/000000/edit.png" alt="Edit Icon" class="form-icon"> Sửa
+                </button>
+            </div>
+        </form>
+    </div>
+</body>
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+<script src="js/jsproject.js"></script>
+
+
+
+<script src="_framework/blazor.webassembly.js"></script>
+<!--<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.0.1/chart.umd.js" integrity="sha512-gQhCDsnnnUfaRzD8k1L5llCCV6O9HN09zClIzzeJ8OJ9MpGmIlCxm+pdCkqTwqJ4JcjbojFr79rl2F1mzcoLMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> <!-- Add chart.js reference if Chart components are used in the application. -->
+<!-- Add sortable.js reference if SortableList component is used in your application. -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script src="_content/Blazor.Bootstrap/blazor.bootstrap.js"></script>
+</html>

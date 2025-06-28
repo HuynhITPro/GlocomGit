@@ -1,0 +1,62 @@
+﻿@using static NFCWebBlazor.App_ThongTin.Page_NhaCungCapMaster
+<div class="row">
+    <div class="col" style="width:350px;">
+    <DxComboBox Data=@lstnhacungcap
+                AllowUserInput="true"
+                SearchFilterCondition="ListSearchFilterCondition.Contains"
+                ListRenderMode=ListRenderMode.Virtual
+                SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                SearchMode="ListSearchMode.AutoSearch"
+                TextFieldName="@nameof(DataDropDownList.FullName)"
+                ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                    @bind-Value="@nhaCungCapShowcrr.MaNCC"
+                    @bind-Text="@nhaCungCapShowcrr.TenNCC"
+                CssClass="cw-480"></DxComboBox>
+    </div>
+    <div class="col-auto" style="width:200px;margin:5px">
+      
+            <DxButton IconCssClass="bi bi-plus-circle" RenderStyle="ButtonRenderStyle.Primary" Text="XÁC NHẬN" Click="@xacnhanclick"  RenderStyleMode="ButtonRenderStyleMode.Outline">
+            </DxButton>
+       
+    </div>
+</div>
+@code {
+    [Parameter]
+    public EventCallback<NVLNhaCungCapShow> GotoMainForm { get; set; }
+    [Parameter]
+    public NVLNhaCungCapShow nhaCungCapShowcrr{get;set;}
+    List<DataDropDownList> lstnhacungcap { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            lstnhacungcap = await Model.ModelData.Getlstnhacungcap();
+            StateHasChanged();
+        }
+        //return base.OnAfterRenderAsync(firstRender);
+    }
+    private async void xacnhanclick()
+    {
+        if(GotoMainForm.HasDelegate)
+        {
+            NVLNhaCungCapShow nVLNhaCungCapShow=new NVLNhaCungCapShow();
+            if(nhaCungCapShowcrr!=null)
+            {
+                var query=lstnhacungcap.Where(x => x.FullName == nhaCungCapShowcrr.TenNCC||x.FullName==nhaCungCapShowcrr.TenNCC.Trim()).FirstOrDefault();
+                if (query != null)
+                {
+                    nVLNhaCungCapShow.MaNCC = query.Name;
+                    nVLNhaCungCapShow.TenNCC = query.FullName;
+                }
+                else
+                {
+                    nVLNhaCungCapShow.MaNCC = null;
+                    nVLNhaCungCapShow.TenNCC = nhaCungCapShowcrr.TenNCC;
+                }
+            }
+           
+            await GotoMainForm.InvokeAsync(nVLNhaCungCapShow);
+        }
+    }
+}

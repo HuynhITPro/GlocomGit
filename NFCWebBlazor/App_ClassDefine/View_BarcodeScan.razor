@@ -1,0 +1,133 @@
+﻿@using BlazorBarcodeScanner.ZXing.JS
+@using BlazorBootstrap
+<style>
+    .zxing-result-container
+    {
+    display: none;
+    }
+
+
+    .zxing-title
+    {
+    display: none;
+    }
+
+</style>
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        <div class="row p-1 text-center">
+            <BlazorBarcodeScanner.ZXing.JS.BarcodeReader @ref="barcodeReader"
+            ShowStart="false"
+            ShowReset="false"
+            ShowToggleTorch="false"
+            ShowVideoDeviceList="false"
+            VideoWidth=@videowidth
+            ShowStop="false"
+            VideoHeight="@videowidth"
+            StartCameraAutomatically=true
+            OnBarcodeReceived="LocalReceivedBarcodeText" />
+        </div>
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+@* <DxTextBox style="font-size:1.8rem;" @bind-Text="@StrBarcode" @oninput="@HandleInput" @onblur="@HandleBlur" @onkeydown="@HandleKeyDown">
+
+    <Buttons>
+        <DxEditorButton Position=EditorButtonPosition.Left IconCssClass="svg-barcode" Click="ClickShowBarcode" />
+    </Buttons>
+</DxTextBox> *@
+<DxComboBox SearchFilterCondition="ListSearchFilterCondition.Contains"
+ListRenderMode=ListRenderMode.Virtual
+Data="@lstidtem"
+SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+SearchMode="ListSearchMode.AutoSearch"
+Id="btserialbarcode"
+ShowDropDownButton="false"
+TextFieldName="@nameof(DataDropDownList.FullName)"
+AllowUserInput="true"
+style="font-size:1.8rem;"
+@ref=dxcombobox
+@oninput="@HandleInput"
+@onkeydown="@HandleKeyDown"
+@onblur="@HandleBlur"
+@bind-Text=@StrBarcode
+@bind-Value=@valuetext
+CssClass="cw-480">
+    <Buttons>
+        <DxEditorButton Position=EditorButtonPosition.Left IconCssClass="svg-barcode" Click="ClickShowBarcode" />
+    </Buttons>
+</DxComboBox>
+@code {
+    [Parameter] public string StrBarcode { get; set; }
+    [Parameter] public EventCallback<string> GetStrBarcode { get; set; }
+    [Parameter] public EventCallback<string> BindingStrBarcode { get; set; }
+    [Parameter] public int videowidth { get; set; }=350;
+    [Parameter]
+    public List<DataDropDownList> lstidtem { get; set; }
+    BarcodeReader barcodeReader { get; set; }
+    DialogWindow dxPopup{ get; set; }
+    DxComboBox<DataDropDownList,string>dxcombobox{ get; set; }
+    public string valuetext{get; set;}
+
+    // private int videowidth = 350;
+    public void ClickShowBarcode()
+    {
+
+        dxPopup.showAsync("Quét tem barcode");
+        dxPopup.ShowAsync();
+    }
+    public string getTextBarcode()
+    {
+        return StrBarcode;
+    }
+    public void setFocus()
+    {
+        dxcombobox.FocusAsync();
+    }
+    private void LocalReceivedBarcodeText(BarcodeReceivedEventArgs args)
+    {
+        StrBarcode = args.BarcodeText;
+        barcodeReader.DisposeAsync();
+        dxPopup.CloseAsync();
+        if(GetStrBarcode.HasDelegate) 
+            GetStrBarcode.InvokeAsync(StrBarcode);
+        StateHasChanged();
+    }
+    private void HandleInput(ChangeEventArgs e)
+    {
+        
+        var input = e.Value?.ToString();
+       // Console.WriteLine("Oninput text được gọi: " + input);
+        StrBarcode = input;
+        if(BindingStrBarcode.HasDelegate)
+            BindingStrBarcode.InvokeAsync(StrBarcode);
+
+    }
+    private void HandleBlur(FocusEventArgs e)
+    {
+        // if (string.IsNullOrEmpty(StrBarcode))
+        //     return;
+        //StateHasChanged();
+       // Console.WriteLine("HandleBlur text được gọi: " + StrBarcode);
+        if (GetStrBarcode.HasDelegate)
+            GetStrBarcode.InvokeAsync(StrBarcode);
+        // Logic của bạn khi trường nhập liệu mất focus
+    }
+   
+    private void HandleKeyDown(KeyboardEventArgs e)
+    {
+
+        if (e.Key == "Enter")
+        {
+            // if (string.IsNullOrEmpty(StrBarcode))
+            //     return;
+            //Console.WriteLine(e.Key);
+            if (GetStrBarcode.HasDelegate)
+                GetStrBarcode.InvokeAsync(StrBarcode);
+            //Console.WriteLine("Bạn vừa nhấn Enter!");
+        }
+
+    }
+
+   
+}

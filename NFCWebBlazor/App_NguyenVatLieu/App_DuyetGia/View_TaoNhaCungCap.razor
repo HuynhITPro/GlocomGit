@@ -1,0 +1,172 @@
+﻿@using BlazorBootstrap
+@using NFCWebBlazor.App_ThongTin
+@using NFCWebBlazor.Model
+@using Newtonsoft.Json
+@using static NFCWebBlazor.App_NguyenVatLieu.App_DuyetGia.Urc_DuyetGia_NCCChuaTao
+@using static NFCWebBlazor.App_ThongTin.Page_NhaCungCapMaster
+@using static NFCWebBlazor.App_NguyenVatLieu.App_DuyetGia.Page_DuyetGiaMaster
+
+
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+@if (listNvlNhaCungCap.Count != null)
+{
+    var query = listNvlNhaCungCap.Where(p => p.SerialLink.Equals(nvlDuyetGiaShowcrr.Serial));
+    @foreach (var item in query)
+    {
+        <div class="row d-flex">
+            <div class="col" style="width:280px;">
+                @if(!string.IsNullOrEmpty(item.MaNCC))
+                {
+                    <img style="width:22px;height:22px;margin-left:10px;" src=@IconImg.CheckMark>
+                }
+                else
+                {
+                    <img style="width:22px;height:22px;margin-left:10px;" src=@IconImg.NotCheck>
+                }
+                <span style="margin-inline-start:10px;white-space: normal;">
+                    @item.TenNCC
+                </span>
+            </div>
+            <div class="col">
+                <a href="#" class="bi bi-plus-circle link-success link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover ms-2" @onclick="@(()=>taomoiclick(item))">Tạo mới</a>
+                <a href="#" class="bi bi-link link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover ms-1" @onclick="@(()=>lienketclick(item))">Liên kết</a>
+            </div>
+        </div>
+
+    }
+}
+@code {
+    [Parameter]
+    public List<Urc_DuyetGia_NCCChuaTao.NvlNhaCungCapAddLink> listNvlNhaCungCap { get; set; }
+    [Parameter]
+    public NvlDuyetGiaShow nvlDuyetGiaShowcrr { get; set; }
+    NvlNhaCungCapAddLink nvlNhaCungCapAddLinkcrr{ get; set; }
+    [Inject]
+    PhanQuyenAccess phanQuyenAccess { get; set; }
+    [Inject]
+    ToastService toastService { get; set; }
+    bool IsOpenfly = false;
+    DialogWindow dxPopup;
+
+
+    RenderFragment renderFragment;
+
+    private async void taomoiclick(NvlNhaCungCapAddLink item)
+    {
+
+        if (!await phanQuyenAccess.CreateNhaCungCap(Model.ModelAdmin.users))
+        {
+            toastService.Notify(new ToastMessage(ToastType.Warning, $"Bạn không có quyền thêm"));
+            return;
+        }
+        nvlNhaCungCapAddLinkcrr = item;
+        NVLNhaCungCapShow khachHangNVLShow = new NVLNhaCungCapShow();
+        khachHangNVLShow.MaNCC = "";
+        khachHangNVLShow.TenNCC = item.TenNCC;
+
+
+        renderFragment = builder =>
+        {
+            builder.OpenComponent<Urc_NhaCungCapAddItem>(0);
+            builder.AddAttribute(1, "khachHangNVLShow", khachHangNVLShow);
+            builder.AddAttribute(2, "GotoMainForm", EventCallback.Factory.Create<NVLNhaCungCapShow>(this, GotoMainForm));
+            //builder.OpenComponent(0, componentType);
+            builder.CloseComponent();
+        };
+        //dxPopup.showpage("TẠO ĐỀ NGHỊ", renderFragment);
+        await  dxPopup.showAsync("THÊM MỚI NHÀ CUNG CẤP");
+        await  dxPopup.ShowAsync();
+    }
+
+    private async void GotoMainForm(NVLNhaCungCapShow nvlNhaCungCapShow)
+    {
+        await dxPopup.CloseAsync();
+        if (!string.IsNullOrEmpty(nvlNhaCungCapShow.MaNCC))
+        {
+            try
+            {
+                saveMaNCC(nvlNhaCungCapShow);
+            }
+            catch (Exception ex)
+            {
+                toastService.Notify(new(ToastType.Danger, $"Lỗi:Liên kết mã nhà cung cấp không được  {ex.Message} "));
+            }
+
+        }
+        else
+        {
+            toastService.Notify(new(ToastType.Danger, $"Bạn chưa chọn nhà cung cấp để liên kết"));
+        }
+    }
+    private async void saveMaNCC(NVLNhaCungCapShow nVLNhaCungCapShow)
+    {
+        CallAPI callAPI = new CallAPI();
+        string sql = "NVLDB.dbo.NvlDuyetGiaItem_UpdateMaNCC";
+        List<ParameterDefine> lstpara = new List<ParameterDefine>();
+
+        lstpara.Add(new ParameterDefine("@SerialLink", nvlNhaCungCapAddLinkcrr.SerialLink));
+        lstpara.Add(new ParameterDefine("@TenNCCDuyetOld", nvlNhaCungCapAddLinkcrr.TenNCC));
+        lstpara.Add(new ParameterDefine("@TenNCCDuyetNew", nVLNhaCungCapShow.TenNCC));
+        lstpara.Add(new ParameterDefine("@MaNCCDuyet", nVLNhaCungCapShow.MaNCC));
+        lstpara.Add(new ParameterDefine("@UserInsert", ModelAdmin.users.UsersName));
+
+        string json = await callAPI.ProcedureEncryptAsync(sql, lstpara);
+        if (json != "")
+        {
+            var query = JsonConvert.DeserializeObject<List<Ketqua>>(json);
+            if (query[0].ketqua == "OK")
+            {
+                nvlNhaCungCapAddLinkcrr.MaNCC = nVLNhaCungCapShow.MaNCC;
+                nvlNhaCungCapAddLinkcrr.TenNCC = nVLNhaCungCapShow.TenNCC + " - " + nVLNhaCungCapShow.MaNCC;
+                toastService.Notify(new(ToastType.Success, $"Tạo liên kết thành công"));
+                StateHasChanged();
+
+            }
+            else
+            {
+                toastService.Notify(new(ToastType.Danger, $"{query[0].ketqua}, {query[0].ketquaexception}"));
+
+            }
+            //Grid.Data = lstDonDatHangSearchShow;
+        }
+    }
+  
+    App_ClassDefine.ClassProcess prs = new App_ClassDefine.ClassProcess();
+   
+
+    private async void lienketclick(NvlNhaCungCapAddLink item)
+    {
+        nvlNhaCungCapAddLinkcrr = item;
+
+        if (!await phanQuyenAccess.CreateNhaCungCap(Model.ModelAdmin.users))
+        {
+            toastService.Notify(new ToastMessage(ToastType.Warning, $"Bạn không có quyền thêm"));
+            return;
+        }
+        nvlNhaCungCapAddLinkcrr = item;
+        NVLNhaCungCapShow khachHangNVLShow = new NVLNhaCungCapShow();
+        khachHangNVLShow.MaNCC = "";
+        khachHangNVLShow.TenNCC = item.TenNCC;
+
+
+        renderFragment = builder =>
+        {
+            builder.OpenComponent<Urc_NhaCungCapSelected>(0);
+
+            builder.AddAttribute(1, "nhaCungCapShowcrr", khachHangNVLShow);
+            builder.AddAttribute(2, "GotoMainForm", EventCallback.Factory.Create<NVLNhaCungCapShow>(this, GotoMainForm));
+            
+            //builder.OpenComponent(0, componentType);
+            builder.CloseComponent();
+        };
+        //dxPopup.showpage("TẠO ĐỀ NGHỊ", renderFragment);
+       await dxPopup.showAsync("LIÊN KẾT NHÀ CUNG CẤP");
+       await dxPopup.ShowAsync();
+
+    }
+   
+}

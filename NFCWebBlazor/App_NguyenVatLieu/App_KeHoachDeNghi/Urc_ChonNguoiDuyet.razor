@@ -1,0 +1,187 @@
+﻿@using DevExpress.Blazor;
+
+@using NFCWebBlazor.App_ModelClass;
+@using Blazored.Modal
+@using Blazored.Modal.Services
+@using static NFCWebBlazor.App_NguyenVatLieu.App_DuyetGia.Page_DuyetGiaMaster
+@using static NFCWebBlazor.App_NguyenVatLieu.App_DonDatHang.Page_DonDatHang_Master
+@using static NFCWebBlazor.App_NguyenVatLieu.App_KeHoachDeNghi.Page_KeHoachMuaHangMaster
+<style>
+    .sizedf {
+        width: min(550px, 95vw); /* minimum of 700px or 50% of viewport width */
+        max-height: 95vh;
+    }
+
+    .heightgrid {
+        max-height: 70vh;
+    }
+
+    #customGridnotheader .dxbl-grid-header-row {
+        display: none;
+    }
+</style>
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup CssClass="widthPopup">
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+
+
+<div class="container sizedf">
+    <div class="row">
+        <DxGrid @ref=dxGrid Data="@lstuser"
+                VirtualScrollingEnabled="true"
+                ShowSearchBox="true"
+                SearchTextParseMode=GridSearchTextParseMode.GroupWordsByOr
+                CssClass="heightgrid"
+                id="customGridnotheader"
+                FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always">
+            <Columns>
+                <DxGridDataColumn FieldName="TenUser">
+                    <CellDisplayTemplate>
+                        @{
+                            var user = (UserDuyet)context.DataItem;
+                        }
+                        <div class="row d-flex justify-content-center">
+                            <div class="col-auto text-center" style="width:200px;">
+                                <img style="width:30px;height:30px;" class="rounded-circle" src="@user.PathImg">
+                                <br />
+                                <span style="color: forestgreen;">@user.TenUser</span>
+                            </div>
+                            <div class="col-auto" style="width:300px;">
+                                <div class="row" style="height:30px;">
+                                    <div class="col-auto">
+                                        <DxCheckBox @bind-Checked="@user.chkKiemTra"
+                                                    Alignment=CheckBoxContentAlignment.Center
+                                                    LabelPosition="LabelPosition.Right">
+                                            Kiểm tra
+                                        </DxCheckBox>
+                                    </div>
+                                    <div class="col-auto">
+                                        <DxCheckBox @bind-Checked="@user.chkDuyet"
+                                                    Alignment=CheckBoxContentAlignment.Center
+                                                    LabelPosition="LabelPosition.Right">
+                                            Duyệt
+                                        </DxCheckBox>
+                                    </div>
+                                </div>
+                                @if (nVLDonDatHangShowcrr != null)
+                                {
+                                    <div class="row">
+                                        <br />
+                                        <span style="color:red">
+                                           
+                                                <a class="bi bi-pencil text-warning" onclick="@(()=>showSetHamMuc())" style="text-decoration: none;" href="javascript:void(0);"> @showhanmuc(user)</a>
+                                        </span>
+
+                                    </div>
+                                    <div class="row">
+                                        <div class="btn-group" style="height:12px;" role="group">
+                                            <div class="btn btn-danger p-0" style="width:@user.Tylesudung%;font-size:8px;">@((user.ThanhTien == null) ? "" : user.ThanhTien.Value.ToString("#,#"))</div>
+                                            <div class="btn btn-primary p-0" style="width:@(100-user.Tylesudung)%"></div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                    </CellDisplayTemplate>
+
+                </DxGridDataColumn>
+
+            </Columns>
+
+        </DxGrid>
+    </div>
+    <div class="row mt-3">
+        <div class="col text-center">
+            <DxButton RenderStyle=ButtonRenderStyle.Success RenderStyleMode=ButtonRenderStyleMode.Outline style="min-width:120px" IconPosition=ButtonIconPosition.BeforeText IconCssClass="icon-check" Click="@Xacnhan" Text="XÁC NHẬN" />
+        </div>
+    </div>
+</div>
+@code {
+    [Parameter]
+    public string KyDuyet { get; set; }
+    [Parameter]
+    public KeHoachMuaHang_Show kehoachmuahangcrr { get; set; }
+    [Parameter]
+    public NVLDonDatHangShow nVLDonDatHangShowcrr { get; set; }
+    [Parameter]
+    public NvlDuyetGiaShow nvlDuyetGiaShowcrr { get; set; }
+
+    [Parameter]
+    public EventCallback<KeHoachMuaHang_Show> GotoMainForm { get; set; }
+    [Parameter]
+    public EventCallback<NVLDonDatHangShow> GotoMainFormDH { get; set; }
+    [Parameter]
+    public EventCallback<NvlDuyetGiaShow> GotoMainFormDG { get; set; }
+    DxGrid dxGrid { get; set; }
+        DialogWindow dxPopup;
+        RenderFragment renderFragment;
+    class UserDuyet
+    {
+        public string UsersName { get; set; }
+        public string? NhaMay { get; set; }
+        public string? GroupUser { get; set; }
+        public string? KhuVuc { get; set; }
+        public string? Email { get; set; }
+        public string? TenUser { get; set; }
+        public bool chkKiemTra { get; set; }
+        public bool chkDuyet { get; set; }
+        public string? PathImg { get; set; }
+        public string? UserHanMuc { get; set; }
+        public long? HanMuc { get; set; }
+        public int? Tylesudung { get; set; }
+
+        public double? ThanhTien { get; set; }
+        public Nullable<int> LevelPhanQuyen { get; set; }
+        private string? _lastname { get; set; }
+        public string? LastName
+        {
+            get { return _lastname; }
+            set
+            {
+                _lastname = GetLastName(value);
+
+            }
+        }
+        string GetLastName(string fullName)
+        {
+            if (string.IsNullOrWhiteSpace(fullName))
+                return string.Empty;
+
+            string[] parts = fullName.Trim().Split(' ');
+            return parts[^1]; // Lấy phần tử cuối cùng trong mảng (tên)
+        }
+    }
+    private string showhanmuc(UserDuyet userDuyet)
+    {
+        if (userDuyet.UserHanMuc == null)
+            return "Chưa khai báo hạn mức";
+        if (userDuyet.HanMuc == null)
+            return "Không giới hạn";
+        userDuyet.Tylesudung = tylesudung(userDuyet);
+        return string.Format("Hạn mức: {0} VNĐ/tháng", userDuyet.HanMuc.Value.ToString("#,#"));
+    }
+    private int? tylesudung(UserDuyet userDuyet)
+    {
+        if (userDuyet.HanMuc == null)
+            return 0;
+        if (userDuyet.HanMuc <= 0)
+            return 0;
+        if (userDuyet.ThanhTien == 0 || userDuyet.ThanhTien == null)
+            return 0;
+        if (userDuyet.ThanhTien.Value >= userDuyet.HanMuc)
+            return 0;
+        double? d = userDuyet.ThanhTien.Value / userDuyet.HanMuc;
+        if (d == null)
+            return 0;
+        if (d >= 1)
+            return 100;
+        int i = (int)(Math.Round(d.Value * 100, 0));
+        if (i < 20)//Vì ít nhất phải 20% thì mới nhìn thấy chữ
+            i = 20;
+        return i;
+    }
+    List<UserDuyet> lstuser { get; set; } = new List<UserDuyet>();
+}

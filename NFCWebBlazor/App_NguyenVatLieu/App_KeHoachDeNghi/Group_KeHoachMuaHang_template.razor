@@ -1,0 +1,40 @@
+﻿@using static NFCWebBlazor.App_NguyenVatLieu.App_KeHoachDeNghi.Page_KeHoachMuaHangMaster
+@if(nvlKeHoachMuaHangItemShow!=null)
+{
+<div class="col ms-2">
+    <div style="display: flex; justify-content: space-between;width:400px;">
+        <span style="color: forestgreen;">@string.Format("{0}", nvlKeHoachMuaHangItemShow.TenSP)</span>
+        <span style="color: red;">@string.Format(" ({0} bộ)", nvlKeHoachMuaHangItemShow.SoLuongSP)</span>
+    </div>
+    <div class="card p-1" style="display: flex; justify-content: space-between;width:270px;background-color:@StaticClass.UIntToHtmlColor(nvlKeHoachMuaHangItemShow.Color)">
+        <span>@string.Format("Art: {0}", nvlKeHoachMuaHangItemShow.ArticleNumber)</span>
+        <a href="#" class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"><i class="oi oi-x me-1"></i>XÓA</a>
+    </div>
+</div>
+}
+@code {
+    [Parameter]
+    public int SerialLink{ get; set; }
+    [Parameter]
+    public List<NvlKeHoachMuaHangItemShow> lstgroup { get; set; }
+    NvlKeHoachMuaHangItemShow nvlKeHoachMuaHangItemShow{ get; set; }
+    bool checkrender = true;
+    protected override bool ShouldRender()
+    {
+
+        return checkrender;
+    }
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+       
+        if(firstRender)
+        {
+            
+            nvlKeHoachMuaHangItemShow = lstgroup.Where(p => p.SerialLink == SerialLink).FirstOrDefault();
+            checkrender = false;
+        }
+        Console.WriteLine("Render group:" + lstgroup.Count);
+        //Không cho render nữa
+        return base.OnAfterRenderAsync(firstRender);
+    }
+}

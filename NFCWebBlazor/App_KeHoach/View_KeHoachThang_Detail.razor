@@ -1,0 +1,185 @@
+﻿@using System.Collections.ObjectModel
+@using BlazorBootstrap
+@using NFCWebBlazor.App_ClassDefine
+@using static NFCWebBlazor.App_KeHoach.Page_KeHoachThang_Master
+
+<style>
+    .griddetail {
+    }
+
+   
+</style>
+
+<NFCWebBlazor.App_Admin.DialogMsg @ref="@dialogMsg"></NFCWebBlazor.App_Admin.DialogMsg>
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+<DxLoadingPanel @bind-Visible="@PanelVisible"
+                IsContentBlocked="true"
+                ApplyBackgroundShading="true"
+                IndicatorAreaVisible="false"
+                Text="Đang xử lý...">
+
+    <DxGrid @ref="Grid" Data="@lstdata"
+            AutoExpandAllGroupRows="false"
+            TextWrapEnabled="true"
+            CssClass="griddetail"
+            CustomizeElement="OnCustomizeElement"
+            FocusedRowEnabled="false"
+            id="griddetail"
+          
+            ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+            FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+            VirtualScrollingEnabled=true
+            ShowFilterRow=true>
+        <ToolbarTemplate>
+            <DxToolbar ItemRenderStyleMode="ToolbarRenderStyleMode.Plain">
+                <DxToolbarItem Text="Xuất excel" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=>Grid.ExportToXlsxAsync("ExporKeHoachThang"))">
+                </DxToolbarItem>
+                <DxToolbarItem Text="Chọn cột" BeginGroup="true" Click="@(()=>Grid.ShowColumnChooser())" IconCssClass="bi bi-layout-text-window-reverse" />
+
+            </DxToolbar>
+        </ToolbarTemplate>
+        <Columns>
+            <DxGridDataColumn FieldName="Serial" Width="100" Caption=" " ShowInColumnChooser=false Visible="@CheckQuyen">
+                <CellDisplayTemplate>
+                    @{
+                        KeHoachThangItem_Show kehoachthangitemshow;
+                        if (context.DataItem != null)
+                            kehoachthangitemshow = (KeHoachThangItem_Show)context.DataItem;
+                        else
+                            kehoachthangitemshow = new KeHoachThangItem_Show();
+                    }
+                    <div class="d-flex gap-4">
+                        <a class="oi oi-pencil" @onclick="@(()=>EditItemAsync(kehoachthangitemshow))" style="text-decoration: none;" href="javascript:void(0);"></a>
+                        <a class="oi oi-x" @onclick="@(()=>deleteAsync(kehoachthangitemshow))" style="text-decoration: none;margin-left:10px;color:red" href="javascript:void(0);"></a>
+
+                    </div>
+
+                    @*  <DxButton Text="XÓA" IconCssClass="bi bi-trash3-fill" RenderStyle="ButtonRenderStyle.Danger" Click="@(()=>deleteAsync(dataDropDownList))" RenderStyleMode="ButtonRenderStyleMode.Text"> *@
+                    @*  </DxButton> *@
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+           
+            <DxGridDataColumn FieldName="MaSP" Width="120" Caption="Mã SP" />
+            <DxGridDataColumn FieldName="TenSP"  Caption="Tên SP" MinWidth="240"/>
+            <DxGridDataColumn FieldName="SLSP" Width="110" Caption="Số lượng" DisplayFormat="#,#"></DxGridDataColumn>
+            
+            <DxGridDataColumn FieldName="TyLe" Visible="@showtyle" Caption="Hoàn thành" Width="150">
+                <CellDisplayTemplate>
+                    @{
+                        KeHoachThangItem_Show kehoachthangitemshow;
+                        if (context.DataItem != null)
+                            kehoachthangitemshow = (KeHoachThangItem_Show)context.DataItem;
+                        else
+                            kehoachthangitemshow = new KeHoachThangItem_Show();
+                    }
+                    @if (kehoachthangitemshow.TyLe > 0)
+                    {
+                        <ProgressBarDf value=@kehoachthangitemshow.TyLe></ProgressBarDf>
+                    }
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="ArticleNumber" Width="120" Caption="Art No."></DxGridDataColumn>
+            <DxGridDataColumn FieldName="TenMau" Width="120" Caption="Tên màu"></DxGridDataColumn>
+            <DxGridDataColumn FieldName="Type_Other" Width="120" Caption="Thị trường"></DxGridDataColumn>
+            <DxGridDataColumn FieldName="UserInsert" Width="120" Caption="Người tạo"></DxGridDataColumn>
+            <DxGridDataColumn FieldName="NgayInsert" Width="120" Caption="Ngày Insert" DisplayFormat="dd-MM-yy HH:mm"></DxGridDataColumn>
+            <DxGridDataColumn FieldName="MaDHMua" Width="100" Caption="Đơn hàng"></DxGridDataColumn>
+            <DxGridDataColumn FieldName="GhiChu"  Caption="Ghi chú" Width="150"></DxGridDataColumn>
+        </Columns>
+        <TotalSummary>
+            <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+                               FieldName="ThanhTien"
+                               Name="ThanhTienShow"
+                               ValueDisplayFormat="#,#"
+                               FooterColumnName="ThanhTien" />
+            <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+                               FieldName="SoLuong"
+                               Name="SoLuong"
+                               ValueDisplayFormat="#,#.###"
+                               FooterColumnName="SoLuong" />
+        </TotalSummary>
+    </DxGrid>
+
+</DxLoadingPanel>
+
+@code {
+    [Inject] BrowserService browserService { get; set; }
+    [Inject] PhanQuyenAccess phanQuyenAccess { get; set; }
+    [Inject] ToastService toastService { get; set; }
+    [Parameter]
+    public KeHoachSP_Show keHoachSP_Showcrr { get; set; }
+    [Parameter]
+    public string ShowView { get; set; }
+    [Parameter]
+    public EventCallback GotoMasterGrid { get; set; }
+    bool showtyle { get; set; } = false;
+    DxFlyout dxFlyoutchucnang { get; set; }
+    List<KeHoachThangItem_Show> lstdata { get; set; }
+    bool CheckQuyen { get; set; } = false;
+    KeHoachThangItem_Show keHoachThangItemcrr { get; set; }
+    bool checkAddItem = true;
+    bool PanelVisible { get; set; }
+    IGrid? Grid { get; set; }
+    bool IsOpenfly = false;
+    bool PopupVisible { get; set; } = false;
+    DialogWindow? dxPopup { get; set; }
+    RenderFragment? renderFragment { get; set; }
+    DialogMsg? dialogMsg { get; set; }
+    public string? random { get; set; }
+    string heightgrid = "500px";
+    string headerform = "";
+    string idflychucnang = "";
+    App_ClassDefine.ClassProcess prs = new ClassProcess();
+    void Grid_CustomizeSummaryDisplayText(GridCustomizeSummaryDisplayTextEventArgs e)
+    {
+        // if (e.Item.Name == "ThanhTienShow")
+        //     e.DisplayText = string.Format("{0:#,#}", e.Value);
+        // if (e.Item.Name == "SoLuong")
+        //     e.DisplayText = string.Format("{0:#,#.###}", e.Value);
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        CheckQuyen =await phanQuyenAccess.CreateKeHoachThang(Model.ModelAdmin.users);
+        //return base.OnInitializedAsync();
+    }
+    public string idelement(int? serial)
+    {
+        if (serial == null)
+            string.Format("flychucnang_{0}_{1}", random, serial);
+        if (random == null)
+        {
+            random = prs.RandomString(9);
+        }
+        return string.Format("flychucnang_{0}_{1}", random, serial);
+    }
+    void OnCustomizeElement(GridCustomizeElementEventArgs e)
+    {
+        
+        if (e.ElementType == GridElementType.DataCell)
+        {
+            var dataColumn = (IGridDataColumn)e.Column;
+            switch (dataColumn.FieldName)
+            {
+
+                case "TenMau":
+                    if (e.Grid.GetRowValue(e.VisibleIndex, "TenMau") != null)
+                    {
+                        var colorhex = e.Grid.GetRowValue(e.VisibleIndex, "ColorHex");
+                        if (colorhex != null)
+                        {
+                            e.Style = string.Format("background-color:{0}", colorhex.ToString());
+                        }
+                    }
+                    break;
+              
+
+            }
+        }
+    }
+
+
+}

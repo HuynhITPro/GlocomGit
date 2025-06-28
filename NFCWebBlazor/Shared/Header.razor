@@ -1,0 +1,244 @@
+﻿@using BlazorBootstrap;
+@using Microsoft.AspNetCore.Components;
+<style>
+    .displayitem {
+    display: flex;
+    justify-content: space-between;
+    }
+
+    .listbox-item-template {
+    display: flex;
+    align-items: center;
+    min-width: 300px;
+    }
+
+    .listbox-item-template > img {
+    border-radius: 50%;
+    width: 2rem;
+    height: 2rem;
+    }
+
+    img + .listbox-item-template-text {
+    margin-left: 0.5rem;
+    }
+
+    .dxbl-sm img + .listbox-item-template-text {
+    margin-left: 0.375rem;
+    }
+
+    .dxbl-lg img + .listbox-item-template-text {
+    margin-left: 0.625rem;
+    }
+
+    .listbox-item-template-text {
+    display: flex;
+    flex-flow: column;
+    }
+
+    .listbox-item-template-text-phone {
+    opacity: 0.65;
+    }
+
+    .badge {
+    margin-left: -5px;
+    }
+</style>
+<DxFlyout @ref=dxFlyoutchucnang
+PositionTarget="#flychucnang_headershowmsg"
+@bind-IsOpen=IsOpenfly
+RestrictionTarget="#Navigation-Flyout-Customization"
+AnimationType=FlyoutAnimationType.Fade
+PreventCloseOnPositionTargetClick="true"
+Context="contextflyout"
+Position=@FlyoutPosition.BottomStart>
+    <BodyTextTemplate>
+
+        <DxListBox Data="@lstdata"
+        @bind-Value="@Value"
+        CssClass="ch-360">
+            <ItemDisplayTemplate>
+
+                @if (context.DataItem.NavigateUrl != "Đã xem")
+                {
+                    <div class="listbox-item-template" @onclick="(()=>OnItemClick(context.DataItem))">
+                        <img src="@(IconImg.Sign)" />
+                        <div class="listbox-item-template-text">
+                            <span>@context.DataItem.TextItem</span>
+
+                        </div>
+                    </div>
+                }
+                else
+                {
+
+                    <div class="listbox-item-template" style="opacity:0.4" @onclick="(()=>OnItemClick(context.DataItem))">
+                        <img src="@(IconImg.Sign)" />
+                        <div class="listbox-item-template-text">
+                            <span>@context.DataItem.TextItem</span>
+
+                        </div>
+                    </div>
+                }
+
+            </ItemDisplayTemplate>
+        </DxListBox>
+
+    </BodyTextTemplate>
+
+</DxFlyout>
+<div class="displayitem backgroudprimary">
+    <nav class="navbar header-navbar p-0">
+        <button class="navbar-toggler backgroudprimary d-block" @onclick="OnToggleClick">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+    </nav>
+    <div style="display:flex;margin:0.5rem 0rem;align-items: center">
+        @if (lstdata != null)
+        {
+            <Button id="flychucnang_headershowmsg" @onclick="showmsg" Type="ButtonType.Link" Class="p-0 mt-1" Color="ButtonColor.None" Position="Position.Relative">
+
+                <img src="@imgavatar()" style="width: auto; height: 32px; margin-right: 5px; border-radius: 50%;">
+                @if (lstdata.Count > 0)
+                {
+                    if (!IsRead)
+                    {
+                        <Badge Color="BadgeColor.Danger"
+                        Position="Position.Absolute"
+                        Placement="BadgePlacement.TopRight"
+                        IndicatorType="BadgeIndicatorType.RoundedPill"
+                        VisuallyHiddenText="unread messages">@showmsgcount()</Badge>
+                    }
+                }
+
+
+            </Button>
+        }
+        <div style="display:flex;margin:0.5rem 0.5rem;color:white;align-items:center">@((UsersLogin!=null)?UsersLogin.TenUser:"")</div>
+        @if (checkconnectsignalR)
+        {
+            <img src="@IconImg.Connect" style="display:flex;width: auto; height: 24px; margin-right: 5px;align-items:center" />
+        }
+        else
+        {
+            <img src="@IconImg.Disconnect" style="display:flex;width: auto; height: 24px;align-items:center; margin-right: 5px;" />
+
+        }
+
+    </div>
+</div>
+@code {
+    [Inject]SignalRConnect signalRConnect { get; set; }
+    [Inject]ToastService toastService { get; set; }
+    [Parameter] public bool ToggleOn { get; set; }
+    [Parameter] public EventCallback<bool> ToggleOnChanged { get; set; }
+
+    [Parameter] public Users UsersLogin { get; set; }
+    [Parameter] public List<MenuItem> lstdata { get; set; }
+    MenuItem Value { get; set; }
+
+    DxFlyout dxFlyoutchucnang { get; set; }
+    public string idflychucnang { get; set; }
+    bool IsOpenfly = false;
+    public bool IsRead { get; set; } = false;
+
+    async Task OnToggleClick() => await Toggle();
+    public void setDataCallBack(List<MenuItem> _lstdata)
+    {
+        UpdateStatus();
+        IsRead = false;
+        if(lstdata==null)
+        {
+            lstdata = new List<MenuItem>();
+        }
+        lstdata.Clear();
+        lstdata.AddRange(_lstdata);
+
+        StateHasChanged();
+
+    }
+    public string imgavatar()
+    {
+        if (UsersLogin == null)
+            return "";
+        if (UsersLogin.PathImg != null)
+        {
+            // Console.WriteLine("Header taskbar:"+ Model.ModelAdmin.pathurlfilepublic + UsersLogin.PathImg);
+            return Model.ModelAdmin.pathurlfilepublic + UsersLogin.PathImg;
+        }
+        else
+            return Model.ModelAdmin.pathurlfilepublic + "UserImage/user.png";
+        // return null;
+    }
+    public string Title { get; set; } = "SP WEB";
+    async Task Toggle(bool? value = null)
+    {
+        var newValue = value ?? !ToggleOn;
+        if (ToggleOn != newValue)
+        {
+            ToggleOn = newValue;
+            await ToggleOnChanged.InvokeAsync(ToggleOn);
+        }
+    }
+    bool showfly = false;
+    private async void showmsg()
+    {
+        if (!showfly)
+            await dxFlyoutchucnang.ShowAsync();
+        else
+            await dxFlyoutchucnang.CloseAsync();
+        showfly = !showfly;
+        IsRead = true;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        //return base.OnInitializedAsync();
+    }
+    bool checkconnectsignalR = false;
+    public void UpdateStatus()
+    {
+        bool checkconnect = signalRConnect.IsConnected;
+        if(checkconnect!=checkconnectsignalR)
+        {
+            checkconnectsignalR = checkconnect;
+            StateHasChanged();
+        }
+        
+    }
+   
+    private string showmsgcount()
+    {
+        if (lstdata == null)
+            return "";
+        if (lstdata.Count > 0)
+        {
+            return lstdata.Count.ToString();
+        }
+
+        return "";
+
+    }
+    private async void OnItemClick(MenuItem item)
+    {
+        var componentType = Type.GetType(item.ComponentName);
+        showfly = false;
+        item.NavigateUrl = "Đã xem";
+        await dxFlyoutchucnang.CloseAsync();
+
+        if (componentType != null)
+        {
+            RenderFragment renderFragment;
+            renderFragment = builder =>
+            {
+
+                builder.OpenComponent(0, componentType);
+                builder.CloseComponent();
+            };
+            Model.ModelAdmin.mainLayout.AddDirectRenderfagment(item, renderFragment);
+        }
+
+    }
+
+}

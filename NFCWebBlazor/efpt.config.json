@@ -1,0 +1,260 @@
+﻿{
+   "CodeGenerationMode": 4,
+   "ContextClassName": "NFCNVLContext",
+   "ContextNamespace": null,
+   "FilterSchemas": false,
+   "IncludeConnectionString": false,
+   "ModelNamespace": null,
+   "OutputContextPath": null,
+   "OutputPath": "Models",
+   "PreserveCasingWithRegex": true,
+   "ProjectRootNamespace": "NFCWebBlazor",
+   "Schemas": null,
+   "SelectedHandlebarsLanguage": 2,
+   "SelectedToBeGenerated": 0,
+   "T4TemplatePath": null,
+   "Tables": [
+      {
+         "Name": "[dbo].[NvlBarcodeHangHoa]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlChiTietKhuVuc]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlChiTietKhuVuc_Log]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlDonDatHang]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlDonDatHang_ChiPhiKhac]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlDonDatHang_FileAttach]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlDonDatHangItem]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlDuyetGia]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlDuyetGiaItem]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlGhiNoHieuChinh]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlHangHoa]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlHangHoa_DVTQuyDoi]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlHangHoa_HanSuDung]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlHangHoa_MaNhanDien]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlHangHoaDungChungGroup]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlHangHoaDungChungItem]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlInPhieu]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlInPhieuTempMs]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlKeHoachChiTiet]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlKeHoachGhiChu]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlKehoachMuaHang]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlKeHoachMuaHangItem]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlKeHoachMuaHangItem_Log]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlKeHoachSP]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlKhachHang]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlKhuVuc]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlKyDuyet]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlKyDuyetHanMuc]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlKyDuyetItem]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlLienKetDHMua]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlMaKho]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlMaMau]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlMsgManage]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlNghiemThuBienBan]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlNghiemThuBienBanItem]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlNghiemThuDienGiai]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlNghiemThuHangMucDienGiai]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlNghiemThuItem]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlNghiemThuMaster]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlNghiemThuSettingColumns]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlNghiemThuTieuChuan]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlNhaCungCap]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlNhaCungCapHD]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlNhapXuat]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlNhapXuat_LyDo]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlNhapXuatItem]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlNhapXuatItem_Log]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlNhomHang]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlNoiBo]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlReportDetail]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlSoDoKho]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlThanhToan]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlThanhToanItem]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[NvlViTri]",
+         "ObjectType": 0
+      }
+   ],
+   "UiHint": null,
+   "UncountableWords": null,
+   "UseAsyncStoredProcedureCalls": true,
+   "UseBoolPropertiesWithoutDefaultSql": false,
+   "UseDatabaseNames": false,
+   "UseDatabaseNamesForRoutines": true,
+   "UseDateOnlyTimeOnly": false,
+   "UseDbContextSplitting": false,
+   "UseDecimalDataAnnotationForSprocResult": true,
+   "UseFluentApiOnly": true,
+   "UseHandleBars": false,
+   "UseHierarchyId": false,
+   "UseInflector": true,
+   "UseLegacyPluralizer": false,
+   "UseManyToManyEntity": false,
+   "UseNoDefaultConstructor": false,
+   "UseNoNavigations": false,
+   "UseNoObjectFilter": false,
+   "UseNodaTime": false,
+   "UseNullableReferences": false,
+   "UsePrefixNavigationNaming": false,
+   "UseSchemaFolders": false,
+   "UseSchemaNamespaces": false,
+   "UseSpatial": false,
+   "UseT4": false,
+   "UseT4Split": false
+}

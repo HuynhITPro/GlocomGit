@@ -1,0 +1,176 @@
+﻿@page "/login"
+@using DevExpress.Blazor;
+@using NFCWebBlazor.Model
+<style>
+    .my-style {
+        color: var(--colorprimary);
+        justify-content: center; /* Căn giữa theo chiều ngang */
+    }
+
+    .centercontent {
+        display: flex;
+        align-items: center;
+        justify-content: center; /* Căn giữa theo chiều ngang */
+    }
+
+    .center-form {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .custom-card {
+        border: 1px solid #ddd; /* Border style */
+        border-radius: 15px; /* Rounded corners */
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Shadow effect */
+        padding: 20px; /* Add some padding for content */
+    }
+    .Css-font
+    {
+        font-size: 20px;
+        
+    }
+</style>
+
+<div id="checklogin" class="container h-100 bg-white p-2" style="border-radius: 20px;">
+    <div class="row h-100">
+        <div class="col-md-6 mb-2 d-flex justify-content-start">
+            <EditForm Model="@userslogin" Context="EditFormContext" OnInvalidSubmit="@HandleInvalidSubmit" OnValidSubmit="@HandleValidSubmit">
+                <DataAnnotationsValidator />
+                <div class="d-flex justify-content-center custom-card col-md-12 bg-white">
+                    <DxFormLayout CssClass="w-100" >
+                        <DxFormLayoutItem ColSpanMd="12">
+                            <Template>
+                                <div class="col-md-12 d-flex align-items-center justify-content-center">
+                                    <img src="images/logo.png" alt="" class="d-block" style="width:60px;border-radius: 10px;">
+                                    <label style="color:#37B24A;font-size:35px;font-weight:bold;">GLOCOM</label>
+                                </div>
+
+                            </Template>
+                        </DxFormLayoutItem>
+
+                        <DxFormLayoutItem Caption="Tên đăng nhập" ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+                            <Template>
+
+                                <DxTextBox NullText="Nhập tên" @bind-Text="@userslogin.UsersName">
+                                    <Buttons>
+                                        <DxEditorButton Position=EditorButtonPosition.Left IconCssClass="bi bi-person-circle" />
+                                    </Buttons>
+                                </DxTextBox>
+                                <div class="text-danger">
+                                    <ValidationMessage For="@(() => userslogin.UsersName)" />
+                                </div>
+                            </Template>
+                        </DxFormLayoutItem>
+                        <DxFormLayoutItem Caption="Mật khẩu" ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+                            <Template>
+                                <DxTextBox  NullText="Mật khẩu"
+                                           @bind-Text=@userslogin.Password
+                                        
+                                           Password="@showPassword">
+                                    <Buttons>
+                                        <DxEditorButton Position=EditorButtonPosition.Left IconCssClass="bi bi-shield-lock" />
+
+                                    </Buttons>
+                                </DxTextBox>
+                                <div class="text-danger">
+                                    <ValidationMessage For="@(() => userslogin.Password)" />
+                                </div>
+                            </Template>
+                        </DxFormLayoutItem>
+                        <DxFormLayoutItem Caption="Nhà máy" ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+
+                            <DxComboBox Data=@lstnhamay TextFieldName="@nameof(DataDropDownList.FullName)"
+                                                             ValueFieldName="@nameof(DataDropDownList.Name)"
+                                                           
+                                                             SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                                             ListRenderMode=ListRenderMode.Virtual
+                                                             SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                                             SearchMode="ListSearchMode.AutoSearch"
+                                        @bind-Value="@userslogin.NhaMay"
+                                        CssClass="cw-480">
+                                <Buttons>
+                                    <DxEditorButton Position=EditorButtonPosition.Left IconCssClass="bi bi-house-door" />
+                                </Buttons>
+                            </DxComboBox>
+                            <div class="text-danger">
+                                <ValidationMessage For="@(() => userslogin.NhaMay)" />
+                            </div>
+
+                        </DxFormLayoutItem>
+                        <DxFormLayoutItem ColSpanMd="12">
+                            <div class="col justify-content-center" style="display:flex;">
+                                <DxRadioGroup Items="@lstphanmem"
+                                              Layout="RadioGroupLayout.Horizontal"
+                                              @bind-Value="@typeappselected"
+                                              ValueFieldName="@nameof(DataDropDownList.Name)"
+                                              TextFieldName="@nameof(DataDropDownList.FullName)"
+                                              CssClass="dx-demo-radio-group">
+
+                                </DxRadioGroup>
+                            </div>
+                        </DxFormLayoutItem>
+                        <DxFormLayoutItem ColSpanMd="12" Visible=@visiblemsg>
+                           <p style="color:red;">@textmsg</p>
+                        </DxFormLayoutItem>
+                        <DxFormLayoutItem CssClass="centerdf" ColSpanMd="12">
+                            <Template>
+
+
+
+                                <div class="row d-flex justify-content-center">
+                                    <div class="col-auto">
+                                        <DxButton RenderStyle="ButtonRenderStyle.Primary"
+                                                  RenderStyleMode="ButtonRenderStyleMode.Outline" CssClass="bi bi-box-arrow-in-right" SubmitFormOnClick="true" Text="ĐĂNG NHẬP">
+
+                                        </DxButton>
+                                    </div>
+                                </div>
+
+                            </Template>
+                        </DxFormLayoutItem>
+                        @*   <div class="row m-1">
+                        <div class="col-auto m-1">
+                        <img src="images/monitor.png" style="width:auto;height:24px;" />
+                        <a href="#" style="font-size:12px;width:auto;height:24px;" onclick=@(() =>savefile("app/nfc.rar"))>Tải App cho máy tính</a>
+                        </div>
+                        <div class="col-auto m-1">
+                        <img src="images/phone.png" style="width:auto;height:24px;" />
+                        <a href="#" style="font-size:12px;" onclick=@(() =>savefile("app/nfc.apk"))>Tải App cho điện thoại</a>
+                        </div>
+                        <div class="col-auto m-1">
+                        <img src="images/chrome.png" style="width:auto;height:24px;" />
+                        <a href="http://nafoco.ddns.net" style="font-size:12px;" >Website: nafoco.ddns.net</a>
+                        </div>
+                        </div>
+                        *@
+
+                    </DxFormLayout>
+                </div>
+            </EditForm>
+        </div>
+        <div class="col-md-6 d-flex align-items-end">
+            <img src="images/NFCSoft.png" alt="" class="d-block" style="width:100%;border-radius: 15px;">
+        </div>
+    </div>
+</div>
+@code {
+
+    List<DataDropDownList> lstnhamay = new List<DataDropDownList>();
+    IEnumerable<DataDropDownList>? lstphanmem { get; set; }
+
+    [Inject] IJSRuntime jSRuntime { get; set; }
+    string typeappselected = "NVL";
+    private bool showPassword = true;
+    private async void savefile(string urlfile)
+    {
+         string filename = Path.GetFileName(urlfile);
+         await jSRuntime.InvokeVoidAsync("downloadFile", ModelAdmin.pathurlfilepublicAPI + urlfile, filename);
+      
+    }
+    private void TogglePasswordVisibility()
+    {
+        showPassword = !showPassword;
+    }
+}

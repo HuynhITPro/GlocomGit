@@ -1,0 +1,175 @@
+﻿@using BlazorBootstrap
+@using DevExpress.Blazor;
+@using NFCWebBlazor.App_ClassDefine;
+@using System.Data
+<style>
+    .my-grid {
+        height: @heightgrid;
+    }
+
+    .dxbl-grid-empty-data > span {
+        display: none;
+    }
+
+    .marginbutton {
+        margin-bottom: 10px;
+        margin-right: 10px;
+    }
+
+    #customGrid .dxbl-grid-header-row {
+        display: none;
+    }
+</style>
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+<DxFlyout @ref=dxFlyoutchucnang
+          PositionTarget="@idflychucnang"
+          @bind-IsOpen=IsOpenfly
+          RestrictionTarget="#Navigation-Flyout-Customization"
+          AnimationType=FlyoutAnimationType.Fade
+          PreventCloseOnPositionTargetClick="true"
+          Width="min(95vw,800px)"
+          Position=@(FlyoutPosition.BottomStart | FlyoutPosition.TopStart)>
+    <BodyTextTemplate>
+
+        <div class="container">
+            <div class="row">
+
+                <div class="col-auto d-flex flex-wrap mb-1">
+
+                    <DxButton @ref=btadd Visible=@VisibleThemMoi IconCssClass="mdi add" CssClass="marginbutton" RenderStyle="ButtonRenderStyle.Primary" Text="THÊM CHI TIẾT" Click=@AddItem RenderStyleMode="ButtonRenderStyleMode.Outline">
+                    </DxButton>
+                    <DxButton @ref=btprint Visible=@VisiblePrint IconCssClass="mdi print" Text="IN" CssClass="marginbutton" RenderStyle="ButtonRenderStyle.Success" Click=@PrintItem RenderStyleMode="ButtonRenderStyleMode.Outline">
+                    </DxButton>
+                    <DxButton @ref=btedit Visible=@VisibleSua Text="CHỈNH SỬA" IconCssClass="mdi edit" CssClass="marginbutton" RenderStyle="ButtonRenderStyle.Warning" Click="(() => EditItem())" RenderStyleMode="ButtonRenderStyleMode.Outline">
+                    </DxButton>
+                    <DxButton @ref=btdelete Visible=@VisibleXoa Text="XÓA" IconCssClass="mdi delete" CssClass="marginbutton" RenderStyle="ButtonRenderStyle.Danger" Click=@DeleteItem RenderStyleMode="ButtonRenderStyleMode.Outline">
+                    </DxButton>
+                  
+                </div>
+
+            </div>
+
+
+        </div>
+    </BodyTextTemplate>
+
+</DxFlyout>
+<DxGridLayout CssClass="w-100 ch-480">
+
+    <Rows>
+     
+        <DxGridLayoutRow Height="auto" />
+        <DxGridLayoutRow />
+    </Rows>
+
+    <Items>
+
+        <DxGridLayoutItem Row="0">
+            <Template>
+                <div class="shadow-sm p-3 mb-2 bg-white border-start rounded-bottom-2">
+                 
+                    <div>
+
+                        <DxFormLayout CssClass="w-100 mt-3">
+
+                            <DxFormLayoutItem Caption="COMBOBOX" ColSpanLg="4" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+                              
+
+                            </DxFormLayoutItem>
+
+                           
+                            
+                            <DxFormLayoutItem ColSpanMd="12">
+                                <Template>
+                                    <div class="d-flex justify-content-center m-2">
+
+                                        <DxButton RenderStyle="ButtonRenderStyle.Primary" CssClass="bi bi-search m-1"
+                                                  RenderStyleMode="ButtonRenderStyleMode.Outline"  Text="XEM">
+                                        </DxButton>
+                                        <DxButton RenderStyle="ButtonRenderStyle.Primary"  CssClass="bi bi-plus-circle m-1" style="margin-left:10px;"
+                                                  RenderStyleMode="ButtonRenderStyleMode.Outline" Text="THÊM MỚI">
+                                        </DxButton>
+                                    </div>
+
+                                </Template>
+                            </DxFormLayoutItem>
+                        </DxFormLayout>
+
+                    </div>
+
+                </div>
+
+            </Template>
+        </DxGridLayoutItem>
+
+       
+
+        <DxGridLayoutItem Row="1">
+            <Template>
+                <DxGrid @ref="Grid" Data="@lstdata" VirtualScrollingEnabled=true
+                        id="customGrid" CssClass="my-grid"
+                        FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always" AutoCollapseDetailRow="true">
+                    <Columns>
+                        <DxGridDataColumn>
+                            <CellDisplayTemplate>
+                                @{
+                                    var keHoachMuaHang_Show = (KeHoachMuaHang_Show)context.DataItem;
+
+                                }
+                           
+
+                            </CellDisplayTemplate>
+
+                        </DxGridDataColumn>
+                    </Columns>
+                    <DetailRowTemplate>
+                        @{
+                            var keHoachMuaHang_Show = (KeHoachMuaHang_Show)context.DataItem;
+                        }
+                        <div class="p-0">
+                           
+                        </div>
+
+                    </DetailRowTemplate>
+                </DxGrid>
+
+
+
+
+            </Template>
+        </DxGridLayoutItem>
+
+
+    </Items>
+</DxGridLayout>
+
+@code {
+    [Inject] BrowserService browserService { get; set; }
+    RenderFragment renderFragment;
+    bool VisibleThemMoi = true, VisiblePrint = true, VisibleSua = true, VisibleXoa = true;
+    DialogMsg dialogMsg;
+    bool IsOpenfly = false;
+    DialogWindow dxPopup;
+    DxButton btadd, btdelete, btprint, btedit;
+    //bool IsOpenfly = true;
+    public string idflychucnang { get; set; }
+    public string random { get; set; }
+    List<Users>lstdata{ get; set; }
+  
+    DxFlyout dxFlyoutchucnang { get; set; }
+    IGrid Grid { get; set; }
+    public string idelement(int? serial)
+    {
+        if (serial == null)
+            string.Format("flychucnang_{0}_{1}", random, serial);
+        if (random == null)
+        {
+            random = prs.RandomString(9);
+        }
+        return string.Format("flychucnang_{0}_{1}", random, serial);
+    }
+}

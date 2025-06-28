@@ -1,0 +1,76 @@
+﻿@using BlazorBootstrap
+@using NFCWebBlazor.Model
+@using Newtonsoft.Json
+@using static NFCWebBlazor.App_NguyenVatLieu.App_NhapXuat.Page_NhapXuat_Master
+
+<div class="row gap-1 justify-content-center m-1">
+    <div class="row">
+        <DxSpinEdit NullText="Nhập số lượng trả" @bind-Value=@nvlNhapXuatItemShowcrr.SLNhap ShowSpinButtons="false"  DisplayFormat="#.###" ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"></DxSpinEdit>
+    </div>
+    <div class="row">
+        <DxTextBox @bind-Text=@nvlNhapXuatItemShowcrr.GhiChu></DxTextBox>
+    </div>
+    <div class="col m-1">
+        <DxButton Text="LƯU" Click="@save"></DxButton>
+    </div>
+</div>
+@code {
+
+    [Inject] ToastService toastService{ get;set;}
+    [Parameter]
+    public NvlNhapXuatItemShow nvlNhapXuatItemShowcrr{ get; set;}
+
+    private async void save()
+    {
+        if (nvlNhapXuatItemShowcrr.SLNhap == null || nvlNhapXuatItemShowcrr.SLNhap <=0)
+        {
+            toastService.Notify(new ToastMessage(ToastType.Danger, "Vui lòng nhập số lượng"));
+            return;
+        }
+        if(string.IsNullOrEmpty(nvlNhapXuatItemShowcrr.GhiChu))
+        {
+            toastService.Notify(new ToastMessage(ToastType.Danger, "Vui lòng nhập lý do"));
+            return;
+        }
+        string sql = "NVLDB.dbo.NvlNhapXuatItem_TraHang";
+        CallAPI callAPI = new CallAPI();
+        try
+        {
+            List<ParameterDefine> lstpara = new List<ParameterDefine>();
+            lstpara.Add(new ParameterDefine("@Serial", nvlNhapXuatItemShowcrr.Serial));
+            lstpara.Add(new ParameterDefine("@SLTra", nvlNhapXuatItemShowcrr.SLNhap));
+            lstpara.Add(new ParameterDefine("@LyDoTra", nvlNhapXuatItemShowcrr.GhiChu));
+            lstpara.Add(new ParameterDefine("@UserInsert", Model.ModelAdmin.users.UsersName));
+            string json = await callAPI.ProcedureEncryptAsync(sql, lstpara);
+            if (json != "")
+            {
+
+                var query = JsonConvert.DeserializeObject<List<Ketqua>>(json);
+                if (query.Count > 0)
+                {
+                    if (query[0].ketqua == "OK")
+                    {
+                        toastService.Notify(new ToastMessage(ToastType.Success, "Trả hàng thành công"));
+                        nvlNhapXuatItemShowcrr.SLNhap = null;
+                        nvlNhapXuatItemShowcrr.GhiChu = "";
+                        StateHasChanged();
+                    }
+                    else
+                    {
+                        toastService.Notify(new ToastMessage(ToastType.Danger, query[0].ketqua));
+                    }
+                }
+                else
+                    toastService.Notify(new ToastMessage(ToastType.Danger,string.Format("Lỗi :{0},{1}", query[0].ketqua,query[0].ketquaexception)));
+
+                //lstNhapXuatKhoSearchShow=lst;
+            }
+        }
+        catch(Exception ex)
+        {
+            Console.Error.WriteLine("Lỗi:"+ex.Message);
+            toastService.Notify(new ToastMessage(ToastType.Danger,"Lỗi:"+ ex.Message));
+        }
+
+    }
+}

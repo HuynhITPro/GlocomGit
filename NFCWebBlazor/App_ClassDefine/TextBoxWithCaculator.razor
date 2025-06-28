@@ -1,0 +1,62 @@
+﻿<style>
+    .svg-background {
+      width: 20px;
+      height: 20px;
+      background-image: url('images/mathcaculator.svg'); /* Đường dẫn đến file SVG */
+      background-size: cover; /* Đảm bảo ảnh phủ kín vùng */
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+</style>
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        <Caculator AfterCompute="@aftercompute"></Caculator>
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+<DxSpinEdit @bind-Value=@valuenumber @onchange="@((e)=>onchangevalue(e))" ShowSpinButtons="false" MinValue="1" DisplayFormat="#,0.##">
+    <Buttons>
+        <DxEditorButton Position=EditorButtonPosition.Left  IconCssClass="svg-background" Click="ClickButton" />
+    </Buttons>
+</DxSpinEdit>
+
+@code {
+
+    [Parameter]
+    public double? valuenumber {
+        get;set;
+    }
+    [Parameter]
+    public EventCallback<double?> ValueNumberChanged { get; set; }
+
+    double? _valuenumber{get; set; }
+
+    DialogWindow dxPopup;
+    private void ClickButton()
+    {
+        dxPopup.ShowAsync();
+    }
+    private void onchangevalue(ChangeEventArgs e)
+    {
+        double? d = 0;
+        if (e == null)
+            d = null;
+        else
+        {
+            if(double.TryParse(e.Value.ToString(), out double k))
+            {
+                d = k;
+            }
+           
+        }
+        if (ValueNumberChanged.HasDelegate)
+            ValueNumberChanged.InvokeAsync(d);
+    }
+    
+    private void aftercompute(double? d)
+    {
+        dxPopup.CloseAsync();
+        valuenumber = d;
+        if (ValueNumberChanged.HasDelegate)
+            ValueNumberChanged.InvokeAsync(d);
+    }
+}

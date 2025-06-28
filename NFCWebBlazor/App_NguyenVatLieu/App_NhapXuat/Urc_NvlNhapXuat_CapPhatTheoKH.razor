@@ -1,0 +1,240 @@
+﻿@using BlazorBootstrap
+@using NFCWebBlazor.Model
+@using Newtonsoft.Json
+@using static NFCWebBlazor.App_NguyenVatLieu.App_NhapXuat.Page_NhapXuat_Master
+<style>
+    .my-grid-max {
+        max-height: @heightgrid;
+    }
+
+  
+</style>
+<DxLoadingPanel @bind-Visible="@PanelVisible"
+IsContentBlocked="true"
+ApplyBackgroundShading="true"
+IndicatorAreaVisible="false"
+Text="Đang xử lý...">
+    <DxGrid @ref=dxGrid
+    TextWrapEnabled="false"
+    ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+    AutoCollapseDetailRow="true"
+            CssClass="my-grid-max"
+    ShowFilterRow="true"
+    VirtualScrollingEnabled=true
+    FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+    Data=@lstdata
+    AutoExpandAllGroupRows=true>
+        <ToolbarTemplate>
+            <DxToolbar AdaptivityAutoCollapseItemsToIcons="false" ItemRenderStyleMode="ToolbarRenderStyleMode.Plain" SizeMode="SizeMode.Small">
+
+                <DxToolbarItem Text="XEM" BeginGroup="true" IconCssClass="bi bi-search m-1" RenderStyle="ButtonRenderStyle.Primary" Click="@searchAsync">
+                </DxToolbarItem>
+
+                <DxToolbarItem Text="Xuất excel" BeginGroup="true" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=>dxGrid.ExportToXlsxAsync("ExporBangKe"))">
+
+                </DxToolbarItem>
+
+                <DxToolbarItem Text="Chọn cột" BeginGroup="true" Click="@(()=>dxGrid.ShowColumnChooser())" IconCssClass="bi bi-layout-text-window-reverse" />
+            </DxToolbar>
+        </ToolbarTemplate>
+        <Columns>
+            @if (!Ismobile)
+            {
+                
+                <DxGridDataColumn FieldName="Ngay" Caption="Ngày C.Từ" Width="120" />
+                <DxGridDataColumn FieldName="Serial" Caption="Serial" Width="110" Visible="false" />
+                <DxGridDataColumn FieldName="SerialCT" Caption="Số CT" Width="90" DisplayFormat="#" />
+                <DxGridDataColumn FieldName="SerialLink" Caption="ID tem" Width="90" DisplayFormat="#" />
+                <DxGridDataColumn FieldName="TenKho" Caption="Tên Kho" Width="120" />
+                <DxGridDataColumn FieldName="TenGN" Caption="Nơi giao nhận" Width="140" />
+                <DxGridDataColumn FieldName="MaHang" Caption="Mã hàng" Width="100" />
+                <DxGridDataColumn FieldName="TenHang" Caption="Tên hàng" Width="240" />
+                <DxGridDataColumn FieldName="DVT" Caption="ĐVT" Width="70" />
+                <DxGridDataColumn FieldName="SLNhap" Visible="false" Caption="SL nhập" Width="110" DisplayFormat="#,0.##;-#,0.##;''" />
+                <DxGridDataColumn FieldName="SLXuat" Caption="SL xuất" Width="110" DisplayFormat="#,0.##;-#,0.##;''" />
+                <DxGridDataColumn FieldName="LyDo" Caption="Lý do" Width="140" />
+                <DxGridDataColumn FieldName="SerialKHDH" DisplayFormat="#" Caption="Serial KH/ĐH" Width="120" Visible=false />
+                <DxGridDataColumn FieldName="SerialDN" Caption="Đề nghị số" Width="110" DisplayFormat="#" />
+                <DxGridDataColumn FieldName="NguoiDN" Caption="Đề nghị bởi" Width="140" />
+                <DxGridDataColumn FieldName="GhiChu" Caption="Ghi chú" Width="130" />
+                <DxGridDataColumn FieldName="UserInsert" Caption="UserInsert" Width="110" />
+                <DxGridDataColumn FieldName="NgayInsert" Caption="Ngày Insert" Width="130" DisplayFormat="dd-MM-yy HH:mm" />
+            }
+            @if (Ismobile)
+            {
+                <DxGridDataColumn>
+                    <CellDisplayTemplate>
+                        @{
+                            NvlNhapXuatItemShow nvlNhapXuatItemShow = (NvlNhapXuatItemShow)context.DataItem;
+                        }
+                        <div class="shadow-sm bg-body-tertiary rounded">
+                            <div class="row d-flex">
+                                <span style="font-weight:bold;color:forestgreen">@nvlNhapXuatItemShow.TenHang</span>
+                            </div>
+                            <div class="row">
+                                <div class="col-8">
+                                    <span>Mã vạch:</span>
+                                    <span style="color: orangered; font-weight: bold">@nvlNhapXuatItemShow.SerialLink</span>
+                                </div>
+                                <div class="col-4">
+                                    <span>Serial:</span>
+                                    <span style="color: green; font-weight: bold">@nvlNhapXuatItemShow.Serial</span>
+                                </div>
+
+                            </div>
+                            <div class="row">
+                                <div class="col-4">
+                                    <span>Số lượng:</span>
+                                    <span style="color: orangered; font-weight: bold">@string.Format("{0} {1}", (nvlNhapXuatItemShow.SLNhap != 0) ? showtextdouble(nvlNhapXuatItemShow.SLNhap) : showtextdouble(nvlNhapXuatItemShow.SLXuat), nvlNhapXuatItemShow.DVT)</span>
+                                </div>
+                                <div class="col-4">
+                                    <span>Đ.Giá:</span>
+                                    <span style="color:green;font-weight:bold">@showtextdouble(nvlNhapXuatItemShow.DonGia)</span>
+                                </div>
+                                <div class="col-4">
+                                    <span>T.tiền:</span>
+                                    <span style="color: green; font-weight: bold">@showtextdouble(nvlNhapXuatItemShow.ThanhTien)</span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <span>Lý do:</span>
+                                    <span>@nvlNhapXuatItemShow.LyDo</span>
+                                </div>
+                                <div class="col-6">
+                                    <span>UserInsert:</span>
+                                    <span>@nvlNhapXuatItemShow.UserInsert</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </CellDisplayTemplate>
+                </DxGridDataColumn>
+            }
+        </Columns>
+
+    </DxGrid>
+</DxLoadingPanel>
+@code {
+    [Inject] ToastService toastService { get; set; }
+    [Inject] IJSRuntime JSRuntime { get; set; }
+    [Inject] BrowserService browserService { get; set; }
+    [Parameter] public int SerialKHDH { get; set; }
+    public bool Ismobile { get; set; }
+    public DxGrid dxGrid { get; set; }
+    bool PanelVisible { get; set; } = false;
+    List<NvlNhapXuatItemShow> lstdata { get; set; }
+    string heightgrid = "500px";
+    private string showtextdouble(decimal? d)
+    {
+        if (d == null)
+            return "";
+        if (d == 0)
+            return "";
+        return d.Value.ToString("#,0.####");
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        var dimension = await browserService.GetDimensions();
+        // var heighrow = await browserService.GetHeighWithID("divcontainer");
+        int height = dimension.Height - 70;
+        heightgrid = string.Format("{0}px", height);
+
+        //// var heighrow = await browserService.GetHeighWithID("divcontainer");
+        //int height = dimension.Height - 120;
+        int width = dimension.Width;
+        if (width < 768)
+        {
+            Ismobile = true;
+        }
+        else
+        {
+            Ismobile = false;
+        }
+        await searchAsync();
+        //randomdivhide = prs.RandomString(10);
+        //return base.OnInitializedAsync();
+    }
+
+    private async Task searchAsync()
+    {
+        if (lstdata == null)
+            lstdata = new List<NvlNhapXuatItemShow>();
+        lstdata.Clear();
+
+
+
+        List<ParameterDefine> lstpara = new List<ParameterDefine>();
+        string dieukien = " ";
+
+
+        dieukien = " where SerialKHDH=@SerialKHDH";
+        lstpara.Add(new ParameterDefine("@SerialKHDH", SerialKHDH));
+
+
+
+        string sqlSearch = "";
+
+
+        //string[] arrshow = new string[] { "MaHang", "TenHang", "SerialCT", "SLNhap", "SLXuat", "DVT", "LyDo", "TenSP", "MaKien", "DauTuan", "SoLo", "TenGN", "SoXe", "GhiChu", "DonGia", "NgayHetHan", "SerialLink", "KhachHang_XuatXu", "UserInsert", "SerialKHDH", "SerialDN", "NguoiDeNghi", "TenLienKet", "NhaMay", "NgayInsert" };
+        bool checkshow = false;
+
+        sqlSearch = string.Format(@"use NVLDB
+
+                        declare @SerialDN int={0}
+                        declare @tblserialdn table(Serial int primary key,UserInsert nvarchar(100))
+                        insert into @tblserialdn(Serial,UserInsert)
+                        select Serial,UserInsert from NvlKeHoachMuaHangItem where SerialDN=@SerialDN
+                        select nxitem.Serial,nxitem.SerialLink,nxitem.SerialCT,nh.TenNhom,nxitem.MaHang,nxitem.SLNhap,nx.LyDo,nx.MaCT,nxitem.SLXuat,nxitem.DonGia,(nxitem.SLNhap+nxitem.SLXuat)*nxitem.DonGia as ThanhTien
+                                            ,nxitem.DauTuan,nxitem.GhiChu,nx.NhaMay,nxitem.NgayInsert,nxitem.UserInsert,nxitem.MaKien,nxitem.SoLo,gn.TenGN,nxitem.SerialKHDH,hh.TenHang,hh.DVT
+                                            ,@SerialDN as SerialDN,qrykh.UserInsert as NguoiDN,nxitem.ViTri,mk.TenKho,nx.Ngay,nx.ChatLuong
+                                            from
+
+                                            (select * from NvlNhapXuatItem where SerialKHDH in (select Serial from @tblserialdn) and TableName='NvlKeHoachMuaHangItem') nxitem
+					                        inner join
+                                               [NvlNhapXuat] nx
+                                            on nx.Serial=nxitem.SerialCT
+                                            inner JOIN View_NoiGN gn on gn.MaGN = nx.MaGN
+                                            inner join dbo.NvlMaKho mk on nx.MaKho=mk.MaKho
+                                            inner join dbo.NvlHangHoa hh on nxitem.MaHang=hh.MaHang
+                                            inner join dbo.NvlNhomHang nh on hh.MaNhom=nh.MaNhom
+                                            left join
+					                        @tblserialdn as qrykh on (nxitem.SerialKHDH=qrykh.Serial)
+                     ", SerialKHDH);
+        CallAPI callAPI = new CallAPI();
+        try
+        {
+
+
+            PanelVisible = true;
+            string json = await callAPI.ExcuteQueryEncryptAsync(sqlSearch, lstpara);
+            if (json != "")
+            {
+                var query = JsonConvert.DeserializeObject<List<NvlNhapXuatItemShow>>(json);
+               
+                if (query.Any())
+                {
+                    lstdata.AddRange(query);
+                }
+                
+
+
+                // await GotoMainForm.InvokeAsync();
+            }
+            else
+                toastService.Notify(new ToastMessage(ToastType.Danger, "Không có dữ liệu"));
+        }
+        catch (Exception ex)
+        {
+            toastService.Notify(new ToastMessage(ToastType.Danger, "Lỗi:" + ex.Message));
+        }
+        finally
+        {
+            PanelVisible = false;
+
+            StateHasChanged();
+        }
+
+
+    }
+}

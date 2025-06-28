@@ -1,0 +1,106 @@
+﻿@using static NFCWebBlazor.App_NguyenVatLieu.App_DonDatHang.Page_KeHoachMuaHang_AddKeHoachSP
+<DxGridLayout CssClass="w-100 ch-480">
+    <Rows>
+        <DxGridLayoutRow Height="auto" />
+        <DxGridLayoutRow />
+    </Rows>
+    <Items>
+        <DxGridLayoutItem Row="0">
+            <Template>
+                <div class="p-2 pt-0 mb-2 bg-white border rounded-bottom-2">
+
+                    <div>
+                        <DxFormLayout CssClass="w-100 mt-3">
+
+
+                            <DxFormLayoutItem ColSpanSm="6" Caption="Tên kế hoạch" ColSpanMd="6" ColSpanLg="4" CaptionPosition="CaptionPosition.Vertical">
+                                <DxComboBox SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                ListRenderMode=ListRenderMode.Virtual
+                                @bind-Value=@kehoachselected
+                                Data="@lstkehoach"
+                                SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                SearchMode="ListSearchMode.AutoSearch"
+                                TextFieldName="@nameof(DataDropDownList.FullName)"
+                                CssClass="cw-480" />
+                            </DxFormLayoutItem>
+
+                        </DxFormLayout>
+
+                    </div>
+
+                </div>
+
+            </Template>
+        </DxGridLayoutItem>
+        <DxGridLayoutItem Row="1">
+            <Template>
+                <DxLoadingPanel @bind-Visible="@PanelVisible"
+                IsContentBlocked="true"
+                ApplyBackgroundShading="true"
+                IndicatorAreaVisible="false"
+                Text="Đang xử lý...">
+                    <DxGrid @ref="Grid" Data="@lstdata"
+                    TextWrapEnabled="true"
+                    FocusedRowEnabled="false"
+                    AllowSort="false"
+
+                    ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+                    FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                    VirtualScrollingEnabled=true
+                    ShowFilterRow=false>
+                        <ToolbarTemplate>
+                            <DxToolbar ItemRenderStyleMode="ToolbarRenderStyleMode.Plain">
+                                <DxToolbarItem Text="Xem" IconCssClass="bi bi-search" RenderStyle="ButtonRenderStyle.Primary" Click="@searchAsync">
+                                </DxToolbarItem>
+                                <DxToolbarItem Text="Xuất excel" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=>Grid.ExportToXlsxAsync("ExporKeHoach"))">
+                                </DxToolbarItem>
+                                <DxToolbarItem Text="Xác nhận" IconCssClass="bi bi-check2-circle" RenderStyle="ButtonRenderStyle.Primary" Click="@(()=>XacNhan())">
+                                </DxToolbarItem>
+                            </DxToolbar>
+                        </ToolbarTemplate>
+                        <Columns>
+
+                            <DxGridDataColumn Caption="STT" Width="60">
+                                <CellDisplayTemplate>@(context.VisibleIndex + 1)</CellDisplayTemplate>
+                            </DxGridDataColumn>
+
+                       
+                            <DxGridDataColumn FieldName="MaSP" Caption="Mã SP" Width="130" DataRowEditorVisible="false" />
+                            <DxGridDataColumn FieldName="TenSP" Width="240" Caption="Tên SP" DataRowEditorVisible="false" />
+                            <DxGridDataColumn FieldName="ArticleNumber" Caption="Art No." Width="100" DataRowEditorVisible="false" />
+                            <DxGridDataColumn FieldName="TenMau" Caption="Tên màu" Width="120" DataRowEditorVisible="false" />
+                          
+                           
+                         
+                            <DxGridDataColumn FieldName="SLPhaiDat" DisplayFormat="#,#" Caption="Số Lượng" Width="110">
+                                <CellDisplayTemplate>
+                                    @{
+                                        KeHoachThang_Show keHoachThang_Show = (KeHoachThang_Show)context.DataItem;
+                                    }
+                                    <DxSpinEdit ShowSpinButtons="false" MaxValue="@keHoachThang_Show.SLConLai" CssClass="text-danger" @bind-Value=@keHoachThang_Show.SLPhaiDat></DxSpinEdit>
+                                </CellDisplayTemplate>
+                            </DxGridDataColumn>
+
+
+                        </Columns>
+
+                    </DxGrid>
+                </DxLoadingPanel>
+
+            </Template>
+        </DxGridLayoutItem>
+
+
+    </Items>
+</DxGridLayout>
+
+@code {
+    [Parameter] public View_KeHoachMuaHangSP_Detail view_KeHoachMuaHangSP_Detail { get; set; }
+    List<DataDropDownList> lstkehoach { get; set; } = new List<DataDropDownList>();
+
+    bool PanelVisible { get; set; } = false;
+    bool PopupVisible { get; set; } = false;
+    IGrid? Grid { get; set; }
+    List<KeHoachThang_Show> lstdata { get; set; }
+}

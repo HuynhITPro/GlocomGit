@@ -1,0 +1,249 @@
+﻿@using BlazorBootstrap
+@using DevExpress.Blazor;
+@using NFCWebBlazor.App_ClassDefine;
+@using System.Data
+@using System.Collections.ObjectModel
+
+<style>
+    .my-grid {
+        height: @heightgrid;
+    }
+
+    .dxbl-modal
+    {
+        --dxbl-popup-max-width: 900px;
+    }
+
+  
+</style>
+@inject Model.ThemeColor themcolor;
+<NFCWebBlazor.App_Admin.DialogMsg @ref="@dialogMsg"></NFCWebBlazor.App_Admin.DialogMsg>
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+<DxFlyout @ref=dxFlyoutchucnang
+          PositionTarget="@idflychucnang"
+          @bind-IsOpen=IsOpenfly
+          RestrictionTarget="#Navigation-Flyout-Customization"
+          AnimationType=FlyoutAnimationType.Fade
+          PreventCloseOnPositionTargetClick="true"
+          Width="min(95vw,800px)"
+          Position=@(FlyoutPosition.BottomStart | FlyoutPosition.TopStart)>
+    <BodyTextTemplate>
+
+        <div class="container">
+            <div class="row">
+
+                <div class="col-auto d-flex flex-wrap mb-1 gap-2">
+
+                    <DxButton Visible=@Visilethemchitiet IconCssClass="bi bi-plus-circle" RenderStyle="ButtonRenderStyle.Primary" Text="THÊM CHI TIẾT" RenderStyleMode="ButtonRenderStyleMode.Outline">
+                    </DxButton>
+
+                    <DxButton Visible=@Visilechinhsua Text="CHỈNH SỬA" IconCssClass="bi bi-pencil" RenderStyle="ButtonRenderStyle.Warning" RenderStyleMode="ButtonRenderStyleMode.Outline" Click="@EditItemAsync" >
+                    </DxButton>
+                    <DxButton Visible=@Visiledelete Text="XÓA" IconCssClass="bi bi-trash3" RenderStyle="ButtonRenderStyle.Danger" RenderStyleMode="ButtonRenderStyleMode.Outline" Click="@deleteAsync">
+                    </DxButton>
+
+                  
+                </div>
+
+            </div>
+
+
+        </div>
+    </BodyTextTemplate>
+
+</DxFlyout>
+<DxGridLayout CssClass="w-100 ch-480">
+
+    <Rows>
+
+        <DxGridLayoutRow Height="auto" />
+        <DxGridLayoutRow />
+    </Rows>
+    <Items>
+        <DxGridLayoutItem Row="0">
+            <Template>
+                <div class="p-2 pt-0 mb-2 bg-white border rounded-bottom-2">
+
+                    <div>
+
+                        <DxFormLayout CssClass="w-100 mt-3">
+
+                            <DxFormLayoutItem ColSpanSm="12" ColSpanMd="6" ColSpanLg="6" CaptionPosition="CaptionPosition.Vertical">
+                                <CaptionTemplate>
+                                    Khách hàng / nơi nhận
+                                </CaptionTemplate>
+                                <Template>
+                                    <ComboboxFilteredTable @ref=txtkhachang
+                                        TextFieldName="@nameof(DataDropDownList.FullName)"
+                                                           ValueFieldName="@nameof(DataDropDownList.Name)"
+                                                           CssClass="cw-480"
+                                                           Data="@lstkhachhang"
+                                                           SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                                           ListRenderMode=ListRenderMode.Virtual
+                                                           SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                                           SearchMode="ListSearchMode.AutoSearch"
+                                                           ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto" />
+
+                                </Template>
+                            </DxFormLayoutItem>
+
+
+                        </DxFormLayout>
+
+                    </div>
+
+                </div>
+
+            </Template>
+        </DxGridLayoutItem>
+        <DxGridLayoutItem Row="1">
+            <Template>
+                <div>
+                    <DxLoadingPanel @bind-Visible="@PanelVisible"
+                                    IsContentBlocked="true"
+
+                                    ApplyBackgroundShading="true"
+                                    IndicatorAreaVisible="false"
+                                    Text="Đang xử lý...">
+                        <DxGrid @ref="Grid" Data="@lstdata" 
+                                id="customGrid" CssClass="my-grid"
+                                AutoExpandAllGroupRows="false"
+                                TextWrapEnabled="false"
+                                FocusedRowEnabled="false"
+                               VirtualScrollingEnabled="true"
+                                ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+                                FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                              
+                            
+                                ShowFilterRow=true>
+                            <ToolbarTemplate>
+                                <DxToolbar ItemRenderStyleMode="ToolbarRenderStyleMode.Plain">
+                                    <DxToolbarItem Text="Xem" IconCssClass="bi bi-search" RenderStyle="ButtonRenderStyle.Primary" Click="@searchAsync">
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="Thêm mới" IconCssClass="bi bi-plus-circle" RenderStyle="ButtonRenderStyle.Success" Click="@AddItemAsync">
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="Xuất excel" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@ExportXlsx_Click">
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="Chọn cột" BeginGroup="true" Click="@(()=>Grid.ShowColumnChooser())" IconCssClass="bi bi-layout-text-window-reverse" />
+                                </DxToolbar>
+                            </ToolbarTemplate>
+                            <Columns>
+                                <DxGridDataColumn FieldName="@nameof(KhachHangNVLShow.Serial)" Caption=" "  Width="140">
+                                    <CellDisplayTemplate>
+                                        @{
+                                            KhachHangNVLShow khachHangNVLShow = (KhachHangNVLShow)context.DataItem;
+                                        }
+                                        <a href="#" class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"
+                                           id=@idelement(khachHangNVLShow.Serial) @onclick="@(()=>ShowFlyout(khachHangNVLShow))"><i class="bi bi-list-stars me-1"></i>Chức năng</a>
+
+                                    </CellDisplayTemplate>
+                                </DxGridDataColumn>
+                                <DxGridDataColumn FieldName="@nameof(KhachHangNVLShow.Serial)" Visible=false Caption="Serial" />
+                                <DxGridDataColumn FieldName="@nameof(KhachHangNVLShow.NhomKH)" Width="130" GroupIndex="0" Caption="Nhóm KH" />
+                                <DxGridDataColumn FieldName="@nameof(KhachHangNVLShow.MaKH)" Width="130" Caption="Mã KH" />
+                                <DxGridDataColumn FieldName="@nameof(KhachHangNVLShow.TenKH)" Width="400" Caption="Tên KH" />
+                                <DxGridDataColumn FieldName="@nameof(KhachHangNVLShow.MaSoThue)" Width="130" Caption="Mã Số Thuế" />
+                                <DxGridDataColumn FieldName="@nameof(KhachHangNVLShow.DiaChi)"  Width="200"  Caption="Địa Chỉ" />
+                                <DxGridDataColumn FieldName="@nameof(KhachHangNVLShow.TinhThanh)"  Width="200" Caption="Tỉnh Thành" />
+                                <DxGridDataColumn FieldName="@nameof(KhachHangNVLShow.QuocGia)" Width="120" Caption="Quốc Gia" />
+                                <DxGridDataColumn FieldName="@nameof(KhachHangNVLShow.DienThoaiBan)" Width="150" Caption="Điện Thoại Bàn" Visible=false />
+                                <DxGridDataColumn FieldName="@nameof(KhachHangNVLShow.DiDong)" Width="100" Caption="Di Động" />
+                                <DxGridDataColumn FieldName="@nameof(KhachHangNVLShow.Email)" Width="100" Caption="Email" />
+                                <DxGridDataColumn FieldName="@nameof(KhachHangNVLShow.Website)" Width="100" Caption="Website" Visible=false />
+                                <DxGridDataColumn FieldName="@nameof(KhachHangNVLShow.MaNganHang)" Width="140" Caption="Mã Ngân Hàng" />
+                                <DxGridDataColumn FieldName="@nameof(KhachHangNVLShow.SoTK)" Width="100" Caption="Số tài khoản" />
+                                <DxGridDataColumn FieldName="@nameof(KhachHangNVLShow.TenTK)" Width="100" Caption="Tên tài khoản" />
+                                <DxGridDataColumn FieldName="@nameof(KhachHangNVLShow.DaiDienPL)" Width="100" Caption="Đại Diện PL" Visible=false />
+                                <DxGridDataColumn FieldName="@nameof(KhachHangNVLShow.MaChungChi)" Width="140" Caption="Mã Chứng Chỉ" Visible=false />
+                                <DxGridDataColumn FieldName="@nameof(KhachHangNVLShow.TinhTrangThue)" Width="140" Caption="Tình Trạng Thuế" Visible=false />
+                                <DxGridDataColumn FieldName="@nameof(KhachHangNVLShow.NgaySoatXet)" Width="100" Caption="Ngày Soát Xét" DisplayFormat="d" Visible=false />
+                                <DxGridDataColumn FieldName="@nameof(KhachHangNVLShow.NguoiSoatXet)" Width="100" Caption="Người Soát Xét" Visible=false/>
+                                <DxGridDataColumn FieldName="@nameof(KhachHangNVLShow.SwiftCode)"  Width="100" Caption="Swift Code" />
+                                <DxGridDataColumn FieldName="@nameof(KhachHangNVLShow.LoaiHinhKinhDoanh)" Width="140" Caption="Mặt hàng chủ yếu" />
+                                <DxGridDataColumn FieldName="@nameof(KhachHangNVLShow.NhomMatHang)" Width="160" Caption="Nhóm chi phí" Visible=false />
+                                <DxGridDataColumn FieldName="@nameof(KhachHangNVLShow.TinhTrang)" Width="140" Caption="Tình Trạng" Visible=false />
+                                <DxGridDataColumn FieldName="@nameof(KhachHangNVLShow.GhiChu)" Width="200" Caption="Ghi Chú" Visible=false />
+                                <DxGridDataColumn FieldName="@nameof(KhachHangNVLShow.UserInsert)" Width="120"  Caption="Người Tạo" />
+                                <DxGridDataColumn FieldName="@nameof(KhachHangNVLShow.NgayInsert)" Width="120" Caption="Ngày Tạo" Visible=false  DisplayFormat="dd-MM-yy HH:mm" />
+                            </Columns>
+                            <DetailRowTemplate>
+                                <DxTabs>
+                        
+                                    <DxTabPage Text="File hồ sơ" TabIconCssClass="bi bi-file-earmark-code">
+                                        @{
+                                            KhachHangNVLShow nvlKhachHang = (KhachHangNVLShow)context.DataItem;
+                                           
+                                        }
+                                        <NFCWebBlazor.App_Admin.Urc_FileHoSoGroup serialLink="@nvlKhachHang.Serial" tableName="NvlKhachHang" lstdata="nvlKhachHang.lstfilehoso" GotoMainForm="@nvlKhachHang.setlstfilehoso"></NFCWebBlazor.App_Admin.Urc_FileHoSoGroup>
+                                       
+                                    </DxTabPage>
+                                </DxTabs>
+
+                            </DetailRowTemplate>
+                        </DxGrid>
+                    </DxLoadingPanel>
+                </div>
+
+
+            </Template>
+        </DxGridLayoutItem>
+
+
+    </Items>
+</DxGridLayout>
+@code {
+    [Inject] BrowserService browserService { get; set; }
+
+
+    
+    bool PopupVisible { get; set; } = false;
+    DialogWindow? dxPopup { get; set; }
+    RenderFragment? renderFragment { get; set; }
+    DialogMsg? dialogMsg { get; set; }
+    public string? random { get; set; }
+    string heightgrid = "500px";
+    string headerform = "";
+    ComboboxFilteredTable txtkhachang{ get; set; }
+    bool Visilethemchitiet = false, Visilechinhsua = true, Visiledelete = true, Visilethemfile = true;
+    List<KhachHangNVLShow> lstdata { get; set; } = new List<KhachHangNVLShow>();
+
+    List<DataDropDownList> lstkhachhang { get; set; }
+    IGrid? Grid { get; set; }
+    DxFlyout? dxFlyoutchucnang { get; set; }
+    public string? idflychucnang { get; set; }
+    bool IsOpenfly { get; set; } = false;
+    App_ClassDefine.ClassProcess prs = new ClassProcess();
+    bool PanelVisible { get; set; } = false;
+    protected override async Task OnInitializedAsync()
+    {
+        await loadAsync();
+        // return base.OnInitializedAsync();
+    }
+    public string idelement(int? serial)
+    {
+        if (serial == null)
+            string.Format("flychucnang_{0}_{1}", random, serial);
+        if (random == null)
+        {
+            random = prs.RandomString(9);
+        }
+        return string.Format("flychucnang_{0}_{1}", random, serial);
+    }
+    private async Task loadAsync()
+    {
+
+        var dimension = await browserService.GetDimensions();
+        // var heighrow = await browserService.GetHeighWithID("divcontainer");
+        int height = dimension.Height - 90;
+        heightgrid = string.Format("{0}px", height);
+        await loaddatadropdownAsync();
+        // var query=ModelData.L
+    }
+   
+
+
+}

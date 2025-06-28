@@ -1,0 +1,349 @@
+﻿@using BlazorBootstrap
+@using static NFCWebBlazor.App_NguyenVatLieu.App_KeHoachDeNghi.Page_KeHoachMuaHangMaster
+<style>
+    .my-grid {
+    height: @heightgrid;
+    }
+    
+    .highlighted-item > td {
+        background-color: lightyellow;
+        color: #0070ff;
+        font-weight: bold;
+    }
+
+</style>
+@inject Model.ThemeColor themcolor;
+<NFCWebBlazor.App_Admin.DialogMsg @ref="@dialogMsg"></NFCWebBlazor.App_Admin.DialogMsg>
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+<DxFlyout @ref=dxFlyoutchucnang
+PositionTarget="@idflychucnang"
+@bind-IsOpen="@IsOpenfly"
+RestrictionTarget="#Navigation-Flyout-Customization"
+AnimationType=FlyoutAnimationType.Fade
+PreventCloseOnPositionTargetClick="true"
+Width="min(95vw,800px)"
+Position=@(FlyoutPosition.BottomStart | FlyoutPosition.TopStart)>
+    <BodyTextTemplate>
+
+        <div class="container">
+            <div class="row">
+
+                <div class="col-auto d-flex flex-wrap gap-1">
+                    <DxButton Visible=@Visilethemchitiet IconCssClass="bi bi-file-earmark-spreadsheet" RenderStyle="ButtonRenderStyle.Primary" Text="IMPORT TỪ FILE" Click="@ImportTuFileAsync" RenderStyleMode="ButtonRenderStyleMode.Outline">
+                    </DxButton>
+                </div>
+
+            </div>
+
+
+        </div>
+    </BodyTextTemplate>
+
+</DxFlyout>
+<DxGridLayout CssClass="w-100 ch-480">
+    <Rows>
+        <DxGridLayoutRow Height="auto" />
+        <DxGridLayoutRow />
+    </Rows>
+    <Items>
+        <DxGridLayoutItem Row="0">
+            <Template>
+                <div class="p-2 pt-0 mb-2 bg-white border rounded-bottom-2">
+                    <h4 style="margin:5px;color:dodgerblue">@string.Format("Đề nghị mua hàng số: {0}", keHoachMuaHang_Showcrr.Serial)</h4>
+                    <div>
+                        <DxFormLayout CssClass="w-100 mt-3">
+
+                            <DxFormLayoutItem ColSpanSm="12" ColSpanMd="6" ColSpanLg="4" Visible=false CaptionPosition="CaptionPosition.Vertical" Caption="Loại kế hoạch">
+                                <NFCWebBlazor.App_ClassDefine.ComboboxFilteredString  SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                ListRenderMode=ListRenderMode.Virtual
+
+                                TypeName="NVL_NhomKeHoach"
+                                SelectedItemChanged="@((DataDropDownList data)=>selecteditemnhomkehoach(data))"
+                                SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                SearchMode="ListSearchMode.AutoSearch"
+                                TextFieldName="@nameof(DataDropDownList.FullName)"
+                                ValueFieldName="@nameof(DataDropDownList.Name)"
+                                CssClass="cw-480" />
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem ColSpanSm="6" Caption="Tên kế hoạch" ColSpanMd="6" ColSpanLg="4" CaptionPosition="CaptionPosition.Vertical">
+                                <DxComboBox SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                ListRenderMode=ListRenderMode.Virtual
+                                @bind-Value=@kehoachselected
+                                Data="@lstkehoach"
+                                SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                SearchMode="ListSearchMode.AutoSearch"
+                                TextFieldName="@nameof(DataDropDownList.FullName)"
+                                CssClass="cw-480" />
+                            </DxFormLayoutItem>
+
+                        </DxFormLayout>
+
+                    </div>
+
+                </div>
+
+            </Template>
+        </DxGridLayoutItem>
+        <DxGridLayoutItem Row="1">
+            <Template>
+                <div>
+                    <DxLoadingPanel @bind-Visible="@PanelVisible"
+                    IsContentBlocked="true"
+                    ApplyBackgroundShading="true"
+                    IndicatorAreaVisible="false"
+                    Text="Đang xử lý...">
+                        <DxGrid @ref="Grid" Data="@lstdata"
+                      
+                        TextWrapEnabled="true"
+                       
+                        FocusedRowEnabled="false"
+                        AllowSort="false"
+                              
+                       
+                        CustomizeElement="OnCustomizeElement"
+                        ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+                        FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                        VirtualScrollingEnabled=true
+                        ShowFilterRow=false>
+                            <ToolbarTemplate>
+                                <DxToolbar ItemRenderStyleMode="ToolbarRenderStyleMode.Plain">
+                                    <DxToolbarItem Text="Xem" IconCssClass="bi bi-search" RenderStyle="ButtonRenderStyle.Primary" Click="@searchAsync">
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="Xuất excel" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=>Grid.ExportToXlsxAsync("ExporKeHoach"))">
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="Chọn cột" BeginGroup="true" Click="@(()=>Grid.ShowColumnChooser())" IconCssClass="bi bi-layout-text-window-reverse" />
+                                    <DxToolbarItem Text="Lưu kế hoạch" RenderStyle="ButtonRenderStyle.Success" Visible="@CheckQuyen" BeginGroup="true" Click="@saveAsync" IconCssClass="bi bi-floppy" />
+
+                                </DxToolbar>
+                            </ToolbarTemplate>
+                            <Columns>
+
+                                <DxGridDataColumn Caption="STT" Width="60">
+                                    <CellDisplayTemplate>@(context.VisibleIndex + 1)</CellDisplayTemplate>
+                                </DxGridDataColumn>
+
+                                <DxGridDataColumn FieldName="isChanged" Caption="Chọn" Width="140">
+                                    <HeaderCaptionTemplate>
+                                        <DxCheckBox CssClass="w-100"
+                                        @bind-Checked="@checkall"
+                                        Alignment=CheckBoxContentAlignment.Default
+                                        LabelPosition="LabelPosition.Left">
+                                            Chọn hết
+                                        </DxCheckBox>
+
+                                    </HeaderCaptionTemplate>
+                                    <CellDisplayTemplate>
+                                        @{
+                                            KeHoachThang_Show keHoachThang_Show = (KeHoachThang_Show)context.DataItem;
+                                        }
+                                        <DxCheckBox Checked="@keHoachThang_Show.Chk" CheckedChanged="@((bool e)=>checkChanged(e,keHoachThang_Show))"
+                                                    ></DxCheckBox>
+                                    </CellDisplayTemplate>                                  
+                                    
+                                </DxGridDataColumn>
+                                <DxGridDataColumn FieldName="MaSP" Caption="Mã SP" Width="130" DataRowEditorVisible="false" />
+                                <DxGridDataColumn FieldName="TenSP" MinWidth="240" Caption="Tên SP" DataRowEditorVisible="false" />
+                                <DxGridDataColumn FieldName="ArticleNumber" Caption="Art No." Width="100" DataRowEditorVisible="false" />
+                                <DxGridDataColumn FieldName="TenMau" Caption="Tên màu" Width="120" DataRowEditorVisible="false" />
+                                <DxGridDataColumn FieldName="% Hoàn thành" Width="160" DataRowEditorVisible="false">
+                                    <CellDisplayTemplate>
+                                        @{
+                                            KeHoachThang_Show keHoachThang_Show;
+                                            if (context.DataItem != null)
+                                            {
+                                                keHoachThang_Show = (KeHoachThang_Show)context.DataItem;
+                                            }
+                                            else
+                                                keHoachThang_Show = new KeHoachThang_Show();
+                                        }
+                                        <NFCWebBlazor.App_ClassDefine.ProgressBarDf value="@keHoachThang_Show.TyLe"></NFCWebBlazor.App_ClassDefine.ProgressBarDf>
+                                    </CellDisplayTemplate>
+                                </DxGridDataColumn>
+                                <DxGridDataColumn FieldName="SLSP" DataRowEditorVisible="false" DisplayFormat="#,#" Caption="SLKH" Width="110" />
+                                <DxGridDataColumn FieldName="SLThucHien" DataRowEditorVisible="false" DisplayFormat="#,#" Caption="Đã sử dụng" Width="130" />
+                                <DxGridDataColumn FieldName="SLPhaiDat" DisplayFormat="#,#" Caption="Phải đặt" Width="110">
+                                    <CellDisplayTemplate>
+                                        @{
+                                            KeHoachThang_Show keHoachThang_Show = (KeHoachThang_Show)context.DataItem;
+                                        }
+                                        <DxSpinEdit ShowSpinButtons="false" MaxValue="@keHoachThang_Show.SLConLai" CssClass="text-danger" Value="@keHoachThang_Show.SLPhaiDat" ValueChanged="@((int value) => SLDatHangChanged(value,keHoachThang_Show))"></DxSpinEdit>
+                                    </CellDisplayTemplate>
+                                </DxGridDataColumn>
+                             
+
+                            </Columns>
+                            <DetailRowTemplate>
+                                @{
+                                    KeHoachThang_Show keHoachThang_Show = (KeHoachThang_Show)context.DataItem;
+                                   
+                                }
+                                <Urc_KeHoachMuaHang_AddSanPham_Detail keHoachThang_Showcrr=@keHoachThang_Show lstdinhmucall="@lstdinhmucall"></Urc_KeHoachMuaHang_AddSanPham_Detail>
+                            </DetailRowTemplate>
+                        </DxGrid>
+                    </DxLoadingPanel>
+                </div>
+
+
+            </Template>
+        </DxGridLayoutItem>
+
+
+    </Items>
+</DxGridLayout>
+@code {
+    [Inject] BrowserService browserService { get; set; }
+    [Parameter]
+    public string LoaiKeHoach { get; set; }
+    [Parameter]
+    public KeHoachMuaHang_Show keHoachMuaHang_Showcrr { get; set; }
+    bool PopupVisible { get; set; } = false;
+    bool _checkall{ get; set; }
+    bool checkall { 
+        get
+        {
+            return _checkall;
+        }
+        set
+        {
+            _checkall = value;
+            if(lstdata!=null)
+            {
+                foreach(var it in lstdata)
+                {
+                    it.Chk = _checkall;
+                }
+                Grid.SaveChangesAsync();
+            }
+        }
+    }
+    bool Visilethemchitiet = true, Visilechinhsua = true, Visiledelete = true;
+    bool CheckQuyen { get; set; } = false;
+    RenderFragment? renderFragment { get; set; }
+    DialogWindow? dxPopup { get; set; }
+    List<DataDropDownList> lstkehoach { get; set; } = new List<DataDropDownList>();
+
+    DataDropDownList? kehoachselected { get; set; }
+    DxFlyout dxFlyoutchucnang { get; set; }
+    DialogMsg dialogMsg { get; set; }
+    public string random { get; set; }
+    bool IsOpenfly { get; set; }
+    string heightgrid = "500px";
+    string headerform = "";
+
+    List<KeHoachThang_Show> lstdata { get; set; }
+
+
+    IGrid? Grid { get; set; }
+
+    //bool IsOpenfly = true;
+    public string idflychucnang { get; set; }
+    bool PanelVisible { get; set; } = false;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await loadAsync();
+        // return base.OnInitializedAsync();
+    }
+    private async Task loadAsync()
+    {
+
+        var dimension = await browserService.GetDimensions();
+        // var heighrow = await browserService.GetHeighWithID("divcontainer");
+        int height = dimension.Height - 70;
+        heightgrid = string.Format("{0}px", height);
+        CheckQuyen = await phanQuyenAccess.CreateKeHoachMuaHang(Model.ModelAdmin.users);
+        await loaddatadropdownAsync();
+
+        // var query=ModelData.L
+    }
+    App_ClassDefine.ClassProcess prs = new App_ClassDefine.ClassProcess();
+    public string idelement(int? serial)
+    {
+        if (serial == null)
+            string.Format("flychucnang_{0}_{1}", random, serial);
+        if (random == null)
+        {
+            random = prs.RandomString(9);
+        }
+        return string.Format("flychucnang_{0}_{1}", random, serial);
+    }
+
+
+    void OnCustomizeElement(GridCustomizeElementEventArgs e)
+    {
+
+        if (e.ElementType == GridElementType.DataCell)
+        {
+            var dataColumn = (IGridDataColumn)e.Column;
+            switch (dataColumn.FieldName)
+            {
+
+                case "TenMau":
+                    if (e.Grid.GetRowValue(e.VisibleIndex, "TenMau") != null)
+                    {
+                        var colorhex = e.Grid.GetRowValue(e.VisibleIndex, "Colorhex");
+                        if (colorhex != null)
+                        {
+                            e.Style = string.Format("background-color:{0}", colorhex.ToString());
+                        }
+                    }
+                    break;
+
+
+            }
+        }
+        if (e.ElementType == GridElementType.DataRow)
+        {
+            
+                    e.CssClass = "highlighted-item";
+            
+
+        }
+
+    }
+    private void SLDatHangChanged(int e,KeHoachThang_Show keHoachThang_Show)
+    {
+       
+        keHoachThang_Show.SLPhaiDat = e;
+
+    }
+    async Task OnEditModelSaving(GridEditModelSavingEventArgs e)
+    {
+
+        // if (e.IsNew)
+        // {
+           
+        // }
+        // else
+        // {
+
+        //     KeHoachThang_Show keHoachThang_Show = (KeHoachThang_Show)e.EditModel;
+
+        //     if (keHoachThang_Show.SLPhaiDat > keHoachThang_Show.SLConLai)
+        //     {
+        //         toastService.Notify(new ToastMessage(ToastType.Warning, "Số lượng đặt hàng không được vượt quá số lượng còn lại của kế hoạch"));
+        //         keHoachThang_Show.SLPhaiDat = ((KeHoachThang_Show)e.DataItem).SLPhaiDat;
+        //         return;
+        //     }
+        //     if (keHoachThang_Show.lstitem != null)
+        //     {
+        //         foreach (var it in keHoachThang_Show.lstitem)
+        //         {
+        //             it.SLKHCan = it.SLQuyDoi * keHoachThang_Show.SLPhaiDat;
+        //         }
+        //     }
+        //     object ob = Grid.GetEditContext();
+        //     e.CopyChangesToDataItem();
+        // }
+
+
+    }
+
+}

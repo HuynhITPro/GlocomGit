@@ -1,0 +1,111 @@
+﻿@using System.Data
+<style>
+
+    .heightGridCss
+    {
+        height:95vh;
+    }
+    .highlighted-item > td {
+    background-color: var(--bs-danger-border-subtle)
+    }
+
+    .highlighted-item > td:first-child {
+    background-color: transparent;
+    }
+</style>
+<div>
+<DxGrid @ref="Grid" CssClass="heightGridCss" Data="@dataTable"
+TextWrapEnabled=false
+ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+EditMode="GridEditMode.EditCell"
+VirtualScrollingEnabled="true"
+KeyFieldName="Serial"
+
+CustomizeElement="Grid_CustomizeElement"
+ShowFilterRow=true>
+    <ToolbarTemplate>
+        <DxToolbar ItemRenderStyleMode="ToolbarRenderStyleMode.Plain">
+
+            <DxToolbarItem Text="Xuất Excel" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=> Grid.ExportToXlsxAsync("ExportImport"))">
+            </DxToolbarItem>
+        </DxToolbar>
+    </ToolbarTemplate>
+    <Columns>
+        @if(dataTable != null)
+        {
+            @buildrender()
+        }
+    </Columns>
+
+</DxGrid>
+</div>
+@code {
+    [Parameter]
+    public  DataTable dataTable{ get; set; }
+    DxGrid Grid { get; set; }
+    void Grid_CustomizeElement(GridCustomizeElementEventArgs e)
+    {
+        if (e.ElementType == GridElementType.DataRow)
+        {
+            if (e.Grid.GetRowValue(e.VisibleIndex, "Err") != null && e.Grid.GetRowValue(e.VisibleIndex, "Err") != DBNull.Value)
+            {
+                //Console.WriteLine(e.Grid.GetRowValue(e.VisibleIndex, "Err").ToString());
+                if (!String.IsNullOrEmpty(e.Grid.GetRowValue(e.VisibleIndex, "Err").ToString()))
+                    e.CssClass = "highlighted-item";
+            }
+
+        }
+
+    }
+    List<InitDxGridDataColumn> lstcolumn = new List<InitDxGridDataColumn>();
+    bool rendercommit = false;
+    public RenderFragment buildrender()
+    {
+        int i = 0;
+        if (lstcolumn.Count == 0)
+        {
+            foreach (DataColumn col in dataTable.Columns)
+            {
+                lstcolumn.Add(new InitDxGridDataColumn(i, col.ColumnName, col.ColumnName));
+                i++;
+            }
+        }
+        return BuildColumns(lstcolumn);
+    }
+    public RenderFragment BuildColumns(List<InitDxGridDataColumn> _lstcolumn)
+    {
+        RenderFragment columns = b =>
+        {
+            int counter = 0;
+            foreach (InitDxGridDataColumn col in _lstcolumn.OrderBy(p => p.Index))
+            {
+                b.OpenComponent(counter, typeof(DxGridDataColumn));
+                b.AddAttribute(0, "FieldName", col.FieldName);
+
+                b.AddAttribute(0, "Caption", col.Caption);
+                if (col.gridTextAlignment != null)
+                    b.AddAttribute(0, "TextAlignment", col.gridTextAlignment);
+                if (col.DisplayFormat != null)
+                {
+                    b.AddAttribute(0, "DisplayFormat", col.DisplayFormat);
+                }
+                if (col.Width != null)
+                    b.AddAttribute(0, "Width", string.Format("{0}px", col.Width));
+                else
+                if (col.Width != null)
+                    b.AddAttribute(0, "MinWidth", string.Format("90px"));
+                if (col.GroupIndex != null)
+                {
+                    b.AddAttribute(0, "GroupIndex", col.GroupIndex.Value);
+                }
+                b.CloseComponent();
+
+                counter++;
+            }
+
+        };
+        rendercommit = true;
+        return columns;
+    }
+}

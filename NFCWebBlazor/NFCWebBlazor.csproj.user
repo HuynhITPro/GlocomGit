@@ -1,0 +1,110 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebuggerFlavor>ProjectDebugger</DebuggerFlavor>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ActiveDebugProfile>NFCWebBlazor</ActiveDebugProfile>
+    <NameOfLastUsedPublishProfile>D:\Work App\WebSPBlazorGit\NFCWebBlazor\Properties\PublishProfiles\FolderProfile3.pubxml</NameOfLastUsedPublishProfile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Update="App_NguyenVatLieu\App_DuyetGia\XtraReportTest.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\App_DuyetGia\XtraRp_DuyetGia.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\App_DuyetGia\XtraRp_DuyetGiaDetail.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\App_DuyetGia\XtraRp_DuyetGiaDetailDauMau.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\App_DuyetGia\XtraRp_DuyetGiaDetailItem.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\App_DuyetGia\XtraRp_DuyetGiaItemVTKhac.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XRp_UNCBIDVBank.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XRp_UNCVietComBank.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XRp_UNCVietinBank.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XtraReport1.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XtraRp_BaoCaoTonKho.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XtraRp_BienBanKiemKe.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XtraRp_DeNghiCapVatTu.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XtraRp_DeNghiMuaHang.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XtraRp_DeNghiXuatKho_Total.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XtraRp_DonDatHang.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XtraRp_DonDatHangItem.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XtraRp_DonDatHangNew.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XtraRp_DuTruVatTu.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XtraRp_InPhieu.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XtraRp_InPhieu2x5.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XtraRp_KeHoachMuaHang.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XtraRp_NhapXuatItem.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XtraRp_PhieuNhapKho.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XtraRp_PhieuNhapKho_KhongGia.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XtraRp_PhieuXuatKho_ChiTiet.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XtraRp_PhieuXuatKho_KhongGia.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\XtraRp_Test.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\Xtra_InPhieuA5.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+    <Compile Update="App_NguyenVatLieu\Report\Xtra_TheKhoTheoNhaMay.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="App_NguyenVatLieu\App_DuyetGia\XtraRp_DuyetGiaDetailDauMau.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="App_NguyenVatLieu\Report\XtraRp_BienBanKiemKe.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+</Project>

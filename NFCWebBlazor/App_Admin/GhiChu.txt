@@ -1,0 +1,89 @@
+﻿ bool bl = await dialogMsg.Show("THÔNG BÁO", "Bạn có chắc muốn xóa dòng này?");
+ 
+ 
+ [Inject] ToastService ToastService { get; set; } = default!;
+   ToastService.Notify(new ToastMessage(ToastType.Success, $"Sửa thành công"));
+     ToastService.Notify(new ToastMessage(ToastType.Warning, $"Lỗi {ex.Messasge}"));
+   //Convert datatable trước khi chuyển xuống procedure lưu
+   lstpara.Add(new ParameterDefine("@Type_NvlKeHoachMuaHangItem", prs.ConvertDataTableToJson(dtsave),"DataTable"));
+
+   Pass EnventCallBack trong RenderFragment AddAttribute
+    builder.AddAttribute(1, "GotoMainForm", EventCallback.Factory.Create(this, GotoMainForm));
+
+ ModalOptions options = new ModalOptions()
+            {
+                Size = Blazored.Modal.ModalSize.Automatic,
+                Position = ModalPosition.Custom,
+                PositionCustomClass = "custom-modal-top",
+                DisableBackgroundCancel = true,
+
+                
+            };
+           
+
+            var parameters = new ModalParameters();
+            parameters.Add("keHoachMuaHang_Show", kehoachshowcrr);
+            parameters.Add("LoaiKeHoach", LoaiKeHoach);
+            modal.Show<Urc_KeHoachMuaHangAddItem>("", parameters, options);
+            await dxFlyoutchucnang.CloseAsync();
+
+//TẠO RENDERFRAGMENT TỪ COMPONENT
+private RenderFragment LoadComponent(string component)
+        {
+            var componentType = Type.GetType(component);
+            RenderFragment renderFragment;
+
+            if (componentType != null)
+            {
+                renderFragment = builder =>
+                {
+                    builder.OpenComponent(0, componentType);
+                    builder.CloseComponent();
+                };
+            }
+            else
+            {
+                renderFragment = builder =>
+                {
+                    builder.AddContent(0, "Component not found");
+                };
+            }
+           
+            return renderFragment;
+
+        }
+
+        Lấy các dòng trong 1 group của dxGrid
+         public List<DinhMucVatTuShow> GetGroupDataItems(bool bl,int visibleIndex)
+        {
+            var result = new List<DinhMucVatTuShow>();
+            var rowLevel = dxGrid.GetRowLevel(visibleIndex);
+            dxGrid.ExpandGroupRow(visibleIndex, true);
+            for (var i = visibleIndex + 1; i < dxGrid.GetVisibleRowCount(); i++)
+            {
+                if (dxGrid.GetRowLevel(i) <= rowLevel)
+                    break;
+                if (!dxGrid.IsGroupRow(i))
+                {
+
+                    result.Add((DinhMucVatTuShow)dxGrid.GetDataItem(i));
+                }
+                   
+            }
+            return result;
+        }
+
+
+
+        //Grid show progress
+
+         <div style="position: relative;justify-content: center; align-items: center;">
+                        <div style="position: absolute;display: flex;width: 100%;">
+                           
+                        </div>
+                    <div style="position: absolute;display:@(PanelVisible ? "flex" : "none");width:100%;height:@heightgrid;background-color: rgba(0, 0, 0, 0.3);justify-content: center; align-items: center;">
+                            <CascadingValue Name="visibleTimer" Value="@PanelVisible">
+                                <LoadingPanel></LoadingPanel>
+                            </CascadingValue>
+                        </div>
+                    </div>

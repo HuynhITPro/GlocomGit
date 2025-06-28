@@ -1,0 +1,197 @@
+﻿@page "/kehoachmuahang/banin"
+@using BlazorBootstrap
+@using DevExpress.Export;
+@using static NFCWebBlazor.App_NguyenVatLieu.App_KeHoachDeNghi.Page_KeHoachMuaHangMaster
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<style>
+    .style-form {
+        width: min(1000px, 95vw); /* minimum of 700px or 50% of viewport width */
+        max-height: 95vh;
+    }
+
+    .style-grid {
+        max-height: 75vh;
+    }
+
+</style>
+@* <DxContextMenu @ref="@ContextMenu">
+    <ItemTextTemplate>
+        <b>@context.Text</b>
+    </ItemTextTemplate>
+    <Items>
+        <DxContextMenuItem Text="Xuất file excel" IconCssClass="bi bi-filetype-xlsx" Click=@ExportXlsx_Click />
+        <DxContextMenuItem Text="Xuất file csv" IconCssClass="bi bi-filetype-csv" Click="@ExportCsv_Click" />
+
+    </Items>
+</DxContextMenu> *@
+<NFCWebBlazor.App_Admin.MsgBox @ref=@msgBox></NFCWebBlazor.App_Admin.MsgBox>
+<DxGridLayout>
+
+    <Rows>
+        <DxGridLayoutRow Height="Auto" />
+        <DxGridLayoutRow Height="auto" />
+        <DxGridLayoutRow />
+       
+    </Rows>
+    <Items>
+        <DxGridLayoutItem Row="0">
+            <Template>
+                <DxMemo @ref=txtnoidung @bind-Text=NoiDungDeNghi @oninput=@HandleInput NullText="Nội dung đề nghị"></DxMemo>
+               
+            </Template>
+        </DxGridLayoutItem>
+        <DxGridLayoutItem Row="1">
+            <Template>
+                <div class="panel-action">
+                    <DxButton 
+                              RenderStyleMode="ButtonRenderStyleMode.Text" Click=@print Context="luu">
+                        <span class="bi bi-printer">
+                        </span>
+                        <span style="margin-left:10px;">In đề nghị</span>
+                    </DxButton>
+                   
+
+
+                        <DxButton  Click=@exportexcelAsync
+                                  RenderStyleMode="ButtonRenderStyleMode.Text" Context="sua">
+                            <i class="bi bi-filetype-xlsx"></i>
+                            <span style="margin-left:10px;">Xuất excel</span>
+                        </DxButton>
+                    <DxButton Click=@reload
+                              RenderStyleMode="ButtonRenderStyleMode.Text" Context="Reload">
+                       
+                        <span style="margin-left:10px;">Reload</span>
+                    </DxButton>
+                </div>
+            </Template>
+        </DxGridLayoutItem>
+        <DxGridLayoutItem Row="2">
+            <Template>
+                <div id="griddragdrop">
+                    <DxGrid @ref=dxGrid
+                    @key="@myKey"
+                            AllowSort="false"
+                            CustomizeElement="Grid_CustomizeElement"
+                           
+                           
+                            CustomizeSummaryDisplayText="Grid_CustomizeSummaryDisplayText"
+                            ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+                            PageSize="20"
+                            KeyboardNavigationEnabled=false
+                            EditMode="GridEditMode.PopupEditForm"
+                            PopupEditFormHeaderText="Chỉnh sửa"
+                            EditFormButtonsVisible="false"
+                            VirtualScrollingEnabled="true"
+                            FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                            Data=@Items>
+                        <Columns>
+                            <DxGridDataColumn FieldName="STT" Caption="STT" Width="40" />
+
+                            <DxGridDataColumn FieldName="MaHang" Caption="Mã hàng" Width="100" />
+                            <DxGridDataColumn FieldName="TenHang" Caption="Tên hàng" Width="200" />
+                            <DxGridDataColumn FieldName="TyLe" Width="140" Caption="Hoàn thành">
+                                <CellDisplayTemplate>
+                                    <NFCWebBlazor.App_ClassDefine.ProgressBarDf value=@(((NvlKeHoachMuaHangItemShow)context.DataItem).TyLe)></NFCWebBlazor.App_ClassDefine.ProgressBarDf>
+                                </CellDisplayTemplate>
+                            </DxGridDataColumn>
+                            <DxGridDataColumn FieldName="SLTon" DisplayFormat="#,#" Caption="Tồn kho" Width="80" />
+                            <DxGridDataColumn FieldName="SoLuong" DisplayFormat="#,#.#" Caption="Số lượng" Width="80" />
+                            <DxGridDataColumn FieldName="SLTheoDoi" DisplayFormat="#,#.#" Caption="SL theo dõi" Width="80" Visible=false />
+                            <DxGridDataColumn FieldName="DonGia" DisplayFormat="#,#.#" Caption="Đơn giá" Width="90" />
+                            <DxGridDataColumn FieldName="ThanhTien" DisplayFormat="#,#.#" Caption="Thành tiền" Width="120" />
+                            <DxGridDataColumn FieldName="DVT" Caption="ĐVT" Width="70" />
+                            <DxGridDataColumn FieldName="GhiChu" Width="140" Caption="Ghi chú" />
+                            <DxGridDataColumn FieldName="UserInsert" Width="120" Caption="UserInsert" />
+                            <DxGridDataColumn FieldName="NgayInsert" Caption="NgayInsert" DisplayFormat="dd-MM-yy HH:mm" Width="120" />
+
+                        </Columns>
+
+                        <TotalSummary>
+                            <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+                                               FieldName="ThanhTien"
+                                               Name="ThanhTienShow"
+                                               FooterColumnName="ThanhTien" />
+                        </TotalSummary>
+
+                    </DxGrid>
+                </div>
+            </Template>
+        </DxGridLayoutItem>
+       
+    </Items>
+</DxGridLayout>
+
+
+@code {
+    [Parameter]
+    public KeHoachMuaHang_Show keHoachMuaHang_Show { get; set; }
+    [Parameter]
+    public string NoiDungDeNghi { get; set; }
+
+    [Inject] PreloadService PreloadService { get; set; }
+
+    DxMemo txtnoidung{ get; set; }
+    public DxGrid dxGrid { get; set; }
+    DxContextMenu ContextMenu { get; set; }
+    void Grid_CustomizeSummaryDisplayText(GridCustomizeSummaryDisplayTextEventArgs e)
+    {
+        if (e.Item.Name == "ThanhTienShow")
+            e.DisplayText = string.Format("{0:#,#}", e.Value);
+    }
+    DialogMsg dialogMsg;
+    MsgBox msgBox;
+
+    bool ExportSelectedRowsOnly { get; set; }
+    async Task ExportXlsx_Click()
+    {
+        await dxGrid.ExportToXlsxAsync("ExportResult", new GridXlExportOptions()
+            {
+                ExportSelectedRowsOnly = ExportSelectedRowsOnly,
+                CustomizeCell = OnCustomizeCell
+            });
+    }
+
+    bool shouldrender = true;
+    protected override bool ShouldRender()
+    {
+        Console.WriteLine("shouldrender:" + shouldrender);
+        return shouldrender;
+    }
+    private void HandleInput(ChangeEventArgs e)
+    {
+
+        //Console.WriteLine("shouldrender:" + shouldrender);
+        shouldrender = false;
+        //Console.WriteLine(NoiDungDeNghi);
+        // if (debounceTimer != null)
+        // {
+        //     debounceTimer.Stop();
+        //     debounceTimer.Dispose();
+        // }
+
+        // debounceTimer = new System.Timers.Timer(500); // 500ms delay
+        // debounceTimer.Elapsed += (sender, args) => InvokeAsync(() =>
+        // {
+        //     displayValue = currentValue;
+        //     StateHasChanged();
+        //     debounceTimer.Dispose();
+        // });
+        // debounceTimer.Start();
+    }
+    async Task ExportCsv_Click()
+    {
+        await dxGrid.ExportToCsvAsync("ExportResult", new GridCsvExportOptions()
+            {
+                ExportSelectedRowsOnly = ExportSelectedRowsOnly
+            });
+    }
+    void OnCustomizeCell(GridExportCustomizeCellEventArgs args)
+    {
+        if (args.ColumnFieldName == "ContactName" && args.AreaType == SheetAreaType.DataArea)
+            args.Formatting.Font = new XlCellFont() { Italic = true };
+        args.Handled = true;
+    }
+
+
+}

@@ -1,0 +1,208 @@
+﻿@page "/d"
+
+<DxFlyout @bind-IsOpen=IsOpenfly
+          PositionTarget=@("#idshowchucnang")
+          RestrictionTarget="#Navigation-Flyout-Customization"
+          AnimationType=FlyoutAnimationType.Fade
+          PreventCloseOnPositionTargetClick="true"
+        
+          Width="min(40vw, 500px)"
+        
+          Position=@(FlyoutPosition.BottomStart | FlyoutPosition.TopStart)>
+    <BodyTextTemplate>
+
+        <div class="container">
+            <div class="row">
+
+                <div class="col-auto mb-1">
+
+                    <DxButton IconCssClass="bi bi-plus-circle" RenderStyle="ButtonRenderStyle.Primary" Text="THÊM MỚI" RenderStyleMode="ButtonRenderStyleMode.Outline">
+                    </DxButton>
+
+                </div>
+                <div class="col-auto mb-1">
+                    <DxButton IconCssClass="bi bi-printer" Text="IN" RenderStyle="ButtonRenderStyle.Success" RenderStyleMode="ButtonRenderStyleMode.Outline">
+                </DxButton>
+                </div>
+                <div class="col-auto mb-1">
+                    <DxButton Text="CHỈNH SỬA" IconCssClass="bi bi-pencil" RenderStyle="ButtonRenderStyle.Warning" RenderStyleMode="ButtonRenderStyleMode.Outline">
+                </DxButton>
+                </div>
+                <div class="col-auto mb-1">
+                    <DxButton Text="XÓA" IconCssClass="oi oi-x" RenderStyle="ButtonRenderStyle.Danger" RenderStyleMode="ButtonRenderStyleMode.Outline">
+                </DxButton>
+                </div>
+            </div>
+
+
+        </div>
+    </BodyTextTemplate>
+  
+</DxFlyout>
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+
+            <DxStackLayout Orientation="Orientation.Vertical">
+                <Items>
+                    <DxStackLayoutItem>
+                        <Template>
+                            <div class="container">
+                                <div class="flex row">
+                                    <div class="col-auto">
+                                        <img src="@img" style="width: auto; height: 32px; margin-right: 10px; border-radius: 50%;">
+                                    </div>
+                                    <div class="col-auto">
+                                        Tạo bởi
+                                    </div>
+                                    <div class="col-auto">
+                                        Ngày tạo
+                                    </div>
+                                </div>
+                            </div>
+                        </Template>
+
+                    </DxStackLayoutItem>
+                    <DxStackLayoutItem>
+                        <Template>
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col-md-6" style="color:forestgreen">
+                                        Đơn đặt hàng số: 100
+                                    </div>
+                                    <div class="col-md-6">
+                                        Cty Hải Phương
+                                    </div>
+                                </div>
+                            </div>
+                        </Template>
+
+                    </DxStackLayoutItem>
+                    <DxStackLayoutItem>
+                        <Template>
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        Ngày đặt hàng:
+                                    </div>
+                                    <div class="col-md-6">
+                                        Ngày trễ nhất:
+                                    </div>
+                                </div>
+                            </div>
+                        </Template>
+                    </DxStackLayoutItem>
+
+                </Items>
+            </DxStackLayout>
+
+        </div>
+        <div class="col-md-6">
+            <DxStackLayout Orientation="Orientation.Vertical">
+                <Items>
+                    <DxStackLayoutItem>
+                        <Template>
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col-auto">
+                                        Tình trạng
+                                    </div>
+                                    <div class="col-auto" style="color:orangered">
+                                        Đã duyệt
+                                    </div>
+                                </div>
+                            </div>
+                        </Template>
+
+                    </DxStackLayoutItem>
+                    <DxStackLayoutItem>
+                        <Template>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    
+                                    <DxButton Text="Tên người kiểm" RenderStyleMode="ButtonRenderStyleMode.Text" RenderStyle="ButtonRenderStyle.Primary"></DxButton>
+                                </div>
+                                <div class="col-md-6">
+                                  
+                                    <DxButton Text="Tên người duyệt" RenderStyleMode="ButtonRenderStyleMode.Text" RenderStyle="ButtonRenderStyle.Primary"></DxButton>
+                                </div>
+                            </div>
+
+                        </Template>
+
+                    </DxStackLayoutItem>
+                    <DxStackLayoutItem>
+                        <Template>
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        Kiểm bởi: nguyễn văn tèo
+                                    </div>
+                                    <div class="col-md-6">
+                                        Duyệt bởi
+                                    </div>
+                                </div>
+                            </div>
+                        </Template>
+
+                    </DxStackLayoutItem>
+
+
+                </Items>
+            </DxStackLayout>
+            <!-- Nội dung cột thứ hai -->
+        </div>
+    </div>
+    <div class="row m-1">
+
+        <DxStackLayout Orientation="Orientation.Horizontal">
+            <Items>
+                <DxStackLayoutItem>
+                    <Template>
+                        <div>
+                            <DxButton Text="CHỨC NĂNG" Click="@btclickshowmodel"></DxButton>
+                            <DxButton Text="Show MSg" Click="@showmsg"></DxButton>
+                            <DxButton Id="idshowchucnang" Text="Show  Fly" Click="@ShowFlyout"></DxButton>
+                        </div>
+
+                    </Template>
+                </DxStackLayoutItem>
+            </Items>
+        </DxStackLayout>
+    </div>
+</div>
+<NFCWebBlazor.App_Admin.DialogMsg @ref="@dialogMsg"></NFCWebBlazor.App_Admin.DialogMsg>
+<NFCWebBlazor.App_Admin.MsgBox @ref=@msgBox></NFCWebBlazor.App_Admin.MsgBox>
+<!-- Cột 1, Dòng 1 đến 4 -->
+<!-- Cột 2, Dòng 1 đến 3 -->
+@code {
+    DialogMsg dialogMsg;
+    MsgBox msgBox;
+    bool IsOpenfly { get; set; } = false;
+    string img { get; set; } = IconImg.CheckMark;
+    private async void btclickshowmodel()
+    {
+        bool bl = await dialogMsg.Show("Header test", "Body test");
+        if (bl)
+        {
+            Console.WriteLine("Nó true rồi");
+        }
+        else
+        {
+            Console.WriteLine("Nó false rồi");
+        }
+
+    }
+    private void showmsg()
+    {
+        msgBox.Show("Xin chào chú ", IconMsg.iconerror);
+    }
+    private void ShowFlyout()
+    {
+        //CurrentEmployee = employee;
+        IsOpenfly = true;
+    }
+    //[Parameter]
+    //public KeHoachMuaHang_Show keHoachMuaHang_Show{ get; set; }
+
+}

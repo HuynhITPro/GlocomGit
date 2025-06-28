@@ -1,0 +1,210 @@
+﻿@using BlazorBootstrap
+@using NFCWebBlazor.Model
+@using Newtonsoft.Json
+@using System.Data
+@using static NFCWebBlazor.App_ThongTin.Page_DinhMucNVLMaster
+<div style="width:800px;">
+    <DxLoadingPanel @bind-Visible="@PanelVisible"
+    IsContentBlocked="true"
+    ApplyBackgroundShading="true"
+    IndicatorAreaVisible="false"
+    Text="Đang xử lý...">
+        <DxGrid @ref="dxGrid" Data="@lstdata"
+        CssClass="my-grid"
+        TextWrapEnabled="false"
+        FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+        VirtualScrollingEnabled=true
+        ShowFilterRow=true>
+            <ToolbarTemplate>
+                <DxToolbar ItemRenderStyleMode="ToolbarRenderStyleMode.Plain">
+                    <DxToolbarItem Text="Xem" IconCssClass="bi bi-search" RenderStyle="ButtonRenderStyle.Primary" Click="@search">
+                    </DxToolbarItem>
+                    <DxToolbarItem Text="Xuất file excel mẫu" IconCssClass="bi bi-box-arrow-up-right" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=>ExportDinhMuc())">
+                    </DxToolbarItem>
+
+                </DxToolbar>
+            </ToolbarTemplate>
+            <Columns>
+                <DxGridDataColumn Caption="Chk" Width="60">
+                    <CellDisplayTemplate>
+                        <DxCheckBox @bind-Checked="@(((SanPhamShow)context.DataItem).Chk)"></DxCheckBox>
+                    </CellDisplayTemplate>
+                </DxGridDataColumn>
+                <DxGridDataColumn FieldName="KhachHang" GroupIndex="0" Width="130" Caption="KhachHang">
+                    <GroupRowTemplate>
+                        @{
+                            SanPhamShow sanPhamShow = (SanPhamShow)context.Grid.GetDataItem(context.VisibleIndex);
+                            SanPhamShow spgroup=lstgroup.Where(x => x.KhachHang == sanPhamShow.KhachHang).FirstOrDefault();
+                        }
+                        <DxCheckBox Checked="@spgroup.Chk" CheckedChanged="@((bool e)=>chkKhachHangChecked(e,spgroup))">@context.GroupValue</DxCheckBox>
+                    </GroupRowTemplate>
+                </DxGridDataColumn>
+                <DxGridDataColumn FieldName="MaSP" Width="130" Caption="MaSP">
+                </DxGridDataColumn>
+                <DxGridDataColumn FieldName="TenSP" Width="240" Caption="TenSP" />
+                <DxGridDataColumn FieldName="MaMau" Caption="MaMau" Width="130" />
+                <DxGridDataColumn FieldName="TenMau" Caption="TenMau" Width="130">
+                    <CellDisplayTemplate>
+                        @{
+                            SanPhamShow sanPhamShow = (SanPhamShow)context.DataItem;
+                        }
+                        <div class="row d-flex ms-2">
+                            <div class="col-auto card p-1" style="background-color:@sanPhamShow.Colorhex;width:120px;">
+                                <span style="color:@StaticClass.GetContrastColor(sanPhamShow.Colorhex)">@(string.IsNullOrEmpty(sanPhamShow.TenMau) ? "Không có màu" : sanPhamShow.TenMau)</span>
+                            </div>
+                        </div>
+                    </CellDisplayTemplate>
+                </DxGridDataColumn>
+            </Columns>
+
+        </DxGrid>
+    </DxLoadingPanel>
+</div>
+@code {
+
+
+    [Inject] IJSRuntime jSRuntime { get; set; }
+    [Inject]ToastService toastService { get; set; }
+    public List<SanPhamShow> lstdata { get; set; } = new List<SanPhamShow>();
+    public List<SanPhamShow> lstgroup { get; set; } = new List<SanPhamShow>();
+    DxGrid dxGrid { get; set; }
+    bool PanelVisible = false;
+    protected override void OnInitialized()
+    {
+        search();
+        //base.OnInitialized();
+    }
+    private async void search()
+    {
+        string sql = @"select dms.MaSP,sp.KhachHang,sp.TenSP,mm.MaMau,mm.Color,mm.TenMau,cast(getdate() as Date) as Ngay from
+                    (SELECT [MaSP],[MauSP]
+                     FROM DataBase_ScansiaPacific2014.[dbo].[DinhMucSon]  group by MaSP,MauSP) dms
+                      inner join DataBase_ScansiaPacific2014.dbo.MaMau mm on dms.MauSP=mm.MaMau
+                      inner join DataBase_ScansiaPacific2014.dbo.SanPham sp on dms.MaSP=sp.MaSP order by sp.KhachHang";
+        sql = @"select *
+                         from OpenQuery(SP,'" + sql + "')";
+        CallAPI callAPI = new CallAPI();
+        string json = await callAPI.ExcuteQueryEncryptAsync(sql, new List<ParameterDefine>());
+        if (json != "")
+        {
+            var query = JsonConvert.DeserializeObject<List<SanPhamShow>>(json);
+            if (query != null)
+            {
+                lstdata.AddRange(query);
+                var lstgr = lstdata.GroupBy(x => x.KhachHang).Select(p=>new {KhachHang=p.Key});
+                foreach(var it in lstgr)
+                {
+                    SanPhamShow sanPhamShow = new SanPhamShow();
+                    sanPhamShow.KhachHang = it.KhachHang;
+                    sanPhamShow.Chk = false;
+                    lstgroup.Add(sanPhamShow);
+                }
+            }
+
+            dxGrid.Reload();
+            StateHasChanged();
+            //var query = JsonConvert.DeserializeObject<List<KeHoachThang_Show>>(json);
+            //lstdata.AddRange(query);
+        }
+
+
+    }
+    App_ClassDefine.ClassProcess prs = new ClassProcess(); 
+    private void chkKhachHangChecked(bool bl, SanPhamShow spgroup)
+    {
+        spgroup.Chk = bl;
+        lstdata.ForEach(p=>p.Chk=bl);
+    }
+    private async void ExportDinhMuc()
+    {
+        string lstsp = "";
+        var queryselected = lstdata.Where(p => p.Chk).ToList();
+        var query = queryselected.GroupBy(p => new { MaSP = p.MaSP }).Select(p => new { MaSP = p.Key.MaSP }).GroupBy(p => 1).Select(p => new { sp = string.Join(";", p.Select(p => p.MaSP)) }).FirstOrDefault();
+        lstsp = query.sp;
+        //string sql= string.Format(@"use NVLDB EXEC GetDinhMucNVL_SanPhamList_TonKho  @lstsanpham = N'{0}',@dateend = '{1}'
+        //select * from ##tmpdinhmuctoancuc
+        //DROP TABLE ##tmpdinhmuctoancuc",lstsp,dtpend.Value.ToString("MM/dd/yyyy 23:59"));
+
+
+        // dtsave.Dispose();
+        PanelVisible = true;
+        CallAPI callAPI = new CallAPI();
+        try
+        {
+            DataTable dtsave = new DataTable(); //Khai báo cho khớp cột vs Type_KeHoachTonKho
+            dtsave.Columns.Add("MaSP", typeof(string));
+            dtsave.Columns.Add("SLSP", typeof(double));
+            dtsave.Columns.Add("MaMau", typeof(string));
+            dtsave.Columns.Add("Ngay", typeof(DateTime));
+            foreach (var dr in queryselected)
+            {
+                DataRow dataRow = dtsave.NewRow();
+                dataRow["MaSP"] = dr.MaSP;
+                dataRow["SLSP"] = 1;
+                dataRow["MaMau"] = dr.MaMau;
+
+                dtsave.Rows.Add(dataRow);
+            }
+            List<ParameterDefine> lstpara = new List<ParameterDefine>();
+            lstpara.Add(new ParameterDefine("@lstsanpham", lstsp));
+            lstpara.Add(new ParameterDefine("@dateend", DateTime.Now.ToString("MM/dd/yyyy 23:59")));
+            lstpara.Add(new ParameterDefine("@Type_KeHoachTonKho", prs.ConvertDataTableToJson(dtsave), "DataTable"));
+            string json = await callAPI.ProcedureEncryptAsync("NVLDB.dbo.GetDinhMucNVL_KeHoach_TonKho", lstpara);
+            if (json != "")
+            {
+                DataTable dtdinhmuc = JsonConvert.DeserializeObject<DataTable>(json);
+                string[] arrtitle = new string[] { "KhachHang;Khách hàng", "TenDinhMuc;Tên định mức", "CongDoan;Công đoạn", "TenSP;Tên SP", "MaSP;Mã SP", "MaVatTu;Mã hàng", "TenHang;Tên hàng", "DVT;ĐVT", "SLQuyDoi;SL quy đổi", "TenMau;Tên màu", "TenNCC;Tên NCC" };//  SLTon   SLNhap
+                                                                                                                                                                                                                                                                        //await jSRuntime.InvokeVoidAsync(CallNameJson.toggleCollapse.ToString(), string.Format("#{0}", randomdivhide));
+                foreach(DataColumn cl in dtdinhmuc.Columns)
+                {
+                    foreach(var it in arrtitle)
+                    {
+                        if (it.StartsWith(cl.ColumnName+";"))
+                        {
+                            cl.ColumnName = it.Split(';')[1];
+                            break;
+                        }
+                    }
+
+                }
+                bool check = false;
+                for(int i=dtdinhmuc.Columns.Count-1;i>=0;i--)
+                {
+                    check = false;
+                    foreach (var it in arrtitle)
+                    {
+                        if (it.Contains(dtdinhmuc.Columns[i].ColumnName))
+                        {
+                            check=true;
+                            break;
+                        }
+                    }
+                    if(!check)
+                    {
+                        dtdinhmuc.Columns.RemoveAt(i);
+                    }
+                }
+                DataView dv = dtsave.DefaultView;
+                dv.Sort = "MaSP ASC";  // Có thể đổi thành "ID DESC"
+                DataTable sortedDt = dv.ToTable();
+                await prs.exportexcelAsync(jSRuntime, dtdinhmuc, 2, 1, "ĐỊNH MỨC VẬT TƯ");
+                PanelVisible = false;
+
+            }
+        }
+        catch(Exception ex)
+        {
+            Console.Error.WriteLine("Lỗi:"+ex.Message);
+            toastService.Notify(new ToastMessage(ToastType.Danger, "Lỗi:" + ex.Message));
+            PanelVisible = false;
+        }
+        finally
+        {
+            PanelVisible = false;
+            StateHasChanged();
+        }
+
+
+    }
+
+}

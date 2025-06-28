@@ -1,0 +1,541 @@
+﻿@using BlazorBootstrap
+@using DevExpress.Blazor;
+@using DevExpress.Data.Filtering
+@using NFCWebBlazor.App_ClassDefine;
+@using System.Data
+@using static NFCWebBlazor.App_NguyenVatLieu.App_NhapXuat.Page_NhapXuat_Master
+<style>
+    .my-grid {
+    height: @heightgrid;
+    }
+
+    
+
+   
+
+   
+
+    .divgrid {
+    display: grid;
+    grid-template-columns: 220px 250px 200px; /* Kích thước các cột */
+    }
+
+    .column-right {
+    text-align: right; /* Chỉ những cột có class này sẽ căn phải */
+    }
+
+</style>
+<DxFlyout @ref=dxFlyoutchucnang
+PositionTarget="@idflychucnang"
+@bind-IsOpen=IsOpenfly
+RestrictionTarget="#Navigation-Flyout-Customization"
+AnimationType=FlyoutAnimationType.Fade
+PreventCloseOnPositionTargetClick="true"
+Width="250px"
+Position=@(FlyoutPosition.BottomStart | FlyoutPosition.TopStart)>
+    <BodyTextTemplate>
+
+        <div class="container">
+            <div class="row gap-1">
+
+                <DxButton IconCssClass="bi bi-printer me-1" Text="Xem thẻ kho" RenderStyle="ButtonRenderStyle.Primary"
+                Click="@(()=>printthekhotheomahangAsync(dataRowViewcrr["MaHang"].ToString()))"
+                RenderStyleMode="ButtonRenderStyleMode.Outline">
+                </DxButton>
+                <DxButton IconCssClass="bi bi-printer me-1" Text="Xem thẻ kho hóa chất" RenderStyle="ButtonRenderStyle.Success"
+                Click="@(()=>printTheKhoDauMau())"
+                RenderStyleMode="ButtonRenderStyleMode.Outline">
+                </DxButton>
+            </div>
+        </div>
+    </BodyTextTemplate>
+
+</DxFlyout>
+<DxGridLayout CssClass="w-100 ch-480">
+
+    <Rows>
+        <DxGridLayoutRow Height="Auto" />
+        <DxGridLayoutRow />
+    </Rows>
+
+    <Items>
+
+        <DxGridLayoutItem Row="0">
+            <Template>
+                <div id=@randomdivhide class="p-2 mb-2 bg-white border  rounded-2 rounded-top-0 collapse show">
+                    <div>
+
+                        <DxFormLayout CssClass="w-100" CaptionPosition="CaptionPosition.Vertical">
+                            <DxFormLayoutItem Caption="Chọn loại báo cáo" ColSpanXs="6" ColSpanSm="6" ColSpanMd="4" ColSpanLg="4">
+                                <ComboboxFilteredString SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                ListRenderMode=ListRenderMode.Virtual
+                                TypeName="TonKhoNVLReport"
+                                SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                SearchMode="ListSearchMode.AutoSearch"
+                                ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto
+                                ValueFieldName="@nameof(DataDropDownList.Name)"
+                                TextFieldName="@nameof(DataDropDownList.FullName)"
+                                @bind-Value="@loaibaocao"
+                                CssClass="cw-480" />
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem Caption="Chọn kho" ColSpanXs="12" ColSpanSm="6" ColSpanMd="4" ColSpanLg="4">
+
+
+                                <DxTagBox 
+                                TextFieldName="@nameof(DataDropDownList.FullName)"
+                                ValueFieldName="@nameof(DataDropDownList.Name)"
+                                CssClass="cw-480"
+                                ListRenderMode="ListRenderMode.Virtual"
+                                Data="@lstkhonvl"
+                                DropDownCssClass="dropdownheight"
+                                @bind-Values="@khoselected"
+                                ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto" />
+
+
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem Caption="Chọn nhà máy" ColSpanXs="6" ColSpanSm="6" ColSpanMd="4" ColSpanLg="4" Visible="false">
+                                <ComboboxFilteredString SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                ListRenderMode=ListRenderMode.Virtual
+                                TypeName="NhaMay_NVL"
+                                SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                SearchMode="ListSearchMode.AutoSearch"
+                                ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto
+                                TextFieldName="@nameof(DataDropDownList.FullName)"
+                                @bind-Value="@nvlNhapXuatItemShowcrr.NhaMay"
+                                CssClass="cw-480" />
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem Caption="Nhóm hàng" ColSpanXs="12" ColSpanSm="6" ColSpanMd="4">
+                                <Template>
+                                    <DxComboBox TextFieldName="@nameof(DataDropDownList.FullName)"
+                                    CssClass="cw-480"
+                                    @bind-Value="@nvlNhapXuatItemShowcrr.TenNhom"
+                                    ValueFieldName="@nameof(DataDropDownList.Name)"
+                                    Data="@lstmanhom"
+                                    SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                    ListRenderMode=ListRenderMode.Virtual
+                                    SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                    SearchMode="ListSearchMode.AutoSearch"
+                                    ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto />
+
+
+                                </Template>
+
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem Caption="Chọn mã hàng" BeginRow="true" ColSpanXs="12" ColSpanSm="12" ColSpanMd="6" ColSpanLg="6">
+                                <DxComboBox TextFieldName="@nameof(NvlHangHoaDropDown.TenHang)"
+                                ValueFieldName="@nameof(NvlHangHoaDropDown.MaHang)"
+                                SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                ListRenderMode=ListRenderMode.Virtual
+                                SearchMode="ListSearchMode.AutoSearch"
+                                Data="lstmahang"
+                                @bind-Text="@nvlNhapXuatItemShowcrr.TenHang"
+                                @bind-Value=@nvlNhapXuatItemShowcrr.MaHang
+                                ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto />
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem Caption="Tình trạng sử dụng" BeginRow="true" ColSpanXs="12" ColSpanSm="12" ColSpanMd="6" ColSpanLg="6">
+                                <DxTagBoxDefine @ref=dxtagkhuvuc TextFieldName="@nameof(DataDropDownList.FullName)"
+                                ValueFieldName="@nameof(DataDropDownList.Name)"
+                                CssClass="cw-480"
+                                ListRenderMode="ListRenderMode.Virtual"
+                                TypeName="Type_GhiChuNhapXuatItem"
+                                DropDownCssClass="dropdownheight"
+                                @bind-Values="@khuvucselected"
+                                ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto" />
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem Caption="Từ ngày" ColSpanXs="6" ColSpanSm="6" ColSpanMd="3" ColSpanLg="3">
+
+                                <DxDateEdit @bind-Date="@dtpbegin" Mask="@DateTimeMask.ShortDate" DisplayFormat="dd-MM-yy" />
+
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem Caption="Đến" ColSpanXs="6" ColSpanSm="6" ColSpanMd="3" ColSpanLg="3">
+
+                                <DxDateEdit @bind-Date="@dtpend" Mask="@DateTimeMask.ShortDate" DisplayFormat="dd-MM-yy" />
+
+                            </DxFormLayoutItem>
+
+
+                        </DxFormLayout>
+
+                    </div>
+                </div>
+
+            </Template>
+        </DxGridLayoutItem>
+
+        <DxGridLayoutItem Row="1">
+            <Template>
+                <div style="position: relative;justify-content: center; align-items: center;">
+                    <div style="position: absolute;display: flex;width: 100%;">
+                        <DxGrid @ref=dxGrid
+                        TextWrapEnabled="true"
+                        ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+                        CssClass="my-grid"
+                        id="@idgrid"
+                        ShowFilterRow="true"
+                        VirtualScrollingEnabled=true
+                        FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                        Data=@dtresult
+                        AutoExpandAllGroupRows=@expandgrouprow>
+                            <ToolbarTemplate>
+                                <DxToolbar AdaptivityAutoCollapseItemsToIcons="false" ItemRenderStyleMode="ToolbarRenderStyleMode.Plain" SizeMode="SizeMode.Small">
+                                    <DxToolbarItem Text="TÌM KIẾM" IconCssClass="bi bi-menu-button-wide" RenderStyle="ButtonRenderStyle.Danger" Click="@(()=>JSRuntime.InvokeVoidAsync("toggleCollapse", string.Format("#{0}",randomdivhide)))">
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="XEM" BeginGroup="true" IconCssClass="bi bi-search" RenderStyle="ButtonRenderStyle.Primary" Click="@searchAsync">
+                                    </DxToolbarItem>
+                                    <DxToolbarItem IconCssClass="bi bi-printer" Text="XUẤT TRANG IN" RenderStyle="ButtonRenderStyle.Success" Click="@printtonkhonew">
+                                    </DxToolbarItem>
+                                    <DxToolbarItem IconCssClass="bi bi-printer" Text="XEM THẺ KHO" RenderStyle="ButtonRenderStyle.Danger">
+                                        <Items>
+                                            <DxToolbarItem Text="Gộp theo ngày" IconCssClass="bi bi-card-checklist" Click="@printthekho" />
+                                            <DxToolbarItem Text="Chi tiết theo tem" IconCssClass="bi bi-list-stars" Click="@printthekhoIDTem" />
+                                            @*  <DxToolbarItem Text="Chi tiết số lô" IconCssClass="bi bi-list-stars" Click="@printthekhoSoLo" /> *@
+                                        </Items>
+                                    </DxToolbarItem>
+                                    <DxToolbarItem IconCssClass="bi bi-search" Text="XEM HÀNG NỢ" RenderStyle="ButtonRenderStyle.Secondary">
+                                        <Items>
+                                            <DxToolbarItem Text="Nợ = Nhập - Xuất" IconCssClass="bi bi-card-checklist" Click="@(()=>printXemHangNo(false))" />
+                                            <DxToolbarItem Text="Nợ = Xuất - Nhập" IconCssClass="bi bi-card-checklist" Click="@(()=>printXemHangNo(true))" />
+
+                                        </Items>
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="Xuất excel" BeginGroup="true" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=>dxGrid.ExportToXlsxAsync("ExporTonKho"))">
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="Chọn cột" BeginGroup="true" Click="@(()=>dxGrid.ShowColumnChooser())" IconCssClass="bi bi-layout-text-window-reverse" />
+                                    <DxToolbarItem  BeginGroup="true" IconCssClass="bi bi-layout-text-window-reverse">
+                                        <Template Context="abc">
+                                            <DxCheckBox  Checked="@checktonkholonhon0" CheckedChanged="@((bool e)=>CheckShowtonkho(e))">Tồn kho> 0</DxCheckBox>
+                                        </Template>
+                                    </DxToolbarItem>
+                                </DxToolbar>
+                            </ToolbarTemplate>
+                            <Columns>
+                                @if (!Ismobile)
+                                {
+                                    <DxGridDataColumn Width="120">
+                                        <CellDisplayTemplate>
+                                            @{
+                                                DataRowView nvlNhapXuatItemShow = (DataRowView)context.DataItem;
+                                            }
+                                            <span>
+                                                <a href="#" class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"
+                                                id=@idelement(nvlNhapXuatItemShow["MaHang"].ToString()) @onclick="@(()=>ShowFlyout(nvlNhapXuatItemShow))"><i class="bi bi-list-stars me-1"></i>Chức năng</a>
+                                            </span>
+                                            @*  <span>
+                                                <a href="#" class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"
+                                                @onclick="@(()=>printthekhotheomahangAsync(nvlNhapXuatItemShow["MaHang"].ToString()))"><i class="bi bi-list-stars me-1"></i>Xem thẻ kho</a>
+                                            </span> *@
+                                        </CellDisplayTemplate>
+                                    </DxGridDataColumn>
+                                    <DxGridDataColumn FieldName="MaHang" Caption="Mã hàng" Width="110" />
+                                    <DxGridDataColumn FieldName="MaPDOC" Caption="Mã PDOC" Width="110" />
+                                    <DxGridDataColumn FieldName="TenHang" Caption="Tên hàng" Width="240" />
+                                    <DxGridDataColumn FieldName="DVT" Caption="ĐVT" Width="80" />
+                                    <DxGridDataColumn FieldName="DonGia" Caption="Đơn giá" Width="80" DisplayFormat="#,0.##;-#,0.##;''" />
+                                    <DxGridDataColumn FieldName="TenNhom" Width="140" Caption="Nhóm hàng" />
+                                    <DxGridDataColumn  FieldName="TinhTrangSuDung" ExportEnabled="@visibletinhtrangsd" Width="140" Caption="Tình trạng sử dụng" Visible="@visibletinhtrangsd"/>
+                                    <DxGridDataColumn FieldName="TenSP" Width="240" GroupIndex="0">
+                                        <GroupRowTemplate>
+                                            @{
+                                                if (context.GroupValue != null)
+                                                {
+                                                    string s = "";
+                                                    s = context.GroupValue.ToString();
+                                                    var query = lstgroup.FirstOrDefault(p => p.GroupName == s);
+                                                    if (query != null)
+                                                    {
+                                                        <div class="divgrid">
+                                                            <div class="column">
+                                                                <span style="color:forestgreen;font-weight:bold">@context.GroupValue</span>
+                                                            </div>
+                                                            <div class="column">
+                                                                <div class="d-flex"><span style="width:110px">Tồn đầu kỳ: </span><span style="color:orangered;text-align:right;width:130px;">@string.Format("{0}", query.TTTonDau.ToString("#,0"))</span></div>
+                                                                <div class="d-flex"><a href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="@lydotinhtien" style="width:110px;">Nhập kho:</a><span style="color:orangered;text-align:right;width:130px;">@string.Format("{0}", query.TTNhap.ToString("#,0"))</span></div>
+                                                                <div class="d-flex"><span style="width:110px">Xuất kho: </span><span style="color:orangered;text-align:right;width:130px;">@string.Format("{0}", query.TTXuat.ToString("#,0"))</span></div>
+                                                                <div class="d-flex"><span style="width:110px">Tồn cuối kỳ: </span><span style="color:green;font-weight:bold;text-align:right;width:130px;">@string.Format("{0}", query.ThanhTien.ToString("#,0"))</span></div>
+                                                            </div>
+
+                                                            @if (query.TyLe < 1)
+                                                            {
+                                                                <div class="column">
+                                                                    <div class="progress" role="progressbar" aria-label="Warning example" aria-valuenow="@((query.TyLe*100).ToString("#,0"))" aria-valuemin="0" aria-valuemax="100">
+                                                                        <div class="progress-bar bg-warning text-dark" style="width: @widthmin(query.TyLe)">@string.Format("{0:P0}", query.TyLe)</div>
+                                                                    </div>
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span style="color:forestgreen;font-weight:bold">@context.GroupValue</span>
+                                                    }
+
+                                                }
+                                            }
+                                        </GroupRowTemplate>
+                                    </DxGridDataColumn>
+                                    <DxGridDataColumn FieldName="GroupSP" Width="150" Caption="@titlegroupsp" Visible="false" />
+                                    <DxGridBandColumn Caption="@headertondauky">
+                                        <Columns>
+                                            <DxGridDataColumn FieldName="SLTonDau" Width="110" Caption="SL Đầu kỳ" DisplayFormat="#,0.##;-#,0.##;''" />
+                                            <DxGridDataColumn FieldName="TTTonDau" Width="90" Caption="Thành tiền" DisplayFormat="#,0;-#,0;''" />
+                                        </Columns>
+                                    </DxGridBandColumn>
+
+                                    <DxGridBandColumn Caption="@headerphatsinh">
+                                        <Columns>
+                                            <DxGridDataColumn FieldName="SLNhap" Caption="SL Nhập" Width="90" DisplayFormat="#,0.##;-#,0.##;''" />
+                                            <DxGridDataColumn FieldName="SLXuat" Caption="SL Xuất" Width="90" DisplayFormat="#,0.##;-#,0.##;''" />
+                                        </Columns>
+                                    </DxGridBandColumn>
+                                    <DxGridBandColumn Caption="@headerphatsinh" Visible="false">
+                                        <Columns>
+                                            <DxGridDataColumn FieldName="TTNhap" Caption="TT Nhập" Width="90" DisplayFormat="#,0.##;-#,0.##;#" />
+                                            <DxGridDataColumn FieldName="TTXuat" Caption="TT Xuất" Width="90" DisplayFormat="#,0.##;-#,0.##;#" />
+                                        </Columns>
+                                    </DxGridBandColumn>
+                                    <DxGridBandColumn Caption="Tồn cuối kỳ">
+                                        <Columns>
+                                            <DxGridDataColumn FieldName="SLTon" Caption="Tồn cuối kỳ" Width="110" DisplayFormat="#,0.##;-#,0.##;#">
+                                                <HeaderCaptionTemplate>
+                                                    <span>@titleton</span>
+                                                </HeaderCaptionTemplate>
+                                            </DxGridDataColumn>
+                                            <DxGridDataColumn FieldName="ThanhTien" Caption="Thành Tiền" Width="100" DisplayFormat="#,#"></DxGridDataColumn>
+                                        </Columns>
+                                    </DxGridBandColumn>
+                                   @*  <DxGridBandColumn Caption="Tồn cuối kỳ (rã vỉ)">
+                                        <Columns>
+                                            <DxGridDataColumn FieldName="QuyDoiRaVi" Caption="Rã vỉ" Width="110" DisplayFormat="#,0.##;-#,0.##;#">
+                                                <HeaderCaptionTemplate>
+                                                    <span></span>
+                                                </HeaderCaptionTemplate>
+                                            </DxGridDataColumn>
+                                            <DxGridDataColumn FieldName="TonCuoiRaVi" Caption="Tồn cuối (rã vỉ)" Width="110" DisplayFormat="#,0.##;-#,0.##;#">
+                                                <HeaderCaptionTemplate>
+                                                    <span>@titleton</span>
+                                                </HeaderCaptionTemplate>
+                                            </DxGridDataColumn>
+                                        </Columns>
+                                    </DxGridBandColumn> *@
+                                    <DxGridBandColumn Caption="Giới hạn tồn">
+                                        <Columns>
+                                            <DxGridDataColumn FieldName="MinTK" Caption="Min TK" Width="90" DisplayFormat="#,0.##;-#,0.##;''" />
+                                            <DxGridDataColumn FieldName="MaxTK" Caption="Max TK" Width="90" DisplayFormat="#,0.##;-#,0.##;''" />
+                                        </Columns>
+                                    </DxGridBandColumn>
+                                }
+                                @if (Ismobile)
+                                {
+                                    <DxGridDataColumn FieldName="MaHang">
+                                        <CellDisplayTemplate>
+                                            @{
+                                                DataRowView nvlNhapXuatItemShow = (DataRowView)context.DataItem;
+                                            }
+                                            <div class="shadow-sm p-3 bg-body-tertiary rounded">
+                                                <div class="row d-flex">
+                                                    <div class="col flex-grow-1">
+                                                        <span style="font-size: 1.1rem; font-weight: bold; color: #0074bd">@string.Format("{0}. {1}", context.VisibleIndex + 1, nvlNhapXuatItemShow["TenHang"].ToString())</span>
+                                                    </div>
+                                                    <div class="col flex-grow-0">
+                                                        <span style="color: forestgreen; font-size: 1.1rem;white-space: nowrap;">@string.Format("{0} {1}", nvlNhapXuatItemShow["SLTon"].ToString(), nvlNhapXuatItemShow["DVT"].ToString())</span>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </CellDisplayTemplate>
+                                    </DxGridDataColumn>
+                                }
+                            </Columns>
+                            <GroupSummary>
+                                <DxGridSummaryItem SummaryType="GridSummaryItemType.Count"
+                                FieldName="TenNhom"
+                                Name="TenNhom"
+                                DisplayText="Thành tiền"
+                                FooterColumnName="TenNhom" />
+                                <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+                                FieldName="ThanhTien"
+                                Name="ThanhTien"
+                                DisplayText="{0}"
+                                FooterColumnName="ThanhTien" />
+                                <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+                                FieldName="TTTonDau"
+                                Name="TTTonDau"
+                                DisplayText="{0}"
+                                FooterColumnName="TTTonDau" />
+                                <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+                                FieldName="TTNhap"
+                                Name="TTNhap"
+                                DisplayText="{0}"
+                                FooterColumnName="SLNhap" />
+                                <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+                                FieldName="TTXuat"
+                                Name="TTXuat"
+                                DisplayText="{0}"
+                                FooterColumnName="SLXuat" />
+                            </GroupSummary>
+                            <TotalSummary>
+                                <DxGridSummaryItem SummaryType="GridSummaryItemType.Count"
+                                FieldName="TenNhom"
+                                Name="TenNhom"
+                                DisplayText="Thành tiền"
+                                FooterColumnName="TenNhom" />
+                                <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+                                FieldName="ThanhTien"
+                                Name="ThanhTien"
+                                DisplayText="{0}"
+                                FooterColumnName="ThanhTien" />
+                                <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+                                FieldName="TTTonDau"
+                                Name="TTTonDau"
+                                DisplayText="{0}"
+                                FooterColumnName="TTTonDau" />
+                                <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+                                FieldName="TTNhap"
+                                Name="TTNhap"
+                                DisplayText="{0}"
+                                FooterColumnName="SLNhap" />
+                                <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+                                FieldName="TTXuat"
+                                Name="TTXuat"
+                                DisplayText="{0}"
+                                FooterColumnName="SLXuat" />
+
+                            </TotalSummary>
+                            <DetailRowTemplate>
+                                <DxTabs>
+                                    <DxTabPage Text="Bảng kê chi tiết" TabIconCssClass="bi bi-list-ol">
+                                        @{
+                                            DataRowView nvlNhapXuatItemShow = (DataRowView)context.DataItem;
+                                        }
+                                        <View_NvlTonKhoItem dataRowView="@nvlNhapXuatItemShow" showTK="@(!visbletinhtrangsd)" lstpara="@lstpara" sqlquery="@setSqlItem(nvlNhapXuatItemShow)" isMobile="@Ismobile"></View_NvlTonKhoItem>
+                                    </DxTabPage>
+                                </DxTabs>
+
+                            </DetailRowTemplate>
+                        </DxGrid>
+                    </div>
+                    <div style="position: absolute;display:@(PanelVisible ? "flex" : "none");width:100%;height:@heightgrid;background-color: rgba(0, 0, 0, 0.3);justify-content: center; align-items: center;">
+                        <CascadingValue Name="visibleTimer" Value="@PanelVisible">
+                            <LoadingPanel></LoadingPanel>
+                        </CascadingValue>
+                    </div>
+                </div>
+
+            </Template>
+        </DxGridLayoutItem>
+
+    </Items>
+</DxGridLayout>
+@code {
+
+
+    [Inject] IJSRuntime JSRuntime { get; set; }
+    [Inject] BrowserService browserService { get; set; }
+    NvlNhapXuatItemShow nvlNhapXuatItemShowcrr { get; set; } = new NvlNhapXuatItemShow();
+    List<DataDropDownList> lstnoigiaonhan { get; set; }
+    List<NvlHangHoaDropDown> lstmahang { get; set; }
+    DataRowView dataRowViewcrr { get; set; }
+    string heightgrid = "500px";
+    bool visibletinhtrangsd { get; set; } = false;
+    DateTime? dtpbegin { get; set; } = DateTime.Now;
+    DateTime? dtpend { get; set; } = DateTime.Now;
+    bool checktonkholonhon0 { get; set; } = false;
+    bool isclick = false;
+    bool expandgrouprow = false;
+    bool visbletinhtrangsd { get; set; } = false;
+    bool PanelVisible { get; set; } = false;
+    string loaibaocao { get; set; } = "Báo cáo theo kho";
+    ComboboxFilteredTable txtnhamay { get; set; }
+    string idgrid { get; set; } = "abc";
+    DxTagBoxDefine dxtagkhuvuc { get; set; }
+    IEnumerable<DataDropDownList> khuvucselected { get; set; } = new List<DataDropDownList>();
+    List<DataDropDownList> lstlydo { get; set; }
+    List<DataDropDownList>? lstmanhom { get; set; }
+
+    IEnumerable<DataDropDownList> khoselected { get; set; }
+    string headertondauky { get; set; } = "Tồn đầu";
+    string headerphatsinh { get; set; } = "Phát sinh";
+    string titlegroupsp { get; set; } = "Nhóm hàng";
+    string TenKho { get; set; }
+    bool IsOpenfly { get; set; } = false;
+    string titleton { get; set; } = "Tồn cuối kỳ";
+    List<DataDropDownList> lstkhonvl { get; set; }
+    DxFlyout dxFlyoutchucnang { get; set; }
+    public string idflychucnang { get; set; }
+    public string random { get; set; }
+    public DxGrid dxGrid { get; set; }
+    public string lydotinhtien { get; set; }
+    private string randomdivhide { get; set; } = string.Format("id{0}", StaticClass.Randomstring(10));//ID của CSS nên bắt đầu bằng chữ, vì nếu bat đầu bằng số dễ bị hẹo lắm
+    DataTable dtresult { get; set; } = new DataTable();
+    private string showdate(DateTime? dt)
+    {
+        if (dt == null)
+            return "";
+        return dt.Value.ToString("dd-MM-yy");
+    }
+    private void expandorcollapse(int i)
+    {
+        if (dxGrid.IsDetailRowExpanded(i))
+            dxGrid.CollapseDetailRow(i);
+        else
+            dxGrid.ExpandDetailRow(i);
+    }
+    private string widthmin(double d)
+    {
+
+        if (d < 0.05)
+            return "5%";
+        return string.Format("{0:P0}", d);
+    }
+    public string idelement(string id)
+    {
+        if (id == null)
+            return "";
+
+        if (random == null)
+        {
+            random = prs.RandomString(9);
+        }
+        return string.Format("flychucnang_{0}_{1}", random, id);
+    }
+    public async void ShowFlyout(DataRowView dataRowView)
+    {
+        try
+        {
+            await dxFlyoutchucnang.CloseAsync();
+            dataRowViewcrr = dataRowView;
+            idflychucnang = "#" + idelement(dataRowViewcrr["MaHang"].ToString());
+
+            //IsOpenfly = true;
+            await dxFlyoutchucnang.ShowAsync();
+        }
+        catch (Exception ex)
+        {
+            toastService.Notify(new ToastMessage(ToastType.Warning, "Lỗi:" + ex.Message));
+            Console.Error.WriteLine(ex.Message);
+        }
+
+    }
+    private void CheckShowtonkho(bool e)
+    {
+        checktonkholonhon0 = e;
+        if(e)
+        {
+            
+                var filterCriteria = CriteriaOperator.Parse(string.Format("[SLTon]>0.01"));
+                //var filterCriteria =
+                // new InOperator("GroupMauSP", query.Select(c => c.MaMau));
+                //var filterCriteria2 =new InOperator("KhuVucKH", query.Select(c => c.KhuVucKH));
+                dxGrid.SetFilterCriteria(filterCriteria);
+               // dxGrid.Reload();
+        }
+        else
+        {
+            dxGrid.ClearFilter();
+           // dxGrid.Reload();
+        }
+    }
+
+}

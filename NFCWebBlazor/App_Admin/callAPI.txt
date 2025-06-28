@@ -1,0 +1,33 @@
+﻿ CallAPI callAPI = new CallAPI();
+                string sql = "NFCNVL.dbo.FileHoSoKyDuyet_InsertNofile";
+                List<ParameterDefine> lstpara = new List<ParameterDefine>();
+                if (keHoachMuaHang_Showcrr != null)
+                {
+                    lstpara.Add(new ParameterDefine("@SerialKyDuyet", keHoachMuaHang_Showcrr.Serial));
+
+                    lstpara.Add(new ParameterDefine("@TableNameKyDuyet", "NvlKehoachMuaHang"));
+                }
+
+                lstpara.Add(new ParameterDefine("@UserDuyet", nguoiduyet));
+
+                lstpara.Add(new ParameterDefine("@UserInsert", userGlobal.users.UsersName));
+
+
+                string json = await callAPI.ProcedureEncryptAsync(sql, lstpara);
+                if (json != "")
+                {
+                    var query = JsonConvert.DeserializeObject<List<Ketqua>>(json);
+                    if (query[0].ketqua == "OK")
+                    {
+                        ToastService.Notify(new ToastMessage(ToastType.Success, $"Duyệt thành công"));
+                        
+                    }
+                    else
+                    {
+                        ToastService.Notify(new ToastMessage(ToastType.Warning, "Lỗi: " + query[0].ketqua));
+
+                    }
+                    //Grid.Data = lstDonDatHangSearchShow;
+                }
+
+

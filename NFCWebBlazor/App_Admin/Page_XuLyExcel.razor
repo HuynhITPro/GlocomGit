@@ -1,0 +1,134 @@
+﻿@using BlazorBootstrap
+@using ClosedXML.Excel
+@using System.IO
+@using System.Buffers
+<DxGridLayout CssClass="w-100 ch-480">
+
+    <Rows>
+        <DxGridLayoutRow Height="Auto" />
+        <DxGridLayoutRow Height="Auto" />
+        <DxGridLayoutRow />
+    </Rows>
+
+    <Items>
+
+        <DxGridLayoutItem Row="0">
+            <Template>
+               
+             
+
+                <h1 class="mb-4">Blazor Server File Upload</h1>
+
+                <!-- Alert message display -->
+                <div class="@AlertClass" role="alert">
+                    @AlertMessage
+                </div>
+
+                <!-- Progress bar for file upload -->
+                <div class="progress mb-3" style="height: 20px;">
+                    <div class="progress-bar" role="progressbar" style="width: @ProgressPercentage%;" aria-valuenow="@ProgressPercentage" aria-valuemin="0" aria-valuemax="100">@ProgressPercentage% Complete</div>
+                </div>
+                <div class="input-group mb-3">
+                    <InputFile @key="InputFileId" class="form-control" id="inputFile" OnChange="OnInputFileChange" aria-describedby="uploadButton" required />
+                    <button class="btn btn-primary" type="submit" id="uploadButton" disabled="@IsUploadDisabled">
+                        <span class="oi oi-cloud-upload" aria-hidden="true"></span> Upload Selected File
+                    </button>
+                </div>
+                <div class="invalid-feedback">
+                    Please select a file to upload.
+                </div>
+
+                <div class="shadow-sm p-3 mb-2 bg-white border rounded-bottom-2">
+                    <div class="container mt-5">
+                        <div class="row justify-content-center">
+                            <div class="col-auto">
+                                <InputFile OnChange="HandleFileSelected" />
+                            </div>
+                            <div class="col-auto">
+                                <button type="button" class="btn btn-secondary">Button 2</button>
+                            </div>
+                            <div class="col-auto">
+                                <button type="button" class="btn btn-success">Button 3</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </Template>
+        </DxGridLayoutItem>
+        <DxGridLayoutItem Row="1">
+            <Template>
+                <div class="row">
+                    <label style="font-size:20px;color:forestgreen">@textxuly</label>
+                </div>
+                <div class="row">
+                    @if (linkfile != "")
+                    {
+                        <div class="col-auto">
+                        <img style="width:auto;height:32px;" src="images/xlsx.svg" onclick="@downloadfileAsync" />
+                        <a onclick="@downloadfileAsync" href="#">Tải file</a>
+                    </div>
+                    }
+                </div>
+            </Template>
+        </DxGridLayoutItem>
+
+
+    </Items>
+</DxGridLayout>
+@code {
+    private const long MaxFileSize = 10 * 1024L * 1024L; // gioi han 10MB thoi
+    private static readonly string[] AllowedExtensions = { ".xlsx" };
+
+    // Properties for UI state management
+    private MarkupString AlertMessage { get; set; } = new("<strong>No file selected</strong>");
+    private string AlertClass { get; set; } = "alert alert-info";
+    private int ProgressPercentage { get; set; }
+    private IBrowserFile? SelectedFile { get; set; }
+    private bool IsUploadDisabled { get; set; } = true;
+    private Guid InputFileId { get; set; } = Guid.NewGuid();
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+       
+    }
+    private void OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        SelectedFile = e.GetMultipleFiles().FirstOrDefault();
+        ProgressPercentage = 0;
+        IsUploadDisabled = true;
+
+        // Validate selected file
+        if (SelectedFile is null)
+        {
+            ToastService.Notify(new ToastMessage(ToastType.Danger, $"Chưa có file "));
+            
+            return;
+        }
+
+        if (SelectedFile.Size > MaxFileSize)
+        {
+            ToastService.Notify(new ToastMessage(ToastType.Danger,  $"File vượt quá giới hạn cho phép là  <strong>{MaxFileSize / (1024 * 1024)} MB"));
+            
+            return;
+        }
+
+        string fileExtension = Path.GetExtension(SelectedFile.Name).ToLowerInvariant();
+        if (!AllowedExtensions.Contains(fileExtension))
+        {
+            ToastService.Notify(new ToastMessage(ToastType.Danger, $"Lỗi định dạng, file chỉ chấp nhận định dạng <strong>{string.Join(", ", AllowedExtensions)}</strong>."));
+           
+            return;
+        }
+        getdataimport(e);
+        //SetAlert("alert alert-info", "oi oi-info", $"<strong>{SelectedFile.Name}</strong> ({SelectedFile.Size} bytes) file selected.");
+        IsUploadDisabled = false;
+    }
+   
+
+    // private void SetAlert(string alertClass, string iconClass, string message)
+    // {
+    //     AlertClass = alertClass;
+    //     AlertMessage = new MarkupString($"<span class='{iconClass}' aria-hidden='true'></span> {message}");
+    // }
+
+}

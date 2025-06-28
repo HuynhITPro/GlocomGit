@@ -1,0 +1,42 @@
+﻿<div class="progress position-relative">
+    <div class=@($"{StyleProgress()}") role="progressbar" style=@($"width: {setValue()}%;") aria-valuenow=@setValue() aria-valuemin="0" aria-valuemax="100"></div>
+    <small class=@($"justify-content-center d-flex {classtext} position-absolute w-100")>@(setValue().ToString() + " %")</small>
+</div>
+
+@code {
+    [Parameter]
+    public double? value { get; set; }
+    public string classtext { get; set; } = "text-primary";
+    public int setValue()
+    {
+        if (value == null)
+            return 0;
+        return (int)Math.Round(value.Value * 100,0);
+    }
+    public string StyleProgress()
+    {
+        double d = 0;
+        if (value == null)
+            d = 0;
+        else
+            d = value.Value * 100;
+        if(d<50)
+        {
+            classtext = "text-primary";
+            return "progress-bar bg-danger";
+        }
+        if (d < 95)
+        {
+            classtext = "text-primary";
+            return "progress-bar bg-warning";
+        }
+        if (d >= 95)
+        {
+            classtext = "text-light";
+            return "progress-bar bg-success";
+        }
+        return "progress-bar";
+
+    }
+}
+

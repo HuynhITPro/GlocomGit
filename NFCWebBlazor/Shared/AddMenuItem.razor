@@ -1,0 +1,53 @@
+﻿@using System.Collections.ObjectModel
+@if (ListItems != null)
+{
+    var queryitem = ListItems.Where(p => p.NodeParent == Nodeparent);
+    @foreach(var item in queryitem)
+    {
+       // Console.WriteLine(item.TextItem);
+
+        if (queryitem.Count() == 0)
+        {
+            <DxMenuItem Text=@item.TextItem  IconCssClass=@item.IconCssClass Name=@item.NameItem Click="itemclick" Target="@item.ComponentName">
+            </DxMenuItem>
+        }
+        else
+        {
+            <DxMenuItem Text=@item.TextItem  IconCssClass=@item.IconCssClass Name=@item.NameItem Click="itemclick" Target="@item.ComponentName">
+                <Items>
+                    <AddMenuItem ListItems="ListItems" Nodeparent="@item.NameItem"></AddMenuItem>
+                </Items>
+            </DxMenuItem>
+        }
+    }
+}
+@code {
+
+    [Parameter]
+    public List<MenuItem> ListItems { get; set; }
+    [Parameter]
+    public string Nodeparent{ get; set; }
+
+    [CascadingParameter(Name = "addtab")]
+    public EventCallback<MenuItem> cascadedValue { get; set; }
+
+    async void itemclick(MenuItemClickEventArgs args)
+    {
+        var it = args.ItemInfo;
+        if (String.IsNullOrEmpty(it.Target))
+            return;
+       MenuItem menuItem = ListItems.Where(p => p.NameItem.Equals(it.Name)).FirstOrDefault();
+       await cascadedValue.InvokeAsync(menuItem);
+        // if (!String.IsNullOrEmpty(menuItem.ComponentName))
+        // {
+        //     await GotoMainForm.InvokeAsync(menuItem);
+        //     //navigationManager.NavigateTo(menuItem.NavigateUrl);
+        // }
+        // else
+        // {
+
+        // }
+       
+    }
+   
+}

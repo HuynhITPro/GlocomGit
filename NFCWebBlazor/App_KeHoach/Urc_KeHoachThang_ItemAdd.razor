@@ -1,0 +1,147 @@
+﻿@using DevExpress.Blazor
+@using NFCWebBlazor.App_ClassDefine
+@using static NFCWebBlazor.App_KeHoach.Page_KeHoachThang_Master
+
+<style>
+    .combobox-item-template {
+        display: flex;
+        align-items: center;
+    }
+</style>
+
+
+<EditForm EditContext="@editContext" Context="EditFormContext" style="max-width:700px;" onkeydown="return handleF11Submit(event)">
+    <DataAnnotationsValidator />
+    <div class="d-flex justify-content-center">
+        <DxFormLayout CssClass="sizelayout" @onkeydown=@Onkeydown>
+            <DxFormLayoutItem Caption="Tên kế hoạch" ColSpanSm="12" ColSpanMd="12" ColSpanLg="12"  CaptionPosition="CaptionPosition.Vertical">
+                <Template>
+                    <DxTextBox @bind-Text=@keHoachSP_Showcrr.TenKHThang Enabled="false"></DxTextBox>
+                </Template>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Chọn sản phẩm" ColSpanSm="12" ColSpanMd="12" ColSpanLg="12" CaptionPosition="CaptionPosition.Vertical">
+                <Template>
+                    <DxComboBox @ref=txtMaSP tabindex="1" SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                                                         ListRenderMode=ListRenderMode.Virtual
+                                                                         SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                                                         ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                                                         SearchMode="ListSearchMode.AutoSearch"
+                               Data="@lstsanphamdropdown"
+                               
+                                                                         SelectedItemChanged="@((DataDropDownList masp)=>SanPhamDropDownSelected(masp))"
+                                                                         TextFieldName="@nameof(DataDropDownList.FullName)"
+                                                                         ValueFieldName="@nameof(DataDropDownList.Name)"
+                                @bind-Value="@keHoachThangItem_Showform.MaSP"
+                                                                         CssClass="cw-480" />
+                    <div class="text-danger">
+                        <ValidationMessage For="@(() => keHoachThangItem_Showform.MaSP)" />
+                    </div>
+                </Template>
+            </DxFormLayoutItem>
+           
+            <DxFormLayoutItem  Caption="Article Number" ColSpanSm="6" ColSpanMd="4" ColSpanLg="4" CaptionPosition="CaptionPosition.Vertical">
+                <Template>
+                    @if (lstArtselected!=null)
+                    {
+                        <DxComboBox tabindex="2" @ref=txtArticleNumber SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                    ListRenderMode=ListRenderMode.Virtual
+                                    SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                    ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                    SearchMode="ListSearchMode.AutoSearch"
+                                    AllowUserInput=true
+                                    Data="@lstArtselected"
+                                    ValueFieldName="@nameof(ArticleNumberProduct.ArticleNumber)"
+                                    TextFieldName="@nameof(ArticleNumberProduct.ArticleNumber)"
+                                    InputId="cbItemTemplate"
+                                    @bind-Value="@keHoachThangItem_Showform.ArticleNumber"
+                                  
+                                    CssClass="cw-480">
+                            <ItemDisplayTemplate Context="comboContext">
+                                <div class="combobox-item-template" style="background-color:@comboContext.DataItem.Colorhex;padding:3px;">
+                                    <span>@comboContext.DataItem.ArticleNumber</span>
+                                </div>
+                            </ItemDisplayTemplate>
+                        </DxComboBox>
+                        <div class="text-danger">
+                            <ValidationMessage For="@(() => keHoachThangItem_Showform.ArticleNumber)" />
+                        </div>
+                    }
+                 
+                </Template>
+            </DxFormLayoutItem>
+
+            <DxFormLayoutItem Caption="Số lượng" ColSpanSm="6" ColSpanMd="4" ColSpanLg="4" CaptionPosition="CaptionPosition.Vertical">
+
+                <DxSpinEdit tabindex="3" @bind-Value="@keHoachThangItem_Showform.SLSP" />
+                <div class="text-danger">
+                    <ValidationMessage For="@(() => keHoachThangItem_Showform.SLSP)" />
+                </div>
+            </DxFormLayoutItem>
+
+            <DxFormLayoutItem Caption="Ghi chú" ColSpanSm="12" ColSpanMd="12" ColSpanLg="12" CaptionPosition="CaptionPosition.Vertical">
+                <DxMemo tabindex="4" id="textarea" Rows="4" @bind-Text=@keHoachThangItem_Showform.GhiChu NullText="Ghi chú"></DxMemo>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanSm="12" ColSpanMd="12">
+                <div class="d-flex justify-content-center mt-2 gap-2">
+                    <DxButton RenderStyle="ButtonRenderStyle.Primary" tabindex="5" IconCssClass="bi bi-floppy" Text="Lưu" Visible=@(!EnableEdit) Click="@saveAsync" />
+                    <DxButton RenderStyle="ButtonRenderStyle.Success" tabindex="6" IconCssClass=" bi bi-file-earmark m-1" Text="Làm lại" Visible=@(!EnableEdit) Click="@reset" />
+                    <DxButton RenderStyle="ButtonRenderStyle.Info" tabindex="5" IconCssClass="bi bi-pencil" CssClass="ms-2" Text="Sửa" Visible=@EnableEdit Click="@updateAsync" />
+                </div>
+
+            </DxFormLayoutItem>
+
+        </DxFormLayout>
+    </div>
+</EditForm>
+
+@code {
+
+    [Inject]
+    PhanQuyenAccess phanQuyenAccess { get; set; }
+    [Parameter]
+    public KeHoachSP_Show keHoachSP_Showcrr { get; set; }
+
+    [Parameter]
+    public KeHoachThangItem_Show keHoachThangItem_Showform { get; set; }
+    [Parameter]
+    public EventCallback<KeHoachSP_Show> GotoMainForm { get; set; }
+
+    [Parameter]
+    public EventCallback<KeHoachThangItem_Show> GotoDetailItem{ get; set; }
+
+
+  
+    private EditContext? editContext;
+    DxComboBox<DataDropDownList,string> txtMaSP{ get; set; }
+    DxComboBox<ArticleNumberProduct, string> txtArticleNumber { get; set; }
+    public List<DataDropDownList> lstsanphamdropdown { get; set; }
+    private List<ArticleNumberProduct> lstart { get; set; }
+    private List<ArticleNumberProduct> lstArtselected { get; set; }
+    public List<DataDropDownList> lstdonhangmua { get; set; }
+    //ArticleNumberProduct articleNumberProductselected { get; set; }
+    DataDropDownList sanphamselected{ get; set; }
+    bool IsOpenfly;
+    string GhiChu { get; set; } = "";
+
+
+
+    bool EnableEdit { get; set; } = false;
+
+    DxFlyout dxFlyoutchucnang { get; set; }
+
+    private async void Onkeydown(KeyboardEventArgs e)
+    {
+        if (e.Key == "F11")
+        {
+
+            if (!EnableEdit)
+            {
+               await txtMaSP.FocusAsync();
+                await saveAsync();
+
+            }
+           
+        }
+    }
+   
+}

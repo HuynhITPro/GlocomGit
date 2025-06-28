@@ -1,0 +1,263 @@
+﻿@using BlazorBootstrap
+@using DevExpress.Blazor;
+@using NFCWebBlazor.App_ClassDefine;
+@using System.Data
+@using System.Collections.ObjectModel
+
+<style>
+    .my-grid {
+        height: @heightgrid;
+    }
+
+   /*  .highlighted-item > td {
+        background-color: lightyellow;
+        color: #0070ff;
+        font-weight: bold;
+    } */
+
+</style>
+<NFCWebBlazor.App_Admin.DialogMsg @ref="@dialogMsg"></NFCWebBlazor.App_Admin.DialogMsg>
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+<DxFlyout @ref=dxFlyoutchucnang
+          PositionTarget="@idflychucnang"
+          @bind-IsOpen=IsOpenfly
+          RestrictionTarget="#Navigation-Flyout-Customization"
+          AnimationType=FlyoutAnimationType.Fade
+          PreventCloseOnPositionTargetClick="true"
+          Width="min(95vw,800px)"
+          Position=@(FlyoutPosition.BottomStart | FlyoutPosition.TopStart)>
+    <BodyTextTemplate>
+
+
+    </BodyTextTemplate>
+
+</DxFlyout>
+<DxGridLayout CssClass="w-100 ch-480">
+
+    <Rows>
+
+        <DxGridLayoutRow Height="auto" />
+        <DxGridLayoutRow />
+    </Rows>
+    <Items>
+        <DxGridLayoutItem Row="0">
+            <Template>
+                <div class="p-2 pt-0 mb-2 bg-white border rounded-bottom-2">
+
+                    <div>
+
+                        <DxFormLayout CssClass="w-100 mt-3">
+                            <DxFormLayoutItem ColSpanSm="12" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+                                <DxComboBox Data=@lstkhachhang
+                                            ValueFieldName="@nameof(NvlKhachHang.MaKh)"
+                                            TextFieldName="@nameof(NvlKhachHang.TenKh)"
+                                            @bind-Value="@khachhangselected"
+                                            SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                            ListRenderMode=ListRenderMode.Virtual
+                                            SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                            SearchMode="ListSearchMode.AutoSearch"
+                                            ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto
+                                            CssClass="cw-480" />
+
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem ColSpanSm="12" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+                                <CaptionTemplate>
+                                    Tên sản phẩm
+                                </CaptionTemplate>
+                                <Template>
+                                    <DxComboBox TextFieldName="TenSPSearch"
+                                                ValueFieldName="MaSP"
+                                                CssClass="cw-480"
+                                                Data="@lstsanpham"
+                                                @bind-Value=MaSPSelected
+                                                SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                                ListRenderMode=ListRenderMode.Virtual
+                                                SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                                SearchMode="ListSearchMode.AutoSearch"
+                                                ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto />
+
+
+                                </Template>
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem ColSpanSm="12" ColSpanMd="12" ColSpanLg="12" CaptionPosition="CaptionPosition.Vertical">
+                                <DxRadioGroup Items="@CheckReportShow"
+                                              Layout="RadioGroupLayout.Horizontal"
+                                              @bind-Value="@reportselectde"
+                                              CssClass="dx-demo-radio-group">
+
+                                </DxRadioGroup>
+                            </DxFormLayoutItem>
+                        </DxFormLayout>
+
+                    </div>
+
+                </div>
+
+            </Template>
+        </DxGridLayoutItem>
+        <DxGridLayoutItem Row="1">
+            <Template>
+                    <div style="position: relative;justify-content: center; align-items: center;">
+                    <div style="position: absolute;display: flex;width: 100%;">
+                            <DxGrid @ref="dxGrid" Data="@lstdata"
+                                    CssClass="my-grid"
+                                    TextWrapEnabled="true"
+                                    AutoExpandAllGroupRows="false"
+                                    FocusedRowEnabled="false"
+                                    AllowSort="false"
+                                    CustomizeElement="Grid_CustomizeElement"
+                                    FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                                    VirtualScrollingEnabled=true
+                                    ShowFilterRow=true>
+                                <ToolbarTemplate>
+                                    <DxToolbar ItemRenderStyleMode="ToolbarRenderStyleMode.Plain">
+                                        <DxToolbarItem Text="Xem" IconCssClass="bi bi-search" RenderStyle="ButtonRenderStyle.Primary" Click="@searchAsync">
+                                        </DxToolbarItem>
+                                    <DxToolbarItem Text="Xuất excel" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=>ShowMaSPAsync())" >
+                                    </DxToolbarItem>
+                                      @*   <DxToolbarItem Text="Xuất excel" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=>dxGrid.ExportToXlsxAsync("ExporKeHoach"))">
+                                        </DxToolbarItem> *@
+                                        <DxToolbarItem Text="Chọn cột" BeginGroup="true" Click="@(()=>dxGrid.ShowColumnChooser())" IconCssClass="bi bi-layout-text-window-reverse" />
+                                        <DxToolbarItem Text="In Định mức" RenderStyle="ButtonRenderStyle.Success" BeginGroup="true" IconCssClass="bi bi-printer" Click="@PrintdinhmucAsync" />
+                                        <DxToolbarItem Text="Test" RenderStyle="ButtonRenderStyle.Success" BeginGroup="true" IconCssClass="bi bi-printer" Click="@showcamera" />
+
+                                    </DxToolbar>
+                                </ToolbarTemplate>
+                                <Columns>
+                                    <DxGridDataColumn Caption="STT" Width="60">
+                                        <CellDisplayTemplate>@(context.VisibleIndex + 1)</CellDisplayTemplate>
+                                    </DxGridDataColumn>
+                                    <DxGridDataColumn FieldName="MaSP" Width="130" Caption=" " ShowInColumnChooser=false>
+                                        <CellDisplayTemplate>
+                                            @{
+                                                SanPhamShow sanPhamShow = (SanPhamShow)context.DataItem;
+                                            }
+                                            <span>
+                                                <a href="#" class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"
+                                                   @onclick="@(()=>PrintdinhmucSPAsync(sanPhamShow))"><i class="bi bi-list-stars me-1"></i>In định mức</a>
+                                            </span>
+                                        </CellDisplayTemplate>
+
+                                    </DxGridDataColumn>
+                                    <DxGridDataColumn FieldName="KhachHang" Caption="Khách hàng" Width="130" GroupIndex="0" />
+                                    <DxGridDataColumn FieldName="MaSP" Caption="Mã SP" Width="130" />
+                                    <DxGridDataColumn FieldName="TenSP" MinWidth="240" Caption="Tên SP" />
+                                    <DxGridDataColumn FieldName="SLSP" DataRowEditorVisible="false" DisplayFormat="#,#" Caption="Số lượng" Width="*" />
+                                </Columns>
+                                <DetailRowTemplate>
+                                    @{
+                                        SanPhamShow sanPhamShow = (SanPhamShow)context.DataItem;
+
+                                    }
+                                    <View_DinhMucNVLItem sanPhamShowcrr="@sanPhamShow" lstdinhmucall="@lstdinhmucall"></View_DinhMucNVLItem>
+                                </DetailRowTemplate>
+                            </DxGrid>
+                        </div>
+                    <div style="position: absolute;display:@(PanelVisible ? "flex" : "none");width:100%;height:@heightgrid;background-color: rgba(0, 0, 0, 0.3);justify-content: center; align-items: center;">
+                            <CascadingValue Name="visibleTimer" Value="@PanelVisible">
+                                <LoadingPanel></LoadingPanel>
+                            </CascadingValue>
+                        </div>
+                    </div>
+               
+            </Template>
+        </DxGridLayoutItem>
+
+
+    </Items>
+</DxGridLayout>
+
+
+
+@code {
+
+    [Inject] IJSRuntime jSRuntime { get; set; }
+    public List<SanPhamShow> lstdata { get; set; } = new List<SanPhamShow>();
+
+    List<DinhMucVatTuShow> lstdinhmucall { get; set; } = new List<DinhMucVatTuShow>();
+    bool checkncc = false;
+    DialogWindow? dxPopup { get; set; }
+
+    RenderFragment? renderFragment { get; set; }
+    DialogMsg? dialogMsg { get; set; }
+    string MaSPSelected { get; set; }
+    List<SanPhamDropDown> lstsanpham { get; set; }
+    List<NvlKhachHang> lstkhachhang { get; set; }
+    public string? random { get; set; }
+    string heightgrid = "500px";
+    bool Visilethemchitiet = true, Visilechinhsua = true, Visiledelete = true, Visilethemfile = true;
+    public List<KeHoachDinhMucCongDoan> lstkehoachcongdoan { get; set; } = new List<KeHoachDinhMucCongDoan>();
+    IGrid? dxGrid { get; set; }
+    string khachhangselected { get; set; }
+    DxFlyout? dxFlyoutchucnang { get; set; }
+    public string? idflychucnang { get; set; }
+    bool IsOpenfly { get; set; } = false;
+    App_ClassDefine.ClassProcess prs = new ClassProcess();
+    bool PanelVisible { get; set; } = false;
+    IEnumerable<string> CheckReportShow = new[] {
+        "Tất cả",
+        "Chỉ những mã có định mức"
+
+    };
+    string reportselectde = "Chỉ những mã có định mức";
+
+    public string idelement(int? serial)
+    {
+        if (serial == null)
+            string.Format("flychucnang_{0}_{1}", random, serial);
+        if (random == null)
+        {
+            random = prs.RandomString(9);
+        }
+        return string.Format("flychucnang_{0}_{1}", random, serial);
+    }
+
+    public string showkhuvuc(string khuvuc)
+    {
+        if (khuvuc == "KV2DH")
+            return "Lắp ráp";
+        if (khuvuc == "KV3")
+            return "Nhúng/Sơn";
+        return khuvuc;
+    }
+    void Grid_CustomizeElement(GridCustomizeElementEventArgs e)
+    {
+        if (e.ElementType == GridElementType.DataRow)
+        {
+            e.CssClass = "highlighted-item";
+            // if (e.Grid.GetRowValue(e.VisibleIndex, "Err") != null && e.Grid.GetRowValue(e.VisibleIndex, "Err") != DBNull.Value)
+            // {
+            //     //Console.WriteLine(e.Grid.GetRowValue(e.VisibleIndex, "Err").ToString());
+            //     if (!string.IsNullOrEmpty(e.Grid.GetRowValue(e.VisibleIndex, "Err").ToString()))
+            //         e.CssClass = "highlighted-item";
+            // }
+
+        }
+
+    }
+    private async void showcamera()
+    {
+        renderFragment = builder =>
+          {
+              builder.OpenComponent<Page_TestCamera>(0);
+              // builder.AddAttribute(1, "arrcolumncheck", arrcolumncheck);
+              // builder.AddAttribute(2, "getdatatble", EventCallback.Factory.Create<DataTable>(this, GetTable));
+              //builder.OpenComponent(0, componentType);
+              builder.CloseComponent();
+          };
+        //dxPopup.showpage("TẠO ĐỀ NGHỊ", renderFragment);
+        dxPopup.showAsync("Test camera");
+        dxPopup.ShowAsync();
+
+        //await jSRuntime.InvokeVoidAsync("startObjectDetection", "videoElement", "canvasElement");
+    }
+
+
+
+
+}

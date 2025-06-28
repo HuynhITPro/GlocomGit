@@ -1,0 +1,306 @@
+﻿using BlazorBootstrap;
+using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.AspNetCore.Components;
+using Newtonsoft.Json;
+using NFCWebBlazor.App_ModelClass;
+using NFCWebBlazor.Model;
+
+namespace NFCWebBlazor.App_NguyenVatLieu.App_ThanhToan
+{
+    public partial class Urc_TaiKhoanAdd
+    {
+        [Inject] ToastService toastService { get; set; }
+        [Inject] PhanQuyenAccess phanQuyenAccess { get; set; }
+
+        List<ThongTinTaiKhoan> lstTaiKhoan = new List<ThongTinTaiKhoan>();
+        List<ThongTinTaiKhoan> lstTaiKhoanNo = new List<ThongTinTaiKhoan>();
+        List<ThongTinTaiKhoan> lstTaiKhoanCo = new List<ThongTinTaiKhoan>();
+        List<DataDropDownList> lstDVT = new List<DataDropDownList>();
+        bool CheckQuyen = false;
+        public async void LoadData()
+        {
+
+
+            lstnhacungcap = await Model.ModelData.Getlstnhacungcap();
+
+            if (thongTinTaiKhoan.Serial == 0)
+            {
+
+            }
+            if (thongTinTaiKhoan.Serial > 0)
+            {
+                EnableEdit = true;
+            }
+            CheckQuyen = await phanQuyenAccess.CreateThanhToan(Model.ModelAdmin.users);
+            StateHasChanged();
+            //txtTaiKhoanNo.setdt(Model.ModelData.GetdtThongTinTaiKhoan().Select("TenTaiKhoan like '%SCANSIA%'").CopyToDataTable(), "SoTK", "SoTK");
+            //txtTenTaiKhoanCo.setdt(Model.ModelData.GetdtThongTinTaiKhoan().AsEnumerable().CopyToDataTable(), "SoTK", "TenTaiKhoan");
+            //txtTaiKhoanCo.setdt(Model.ModelData.GetdtThongTinTaiKhoan().AsEnumerable().CopyToDataTable(), "SoTK", "SoTK");
+            //txtDVT.setdt(Model.ModelData.Getdtdropdownlist().Select("TypeName='DonViThanhToan'").CopyToDataTable(), "Name", "Name");
+            //btthemnDVT.InitButton(txtDVT, "Thêm đơn vị tính", "DonViThanhToan");
+            //// txtThanhTien.Text = "100000000000";
+            //txtTaiKhoanNo.setValueItem = "007 0000 118 023";
+        }
+        protected override Task OnInitializedAsync()
+        {
+            try
+            {
+                LoadData();
+                editContext = new EditContext(thongTinTaiKhoan);
+                editContext.OnValidationRequested += CustomValidation;//Dùng hàm Validate của editcontext ko ổn cho lắm
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Lỗi load form ke hoach master " + ex.Message);
+            }
+            finally
+            {
+            }
+
+
+            return base.OnInitializedAsync();
+        }
+        ValidationMessageStore validationMessages { get; set; }
+        bool checksave = true;//Gán biến để tránh trường hợp mạng lag API gọi lại 2 lần
+        private async void CustomValidation(object? sender, ValidationRequestedEventArgs e)
+        {
+            if (validationMessages == null)
+                validationMessages = new ValidationMessageStore(editContext);
+            // Xóa các thông báo lỗi hiện tại
+            validationMessages.Clear();
+            if (string.IsNullOrEmpty(thongTinTaiKhoan.SoTK))
+            {
+                validationMessages.Add(() => thongTinTaiKhoan.SoTK, "Vui lòng nhập số tài khoản.");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(thongTinTaiKhoan.TenTaiKhoan))
+            {
+                validationMessages.Add(() => thongTinTaiKhoan.TenTaiKhoan, "Vui lòng nhập tên tài khoản.");
+                return;
+            }
+            if (string.IsNullOrEmpty(thongTinTaiKhoan.ChiNhanh))
+            {
+                validationMessages.Add(() => thongTinTaiKhoan.ChiNhanh, "Vui lòng nhập chi nhánh.");
+                return;
+            }
+            if (string.IsNullOrEmpty(thongTinTaiKhoan.NganHang))
+            {
+                validationMessages.Add(() => thongTinTaiKhoan.NganHang, "Vui lòng nhập ngân hàng.");
+                return;
+            }
+
+
+            // Lưu kết quả validation
+
+            editContext.NotifyValidationStateChanged();
+        }
+
+        private bool checklogic(ThongTinTaiKhoan uyNhiemChi)
+        {
+            if (!checksave)
+                return false;
+            return editContext.Validate();
+        }
+        public class Ketqua
+        {
+            public string MaUNC { get; set; }
+
+            public int Serial { get; set; }
+            public string? ketqua { get; set; }
+            public string? ketquaexception { get; set; } = "";
+
+        }
+        private async Task saveAsync()
+        {
+            if (!CheckQuyen)
+            {
+                toastService.Notify(new ToastMessage(ToastType.Danger, "Không có quyền sử dụng chức năng này"));
+                return;
+            }
+            if (!checklogic(thongTinTaiKhoan))
+            {
+                toastService.Notify(new ToastMessage(ToastType.Danger, "Dữ liệu nhập không đúng. Vui lòng kiểm tra những dòng tô màu đỏ"));
+                return;
+            }
+            try
+            {
+                checksave = false;//Tránh để call 2 lần do API chậm
+                string sql = "SPSupplier.dbo.ThongTinTaiKhoan_Insert";
+                CallAPI callAPI = new CallAPI();
+                List<ParameterDefine> lstpara = new List<ParameterDefine>();
+               
+                lstpara.Add(new ParameterDefine("@SoTK", thongTinTaiKhoan.SoTK));
+                lstpara.Add(new ParameterDefine("@TenTaiKhoan", thongTinTaiKhoan.TenTaiKhoan));
+                lstpara.Add(new ParameterDefine("@ChiNhanh", thongTinTaiKhoan.ChiNhanh));
+                lstpara.Add(new ParameterDefine("@DiaChi", thongTinTaiKhoan.DiaChi));
+                lstpara.Add(new ParameterDefine("@NganHang", thongTinTaiKhoan.NganHang));
+                lstpara.Add(new ParameterDefine("@MaNCC", thongTinTaiKhoan.MaNCC));
+                lstpara.Add(new ParameterDefine("@Swiftcode", thongTinTaiKhoan.Swiftcode));
+                lstpara.Add(new ParameterDefine("@IBAN", thongTinTaiKhoan.IBAN));
+                lstpara.Add(new ParameterDefine("@UserInsert", thongTinTaiKhoan.UserInsert));
+                string json = await callAPI.ProcedureEncryptAsync(sql, lstpara);
+                if (json != "")
+                {
+                    var query = JsonConvert.DeserializeObject<List<Ketqua>>(json);
+                    if (query[0].ketqua == "OK")
+                    {
+                        toastService.Notify(new ToastMessage(ToastType.Success, "LƯU THÀNH CÔNG"));
+                        checksave = true;
+                        if (GotoMainForm.HasDelegate)
+                        {
+                            var queryc = await ModelData.GetdtThongTinTaiKhoan();
+                            queryc.Add(thongTinTaiKhoan.CopyClass());
+                        }// reset();
+
+                    }
+                    else
+                    {
+                        toastService.Notify(new ToastMessage(ToastType.Danger, string.Format("Lỗi:{0}, {1} ", query[0].ketqua, query[0].ketquaexception)));
+
+                        //reset();
+                    }
+                    checksave = true;
+                    //Grid.Data = lstDonDatHangSearchShow;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                checksave = true;
+                Console.Error.WriteLine("Lỗi:" + ex.Message);
+                toastService.Notify(new ToastMessage(ToastType.Warning, "Lỗi " + ex.Message));
+                //msgBox.Show("Lỗi: " + ex.Message, IconMsg.iconerror);
+            }
+        }
+        private async Task updateAsync()
+        {
+            if (!CheckQuyen)
+            {
+                toastService.Notify(new ToastMessage(ToastType.Danger, "Không có quyền sử dụng chức năng này"));
+                return;
+            }
+            if (!checklogic(thongTinTaiKhoan))
+            {
+                toastService.Notify(new ToastMessage(ToastType.Danger, "Dữ liệu nhập không đúng. Vui lòng kiểm tra những dòng tô màu đỏ"));
+                return;
+            }
+            try
+            {
+                checksave = false;//Tránh để call 2 lần do API chậm
+                string sql = "SPSupplier.dbo.ThongTinTaiKhoan_Update";
+                CallAPI callAPI = new CallAPI();
+                List<ParameterDefine> lstpara = new List<ParameterDefine>();
+               
+                lstpara.Add(new ParameterDefine("@SoTK", thongTinTaiKhoan.SoTK));
+                lstpara.Add(new ParameterDefine("@TenTaiKhoan", thongTinTaiKhoan.TenTaiKhoan));
+                lstpara.Add(new ParameterDefine("@ChiNhanh", thongTinTaiKhoan.ChiNhanh));
+                lstpara.Add(new ParameterDefine("@DiaChi", thongTinTaiKhoan.DiaChi));
+                lstpara.Add(new ParameterDefine("@NganHang", thongTinTaiKhoan.NganHang));
+                lstpara.Add(new ParameterDefine("@MaNCC", thongTinTaiKhoan.MaNCC));
+                lstpara.Add(new ParameterDefine("@Swiftcode", thongTinTaiKhoan.Swiftcode));
+                lstpara.Add(new ParameterDefine("@IBAN", thongTinTaiKhoan.IBAN));
+                lstpara.Add(new ParameterDefine("@UserInsert", thongTinTaiKhoan.UserInsert));
+                string json = await callAPI.ProcedureEncryptAsync(sql, lstpara);
+                if (json != "")
+                {
+                    var query = JsonConvert.DeserializeObject<List<Ketqua>>(json);
+                    if (query[0].ketqua == "OK")
+                    {
+                        toastService.Notify(new ToastMessage(ToastType.Success, "SỬA THÀNH CÔNG"));
+                        checksave = true;
+                        if (GotoMainForm.HasDelegate)
+                        {
+                            var queryc = await ModelData.GetdtThongTinTaiKhoan();
+                            var querydelete=queryc.Where(c=>c.SoTK==thongTinTaiKhoan.SoTK).FirstOrDefault();
+                            queryc.Remove(querydelete);
+                            queryc.Add(thongTinTaiKhoan.CopyClass());
+                        }// reset();
+
+                    }
+                    else
+                    {
+                        toastService.Notify(new ToastMessage(ToastType.Danger, string.Format("Lỗi:{0}, {1} ", query[0].ketqua, query[0].ketquaexception)));
+
+                        //reset();
+                    }
+                    checksave = true;
+                    //Grid.Data = lstDonDatHangSearchShow;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                checksave = true;
+                Console.Error.WriteLine("Lỗi:" + ex.Message);
+                toastService.Notify(new ToastMessage(ToastType.Warning, "Lỗi " + ex.Message));
+                //msgBox.Show("Lỗi: " + ex.Message, IconMsg.iconerror);
+            }
+        }
+
+        
+        private async Task deleteAsync()
+        {
+            if (!CheckQuyen)
+            {
+                toastService.Notify(new ToastMessage(ToastType.Danger, "Không có quyền sử dụng chức năng này"));
+                return;
+            }
+            if (!checklogic(uyNhiemChi))
+            {
+                toastService.Notify(new ToastMessage(ToastType.Danger, "Dữ liệu nhập không đúng. Vui lòng kiểm tra những dòng tô màu đỏ"));
+                return;
+            }
+            try
+            {
+                checksave = false;//Tránh để call 2 lần do API chậm
+
+
+                string sql = "SPSupplier.dbo.UyNhiemChi_Item_delete";
+                CallAPI callAPI = new CallAPI();
+                List<ParameterDefine> lstpara = new List<ParameterDefine>();
+
+                lstpara.Add(new ParameterDefine("@MaUNC", uyNhiemChi.MaUNC));
+                lstpara.Add(new ParameterDefine("@LyDoDelete", "Xóa"));
+
+                lstpara.Add(new ParameterDefine("@UserInsert", ModelAdmin.users.UsersName));
+                //lstpara.Add(new ParameterDefine("@TableName", "NvlThanhToan"));
+                string json = await callAPI.ProcedureEncryptAsync(sql, lstpara);
+                if (json != "")
+                {
+                    var query = JsonConvert.DeserializeObject<List<Ketqua>>(json);
+                    if (query[0].ketqua == "OK")
+                    {
+                        toastService.Notify(new ToastMessage(ToastType.Success, "XÓA THÀNH CÔNG"));
+                        checksave = true;
+                        if (GotoMainForm.HasDelegate)
+                        {
+                            uyNhiemChi.MaUNC = "";
+                            GotoMainForm.InvokeAsync(uyNhiemChi);
+                        }// reset();
+
+                    }
+                    else
+                    {
+                        toastService.Notify(new ToastMessage(ToastType.Danger, string.Format("Lỗi:{0}, {1} ", query[0].ketqua, query[0].ketquaexception)));
+
+                        //reset();
+                    }
+                    checksave = true;
+                    //Grid.Data = lstDonDatHangSearchShow;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                checksave = true;
+                Console.Error.WriteLine("Lỗi:" + ex.Message);
+                toastService.Notify(new ToastMessage(ToastType.Warning, "Lỗi " + ex.Message));
+                //msgBox.Show("Lỗi: " + ex.Message, IconMsg.iconerror);
+            }
+        }
+
+    }
+}
+

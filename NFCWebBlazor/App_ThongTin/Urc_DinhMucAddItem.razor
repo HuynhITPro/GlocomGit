@@ -1,0 +1,135 @@
+﻿@using DevExpress.Blazor;
+@using NFCWebBlazor.App_ClassDefine
+@using NFCWebBlazor.Model
+@using Newtonsoft.Json
+@using static NFCWebBlazor.App_ThongTin.Page_DinhMucHangHoaMaster
+
+
+<EditForm EditContext="@editContext" Context="formuser" onkeydown="return handleEnterSubmit(event)">
+    <DataAnnotationsValidator />
+    <DxFormLayout @onkeydown=Onkeydown>
+        <DxFormLayoutItem ColSpanSm="12">
+            <Template>
+                <span class="text-primary" style="font-size:1.5rem;font-style:oblique;">@sanPhamShowcrr.TenSP</span>
+            </Template>
+        </DxFormLayoutItem>
+        <DxFormLayoutItem ColSpanSm="12" ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+            <CaptionTemplate>
+                ArticleNumber <span class="text-danger">*</span>
+            </CaptionTemplate>
+            <Template>
+                <DxTagBoxDefine Data="@lstart" @ref=dxTagBoxArt Sel></DxTagBoxDefine>
+            </Template>
+        </DxFormLayoutItem>
+        <DxFormLayoutItem ColSpanSm="12" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+            <CaptionTemplate>
+                Mã hàng <span class="text-danger">*</span>
+            </CaptionTemplate>
+            <Template>
+                <ComboboxMaHang @ref=txtMaHang TextFieldName="@nameof(NvlHangHoaDropDown.TenHang)"
+                                ValueFieldName="@nameof(NvlHangHoaDropDown.MaHang)"
+                                CssClass="cw-480"
+                                SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                ListRenderMode=ListRenderMode.Virtual
+                                SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                SearchMode="ListSearchMode.AutoSearch"
+                                ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto />
+                <div class="text-danger">
+
+                    <ValidationMessage For="@(() => nvlHangHoaShowcrr.MaHang)" />
+                </div>
+            </Template>
+
+        </DxFormLayoutItem>
+        <DxFormLayoutItem ColSpanSm="12" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+            <CaptionTemplate>
+                Số lượng/bộ <span class="text-danger">*</span>
+            </CaptionTemplate>
+            <Template>
+                <DxSpinEdit MinValue="0" @bind-Value=@nvlHangHoaShowcrr.SLQuyDoi></DxSpinEdit>
+                <div class="text-danger">
+
+                    <ValidationMessage For="@(() => nvlHangHoaShowcrr.SLQuyDoi)" />
+                </div>
+            </Template>
+
+        </DxFormLayoutItem>
+        <DxFormLayoutItem ColSpanSm="12" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+            <CaptionTemplate>
+                Định mức tiêu hao
+            </CaptionTemplate>
+            <Template>
+                <DxSpinEdit MinValue="0" @bind-Value=@nvlHangHoaShowcrr.DinhMucHaoHut></DxSpinEdit>
+            </Template>
+
+        </DxFormLayoutItem>
+
+        <DxFormLayoutItem Caption="Chất lượng" ColSpanSm="12" ColSpanMd="6" CaptionPosition="CaptionPosition.Vertical">
+            <ComboboxFilteredString @ref=txtChatLuong
+                                    TextFieldName="@nameof(DataDropDownList.FullName)"
+                                    ValueFieldName="@nameof(DataDropDownList.Name)"
+                                    CssClass="cw-480"
+                                    TypeName="NVL_ChatLuong"
+                                    SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                    ListRenderMode=ListRenderMode.Virtual
+                                    SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                    SearchMode="ListSearchMode.AutoSearch"
+                                    ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto
+                                    @bind-Value=@nvlHangHoaShowcrr.ChatLuong />
+        </DxFormLayoutItem>
+        <DxFormLayoutItem ColSpanMd="12">
+            <Template>
+                <div class="d-flex justify-content-center mt-2 gap-2">
+                    <DxButton RenderStyle="ButtonRenderStyle.Primary" IconCssClass="bi bi-floppy" Text="Lưu (nhấn F11)" Visible=@(!visibleedit) Click="@saveAsync" />
+                    <DxButton RenderStyle="ButtonRenderStyle.Success" IconCssClass="bi bi-file-earmark m-1" Text="Làm lại" Visible=@(!visibleedit) Click="@reset" />
+                    <DxButton RenderStyle="ButtonRenderStyle.Info" IconCssClass="bi bi-pencil" CssClass="ms-2" Text="Sửa" Visible=@visibleedit Click="@updateAsync" />
+                </div>
+            </Template>
+        </DxFormLayoutItem>
+    </DxFormLayout>
+
+</EditForm>
+@code {
+    [Parameter]
+    public HangHoaItem nvlHangHoaShowcrr { get; set; }
+    [Parameter]
+    public EventCallback<HangHoaItem> GotoMainForm { get; set; }
+    [Parameter]
+    public List<DataDropDownList>? lstart { get; set; }
+    [Parameter]
+    public SanPhamShow sanPhamShowcrr
+    {
+        get;set;
+    }
+   
+    DxTagBoxDefine dxTagBoxArt { get; set; }
+    private EditContext? editContext;
+    string textmanhom = "";
+    
+    DataDropDownList selectNhom { get; set; }
+    ComboboxFilteredString? txtChatLuong;
+    public string? MaKH, TenKhachHang, QuocGia, TinhThanh, MaSoThue;
+    bool visibleedit { get; set; } = false;
+    ComboboxMaHang? txtMaHang { get; set; }
+    private async void Onkeydown(KeyboardEventArgs e)
+    {
+        if (e.Key == "F11")
+        {
+            await saveAsync();
+        }
+    }
+
+
+    private void reset()
+    {
+        HangHoaItem nvlHangHoaShow = new HangHoaItem();
+        nvlHangHoaShowcrr.MaHang = "";
+        nvlHangHoaShowcrr.SLQuyDoi = 0;
+        nvlHangHoaShow.DinhMucHaoHut = 0;
+
+        editContext = new EditContext(nvlHangHoaShowcrr);
+        StateHasChanged();
+        txtMaHang.FocusAsync();
+    }
+
+}

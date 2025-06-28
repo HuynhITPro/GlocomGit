@@ -1,0 +1,72 @@
+﻿<style>
+    .progress-indeterminate-show {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        color:forestgreen;
+    }
+</style>
+<div class="progress-indeterminate-show" style="display:@display">
+    <div>Vui lòng đợi giây lát...</div>
+   
+    <div>
+        <DxProgressBar Value="1"
+                       Type=ProgressBarType.Circular
+                       Size="50px"
+                       ShowLabel=true
+                       Label="@timerText"
+                       Indeterminate="true" />
+    </div>
+
+</div>
+
+
+@code {
+    [CascadingParameter(Name = "visibleTimer")]
+    public bool isVisible
+    {
+        get
+        { return _isVisible; }
+
+        set { _isVisible = value;
+            if (!_isVisible) { Hide(); }
+                if (_isVisible) { Show(); }
+        }
+    }
+    private string display = "none";
+    private bool _isVisible;
+    private string timerText = "00:00";
+    private System.Timers.Timer? timer;
+    private DateTime startTime;
+
+    public void Show()
+    {
+        display = "flex";
+        timerText = "00:00";
+        startTime = DateTime.Now;
+
+        timer = new System.Timers.Timer(1000);
+        timer.Elapsed += UpdateTime;
+        timer.Start();
+
+        StateHasChanged();
+    }
+
+    public void Hide()
+    {
+       
+        timer?.Stop();
+        timer?.Dispose();
+        timer = null;
+        display = "none";
+        StateHasChanged();
+    }
+
+    private void UpdateTime(object? sender, System.Timers.ElapsedEventArgs e)
+    {
+        var elapsed = DateTime.Now - startTime;
+        timerText = elapsed.ToString(@"mm\:ss");
+        InvokeAsync(StateHasChanged);
+    }
+}

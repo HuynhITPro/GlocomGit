@@ -1,0 +1,297 @@
+﻿@using BlazorBootstrap
+@using DevExpress.Blazor;
+@using NFCWebBlazor.App_ClassDefine;
+@using System.Data
+@using static NFCWebBlazor.App_NguyenVatLieu.App_NhapXuat.Page_NhapXuat_Master
+<style>
+    .my-grid {
+    height: @heightgrid;
+    }
+
+    #customGridnotheader .dxbl-grid-header-row {
+    display: none;
+    }
+
+    #griddetailnhapkho .dxbl-grid-header-row {
+    display: contents;
+    color: green;
+    }
+</style>
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+<DxGridLayout CssClass="w-100 ch-480">
+
+    <Rows>
+        <DxGridLayoutRow Height="Auto" />
+        <DxGridLayoutRow />
+    </Rows>
+
+    <Items>
+
+        <DxGridLayoutItem Row="0">
+            <Template>
+                <div id=@randomdivhide class="p-2 mb-2 bg-white border  rounded-2 rounded-top-0 collapse show">
+                    <div>
+
+                        <DxFormLayout CssClass="w-100" CaptionPosition="CaptionPosition.Vertical">
+
+                            <DxFormLayoutItem Caption="Người nhập" ColSpanXs="12" ColSpanSm="12" ColSpanMd="6" ColSpanLg="6">
+                                <DxComboBox Data=@lstuser
+                                SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                ListRenderMode=ListRenderMode.Virtual
+                                SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                SearchMode="ListSearchMode.AutoSearch"
+                                TextFieldName="@nameof(Users.TenUser)"
+                                ValueFieldName="@nameof(Users.UsersName)"
+                                ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto
+                                @bind-Value="@nvlNhapXuatItemShowcrr.UserInsert"
+                                CssClass="cw-480" />
+
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem Caption="Nơi giao nhận" ColSpanXs="12" ColSpanSm="12" ColSpanMd="6" ColSpanLg="6">
+                                <NFCWebBlazor.App_ClassDefine.ComboboxFilteredString CssClass="cw-480"
+                                SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                ListRenderMode=ListRenderMode.Virtual
+                                SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                SearchMode="ListSearchMode.AutoSearch"
+                                TextFieldName="@nameof(DataDropDownList.FullName)"
+                                ValueFieldName="@nameof(DataDropDownList.Name)"
+                                Data="@lstnoigiaonhan"
+                                ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                @bind-Value="@nvlNhapXuatItemShowcrr.TenGN" />
+                            </DxFormLayoutItem>
+                           
+                            <DxFormLayoutItem Caption="Serial chứng từ" ColSpanXs="6" ColSpanSm="6" ColSpanMd="6" ColSpanLg="6">
+
+                                <DxSpinEdit @bind-Value=@nvlNhapXuatItemShowcrr.SerialCT ShowSpinButtons="false" />
+
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem Caption="ID Tem" ColSpanXs="6" ColSpanMd="6">
+                                <DxSpinEdit @bind-Value=@nvlNhapXuatItemShowcrr.SerialLink ShowSpinButtons="false" />
+                               
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem Caption="Từ ngày" ColSpanXs="6" ColSpanSm="4" ColSpanMd="4" ColSpanLg="4">
+
+                                <DxDateEdit @bind-Date="@dtpbegin" Mask="@DateTimeMask.ShortDate" DisplayFormat="dd-MM-yy" />
+
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem Caption="Đến" ColSpanXs="6" ColSpanSm="4" ColSpanMd="4" ColSpanLg="4">
+
+                                <DxDateEdit @bind-Date="@dtpend" Mask="@DateTimeMask.ShortDate" DisplayFormat="dd-MM-yy" />
+
+                            </DxFormLayoutItem>
+
+
+                        </DxFormLayout>
+
+                    </div>
+                </div>
+
+            </Template>
+        </DxGridLayoutItem>
+
+        <DxGridLayoutItem Row="1">
+            <Template>
+                <DxLoadingPanel @bind-Visible="@PanelVisible"
+                IsContentBlocked="true"
+                ApplyBackgroundShading="true"
+                IndicatorAreaVisible="false"
+                Text="Đang xử lý...">
+                    <DxGrid @ref=dxGrid
+                    TextWrapEnabled="true"
+                    ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+                    AutoCollapseDetailRow="true"
+                    CssClass="my-grid"
+                    VirtualScrollingEnabled=true
+                    FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                    Data=@lstdata
+                    AutoExpandAllGroupRows=true>
+                        <ToolbarTemplate>
+                            <DxToolbar AdaptivityAutoCollapseItemsToIcons="false" ItemRenderStyleMode="ToolbarRenderStyleMode.Plain" SizeMode="SizeMode.Small">
+                                <DxToolbarItem Text="TÌM KIẾM" IconCssClass="bi bi-menu-button-wide" RenderStyle="ButtonRenderStyle.Danger" Click="@(()=>JSRuntime.InvokeVoidAsync("toggleCollapse", string.Format("#{0}",randomdivhide)))">
+                                </DxToolbarItem>
+                                <DxToolbarItem Text="XEM" BeginGroup="true" IconCssClass="bi bi-search m-1" RenderStyle="ButtonRenderStyle.Primary" Click="@searchAsync">
+                                </DxToolbarItem>
+
+                                <DxToolbarItem Text="Xuất excel" BeginGroup="true" Visible="@(!Ismobile)" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=>dxGrid.ExportToXlsxAsync("ExporBangKe"))">
+                                </DxToolbarItem>
+                                <DxToolbarItem Text="Chọn cột" BeginGroup="true" Visible="@(!Ismobile)" Click="@(()=>dxGrid.ShowColumnChooser())" IconCssClass="bi bi-layout-text-window-reverse" />
+                            </DxToolbar>
+                        </ToolbarTemplate>
+                        <Columns>
+                            @if (!Ismobile)
+                            {
+                                <DxGridDataColumn FieldName="SerialCT" Caption="Serial CT" Width="90" DisplayFormat="#" />
+                                <DxGridDataColumn FieldName="Serial" Visible="false" Caption="Serial" Width="90" DisplayFormat="#" />
+                                <DxGridDataColumn FieldName="SerialLink" Caption="ID tem" Width="100" DisplayFormat="#" />
+                               
+                                <DxGridDataColumn FieldName="MaHang" Caption="Mã hàng" Width="110" />
+                                <DxGridDataColumn FieldName="TenHang" Caption="Tên hàng" Width="240" />
+                                <DxGridDataColumn FieldName="SLNhap" Caption="SL nhập" Width="110" DisplayFormat="#,0.##;-#,0.##;''"  />
+                                <DxGridDataColumn FieldName="SLXuat" Caption="SL xuất" Width="110" DisplayFormat="#,0.##;-#,0.##;''"/>
+                                <DxGridDataColumn FieldName="DVT" Caption="ĐVT" Width="70" />
+                                <DxGridDataColumn FieldName="DonGia" Caption="Đơn giá" Width="110">
+                                    <CellDisplayTemplate>
+                                        @{
+                                            NvlNhapXuatItemShow nvlNhapXuatItemShow = (NvlNhapXuatItemShow)context.DataItem;
+                                        }
+                                        <div class="row d-flex float-end">
+                                            <span> @showtextdouble(nvlNhapXuatItemShow.DonGia)</span>
+                                            @if (nvlNhapXuatItemShow.DonGiaDN > 0)
+                                            {
+                                                <span class="text-danger justify-content-end" style="font-size:10px;">Giá đề nghị:@showtextdouble(nvlNhapXuatItemShow.DonGiaDN)</span>
+                                            }
+                                        </div>
+                                    </CellDisplayTemplate>
+                                </DxGridDataColumn>
+                                <DxGridDataColumn FieldName="ThanhTien" Caption="Thành tiền" Width="120" DisplayFormat="#,0.##;-#,0.##;''" />
+                                <DxGridDataColumn FieldName="TenGN" Caption="Nơi giao nhận" Width="240" />
+                                <DxGridDataColumn FieldName="NgaySanXuat" Caption="Ngày sản xuất" Width="110" Visible="false" />
+                                <DxGridDataColumn FieldName="NgayHetHan" Caption="Ngày hết hạn" Width="110" Visible="false" />
+                                <DxGridDataColumn FieldName="DauTuan" Caption="Dấu tuần" Width="110" />
+                                <DxGridDataColumn FieldName="KhachHang_XuatXu" Caption="Xuất xứ" Width="110" Visible="false" />
+                                <DxGridDataColumn FieldName="MaKien" Caption="Mã kiện" Width="110" />
+                                <DxGridDataColumn FieldName="ArticleNumber" Caption="Art.No" Width="110" Visible=false />
+                                <DxGridDataColumn FieldName="SoLo" Caption="Số lô" Width="110" />
+                                <DxGridDataColumn FieldName="SoXe" Caption="Số xe" Width="110" Visible=false />
+                                <DxGridDataColumn FieldName="GhiChu" Caption="Ghi chú" Width="130" />
+                                <DxGridDataColumn FieldName="ViTri" Caption="Ghi chú" Width="130" />
+                                <DxGridDataColumn FieldName="UserInsert" Caption="UserInsert" Width="110" />
+                                <DxGridDataColumn FieldName="NgayInsert" Caption="Ngày Insert" Width="130" DisplayFormat="dd-MM-yy HH:mm" />
+                            }
+                            @if (Ismobile)
+                            {
+                                <DxGridDataColumn>
+                                    <CellDisplayTemplate>
+                                        @{
+                                            NvlNhapXuatItemShow nvlNhapXuatItemShow = (NvlNhapXuatItemShow)context.DataItem;
+                                            bool checkquyen = false;
+                                            if(nvlNhapXuatItemShow!=null)
+                                            {
+                                                checkquyen = (nvlNhapXuatItemShow.UserInsert == Model.ModelAdmin.users.UsersName);
+                                            }
+
+                                        }
+                                        <div class="shadow-sm bg-body-tertiary rounded">
+                                            <div class="row">
+                                                <span style="font-weight:bold;color:#0074bd">@nvlNhapXuatItemShow.TenGN</span>
+                                            </div>
+                                            <div class="row">
+                                               <span style="font-weight:bold;color:forestgreen">@nvlNhapXuatItemShow.TenHang</span>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <span>Mã vạch:</span>
+                                                    <span style="color: orangered; font-weight: bold">@nvlNhapXuatItemShow.SerialLink</span>
+                                                </div>
+                                                <div class="col-6">
+                                                    <span>Serial:</span>
+                                                    <span style="color: green; font-weight: bold">@nvlNhapXuatItemShow.Serial</span>
+                                                </div>
+
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <span>Số lượng:</span>
+                                                    <span style="color: orangered; font-weight: bold">@string.Format("{0} {1}", (nvlNhapXuatItemShow.SLNhap != 0) ? showtextdouble(nvlNhapXuatItemShow.SLNhap) : showtextdouble(nvlNhapXuatItemShow.SLXuat), nvlNhapXuatItemShow.DVT)</span>
+                                                </div>
+                                                <div class="col-6">
+                                                    <span>Dấu tuần:</span>
+                                                    <span style="color:green;font-weight:bold">@nvlNhapXuatItemShow.DauTuan</span>
+                                                </div>
+                                               
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <span>@string.Format("Lý do: {0}", nvlNhapXuatItemShow.LyDo)</span>
+                                                </div>
+                                                <div class="col-6">
+                                                    <span>@string.Format("Vị trí: {0}", nvlNhapXuatItemShow.ViTri)</span>
+                                                </div>
+                                            </div>
+                                             <div class="row">
+                                              <div class="col-6">
+                                                    <span>@string.Format("User nhập: {0}", nvlNhapXuatItemShow.UserInsert)</span>
+                                              </div>
+                                                <div class="col-6">
+                                                    <span>@string.Format("Ngày tạo: {0}", nvlNhapXuatItemShow.NgayInsert.ToString("dd-MM-yy HH:mm"))</span>
+                                                </div>
+                                             </div>
+                                           
+                                            @if (checkquyen)
+                                            {
+                                                <div class="row">
+                                                    <span><a href="#" class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" @onclick="@(()=>deleteitem(nvlNhapXuatItemShow))"><i class="oi oi-x me-1"></i>XÓA</a></span>
+                                                </div>
+                                            }
+                                        </div>
+
+                                    </CellDisplayTemplate>
+                                </DxGridDataColumn>
+                            }
+                        </Columns>
+
+                    </DxGrid>
+                </DxLoadingPanel>
+            </Template>
+        </DxGridLayoutItem>
+
+    </Items>
+</DxGridLayout>
+@code {
+
+
+    [Inject] IJSRuntime JSRuntime { get; set; }
+    [Inject] BrowserService browserService { get; set; }
+
+    [Parameter]
+    public string LoaiNhapXuat { get; set; }
+    NvlNhapXuatItemShow nvlNhapXuatItemShowcrr { get; set; } = new NvlNhapXuatItemShow();
+    DialogWindow dxPopup;
+    RenderFragment renderFragment;
+    List<Users> lstuser { get; set; }
+
+    private string randomdivhide { get; set; } = string.Format("id{0}", StaticClass.Randomstring(10));//ID của CSS nên bắt đầu bằng chữ, vì nếu bat đầu bằng số dễ bị hẹo lắm
+    public bool Ismobile { get; set; }
+    string heightgrid = "500px";
+    List<DataDropDownList> lstnoigiaonhan { get; set; }
+    DateTime? dtpbegin { get; set; } = DateTime.Now;
+    DateTime? dtpend { get; set; } = DateTime.Now;
+    bool isclick = false;
+    bool PanelVisible { get; set; } = false;
+    string loaibaocao { get; set; } = "Báo cáo chi tiết";
+ 
+    string idgrid = "griddetailnhapkho";
+
+
+   
+
+    public DxGrid dxGrid { get; set; }
+
+    List<NvlNhapXuatItemShow> lstdata { get; set; }
+    private string showdate(DateTime? dt)
+    {
+        if (dt == null)
+            return "";
+        return dt.Value.ToString("dd-MM-yy");
+    }
+    private void expandorcollapse(int i)
+    {
+        if (dxGrid.IsDetailRowExpanded(i))
+            dxGrid.CollapseDetailRow(i);
+        else
+            dxGrid.ExpandDetailRow(i);
+    }
+    private string showtextdouble(decimal? d)
+    {
+        if (d == null)
+            return "";
+        if (d == 0)
+            return "";
+        return d.Value.ToString("#,0.####");
+    }
+
+}

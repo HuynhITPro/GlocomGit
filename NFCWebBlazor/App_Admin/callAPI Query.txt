@@ -1,0 +1,13 @@
+﻿  PreloadService.Show(SpinnerColor.Success, "Vui lòng đợi...");
+                await Task.Delay(100);
+                CallAPI callAPI = new CallAPI();
+                string json = await callAPI.ExcuteQueryEncryptAsync(sql, lstpara);
+                if (json != "")
+                {
+
+                   var query= JsonConvert.DeserializeObject<List<KeHoachMuaHang_Show>>(json);
+                    
+                    lstDonDatHangSearchShow.AddRange(query);
+                    Console.WriteLine(query.Count);
+                    //await InvokeAsync(StateHasChanged);
+                }

@@ -1,0 +1,221 @@
+﻿@using System.Collections.ObjectModel
+@using static NFCWebBlazor.App_NguyenVatLieu.App_KeHoachDeNghi.Page_KeHoachMuaHangMaster
+<style>
+    .highlighted-item > td {
+        background-color: pink;
+        text-decoration: line-through;
+    }
+
+    .highlighchuaduyet-item > td {
+        color: gray;
+        font-style: italic;
+    }
+
+  
+</style>
+<NFCWebBlazor.App_Admin.DialogMsg @ref="@dialogMsg"></NFCWebBlazor.App_Admin.DialogMsg>
+<DxGridLayout CssClass="w-100 ch-480">
+
+    <Rows>
+
+        <DxGridLayoutRow Height="auto" />
+        <DxGridLayoutRow />
+    </Rows>
+    <Items>
+
+        <DxGridLayoutItem Row="1">
+            <Template>
+                <div>
+                    <DxLoadingPanel @bind-Visible="@PanelVisible"
+                                    IsContentBlocked="true"
+                                    ApplyBackgroundShading="true"
+                                    IndicatorAreaVisible="false"
+                                    Text="Đang xử lý...">
+                        <DxGrid @ref="Grid" Data="@lstdata"
+                                AutoExpandAllGroupRows="@expandallgroup"
+                                TextWrapEnabled="false"
+                              
+                                CustomizeElement="OnCustomizeElement"
+                                ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+                                FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                               
+                                VirtualScrollingEnabled=true
+                                >
+                            <ToolbarTemplate>
+                                <DxToolbar ItemRenderStyleMode="ToolbarRenderStyleMode.Plain">
+                                    <DxToolbarItem Text="Tải lại" IconCssClass="bi bi-arrow-clockwise" RenderStyle="ButtonRenderStyle.Primary" Click="@searchAsync">
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="Xuất Excel" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=> Grid.ExportToXlsxAsync("ExportKehoachChuaDatHang"))">
+                                    </DxToolbarItem>
+                                    <DxToolbarItem Text="Chọn cột" Click="@(()=>Grid.ShowColumnChooser())" IconCssClass="bi bi-layout-text-window-reverse" />
+                                    
+                                </DxToolbar>
+                            </ToolbarTemplate>
+                            <Columns>
+                                <DxGridCommandColumn Width="90" ShowInColumnChooser=false Visible=@CheckQuyen>
+                                    <HeaderTemplate>
+                                        <a style="text-decoration: none;" href="javascript:void(0);">Hủy đặt hàng</a>
+                                    </HeaderTemplate>
+                                    <CellDisplayTemplate>
+                                        @{
+                                            NvlKeHoachMuaHangItemShow nvlKeHoachMuaHangItem = (NvlKeHoachMuaHangItemShow)context.DataItem;
+                                        }
+                                        <a class="bi bi-bookmark-plus" @onclick=@(()=>tieptucdathangAsync(nvlKeHoachMuaHangItem)) style="text-decoration: none;color:green" href="javascript:void(0);"></a>
+                                        <a class="oi oi-x" @onclick="@(()=>huydathangAsync(nvlKeHoachMuaHangItem))" style="text-decoration: none;margin-left:10px;color:red" href="javascript:void(0);"></a>
+
+                                    </CellDisplayTemplate>
+                                </DxGridCommandColumn>
+                                @if (keHoachMuaHangcrr.LoaiKeHoach.Contains("KeHoach"))
+                                {
+                                    <DxGridDataColumn FieldName="@nameof(NvlKeHoachMuaHangItemShow.SerialLink)" GroupIndex="0">
+                                        <GroupRowTemplate>
+                                            @{
+
+                                                int? valuegroup = (int?)context.GroupValue;
+                                                NvlKeHoachMuaHangItemShow nvlKeHoachMuaHangItemShow = lstdata.FirstOrDefault(p => p.SerialLink.Equals(valuegroup));
+                                            }
+                                            @if (nvlKeHoachMuaHangItemShow.SoLuongSP != null)
+                                            {
+                                                <div style="display: flex; justify-content: space-between;width:400px;">
+                                                    <span style="color: forestgreen;">@string.Format("{0}", nvlKeHoachMuaHangItemShow.TenSP)</span>
+                                                    <span style="color: red;">@string.Format(" ({0} bộ)", nvlKeHoachMuaHangItemShow.SoLuongSP)</span>
+                                                </div>
+
+                                                <div class="rounded-2 p-1" style="display: flex; justify-content: space-between;width:270px;background-color:@StaticClass.UIntToHtmlColor(nvlKeHoachMuaHangItemShow.Color)">
+                                                    <span>@string.Format("Art: {0}", nvlKeHoachMuaHangItemShow.ArticleNumber)</span>
+
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div style="display: flex; justify-content: space-between;width:400px;">
+                                                    <span style="color: forestgreen;">@string.Format("Vật tư không thuộc kế hoạch sản phẩm")</span>
+                                                </div>
+                                            }
+                                        </GroupRowTemplate>
+                                    </DxGridDataColumn>
+                                    <DxGridDataColumn FieldName="@nameof(NvlKeHoachMuaHangItemShow.PhanLoai)" Caption="Phân loại" GroupIndex="1" Width="130" />
+                                }
+                                else
+                                {
+                                    <DxGridDataColumn FieldName="@nameof(NvlKeHoachMuaHangItemShow.PhanLoai)" Caption="Phân loại" GroupIndex="0" Width="130" />
+                                }
+                                <DxGridDataColumn FieldName="@nameof(NvlKeHoachMuaHangItemShow.MaHang)" Caption="Mã hàng" Width="140" />
+                                <DxGridDataColumn FieldName="@nameof(NvlKeHoachMuaHangItemShow.TenHang)" Caption="Tên hàng" MinWidth="250" />
+                                <DxGridDataColumn FieldName="@nameof(NvlKeHoachMuaHangItemShow.SoLuong)" Caption="Số lượng" Width="110" DisplayFormat="#,0.###" />
+                                <DxGridDataColumn FieldName="@nameof(NvlKeHoachMuaHangItemShow.SLTheoDoi)" Caption="Còn lại" Width="110" DisplayFormat="#,0.###" />
+                                <DxGridDataColumn FieldName="@nameof(NvlKeHoachMuaHangItemShow.TyLe)" Caption="% Hoàn thành" Width="150">
+                                    <CellDisplayTemplate>
+                                        @{
+                                            NvlKeHoachMuaHangItemShow nvlKeHoachMuaHangItemShow = (NvlKeHoachMuaHangItemShow)context.DataItem;
+                                        }
+                                        <NFCWebBlazor.App_ClassDefine.ProgressBarDf value="@nvlKeHoachMuaHangItemShow.TyLe"></NFCWebBlazor.App_ClassDefine.ProgressBarDf>
+                                    </CellDisplayTemplate>
+                                </DxGridDataColumn>
+                                <DxGridDataColumn FieldName="@nameof(NvlKeHoachMuaHangItemShow.DonGia)" Caption="Đơn giá" Width="110" DisplayFormat="#,#.###" />
+                                <DxGridDataColumn FieldName="@nameof(NvlKeHoachMuaHangItemShow.DonGia)" Caption="Thành tiền" Width="110" DisplayFormat="#,#.###" />
+
+                                <DxGridDataColumn FieldName="@nameof(NvlKeHoachMuaHangItemShow.UserInsert)" Caption="UserInsert" Width="120" />
+                                <DxGridDataColumn FieldName="@nameof(NvlKeHoachMuaHangItemShow.NgayInsert)" Caption="NgayInsert" Width="120" DisplayFormat="dd-MM-yy HH:mm" />
+                            </Columns>
+
+                        </DxGrid>
+                    </DxLoadingPanel>
+                </div>
+            </Template>
+        </DxGridLayoutItem>
+
+
+    </Items>
+</DxGridLayout>
+@code {
+
+    [Parameter]
+    public EventCallback GotoMainForm { get; set; }
+    [Parameter]
+    public KeHoachMuaHang_Show keHoachMuaHangcrr { get; set; }
+
+    [Inject] BrowserService browserService { get; set; }
+    [Inject] PhanQuyenAccess phanQuyenAccess { get; set; }
+    bool PopupVisible { get; set; } = false;
+    DialogMsg? dialogMsg { get; set; }
+    public string? random { get; set; }
+
+    string heightgrid = "500px";
+
+    ObservableCollection<NvlKeHoachMuaHangItemShow> lstdata { get; set; }
+    IGrid? Grid { get; set; }
+    DxFlyout? dxFlyoutchucnang { get; set; }
+    public string? idflychucnang { get; set; }
+    bool IsOpenfly { get; set; } = false;
+    App_ClassDefine.ClassProcess prs = new ClassProcess();
+    bool PanelVisible { get; set; } = false;
+    protected override async Task OnInitializedAsync()
+    {
+        await loadAsync();
+        // return base.OnInitializedAsync();
+    }
+    public string idelement(int? serial)
+    {
+        if (serial == null)
+            string.Format("flychucnang_{0}_{1}", random, serial);
+        if (random == null)
+        {
+            random = prs.RandomString(9);
+        }
+        return string.Format("flychucnang_{0}_{1}", random, serial);
+    }
+
+    bool CheckQuyen = false;
+    bool expandallgroup { get; set; } = false;
+    private async Task loadAsync()
+    {
+
+        var dimension = await browserService.GetDimensions();
+        // var heighrow = await browserService.GetHeighWithID("divcontainer");
+        int height = dimension.Height - 90;
+        heightgrid = string.Format("{0}px", height);
+        CheckQuyen = phanQuyenAccess.CheckDelete(keHoachMuaHangcrr.UserInsert, Model.ModelAdmin.users);
+        if (keHoachMuaHangcrr.LoaiKeHoach.Contains("DeNghi"))
+                expandallgroup = true;
+            
+        loaddatadropdownAsync();
+        // var query=ModelData.L
+    }
+    async Task OnEditModelSaving(GridEditModelSavingEventArgs e)
+    {
+        //var editModel = (DataRowView)e.EditModel;
+        // Assign changes from the edit model to the data item.
+        if (e.IsNew)
+        {
+            // DataRow rownew = lstdata.NewRow();
+            // lstdata.Rows.Add(rownew);
+        }
+
+        else
+            e.CopyChangesToDataItem();
+        // Post changes to the database.
+
+    }
+    void OnCustomizeElement(GridCustomizeElementEventArgs e)
+    {
+        if (e.ElementType == GridElementType.DataRow)
+        {
+            NvlKeHoachMuaHangItemShow nvlKeHoachMuaHangItemShow = (NvlKeHoachMuaHangItemShow)e.Grid.GetDataItem(e.VisibleIndex);
+            // Console.WriteLine(nvlKeHoachMuaHangItemShow.HuyDatHang);
+            if (nvlKeHoachMuaHangItemShow.HuyDatHang == "Hủy")
+                e.CssClass = "highlighted-item";
+            if (nvlKeHoachMuaHangItemShow.TextDuyet == "Chưa duyệt")
+                e.CssClass = "highlighchuaduyet-item";
+        }
+
+    }
+    bool expand = true;
+    private void expandall()
+    {
+        Grid.BeginUpdate();
+        Grid.AutoExpandAllGroupRows = expand;
+        Grid.EndUpdate();
+        expand = !expand;
+    }
+}

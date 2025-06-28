@@ -1,0 +1,157 @@
+﻿@using BlazorBootstrap
+@using NFCWebBlazor.Model
+@using Newtonsoft.Json
+@using static NFCWebBlazor.App_NguyenVatLieu.App_NhapXuat.Page_KhoThanhPhamShow
+
+
+
+<style>
+</style>
+
+<DxLoadingPanel @bind-Visible="@PanelVisible"
+IsContentBlocked="true"
+ApplyBackgroundShading="true"
+IndicatorAreaVisible="false"
+Text="Đang xử lý...">
+    <DxGrid @ref=dxGrid
+       
+    ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+    VirtualScrollingEnabled="true"
+    TextWrapEnabled="false"
+
+    CssClass="gridcss"
+    FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+    Data=@lstdata
+    AutoExpandAllGroupRows="true">
+       
+        <Columns>
+
+            <DxGridDataColumn FieldName="MaHang" Caption="Mã hàng" Width="110" />
+            <DxGridDataColumn FieldName="TenHang" Caption="Tên hàng" Width="270" />
+
+            <DxGridDataColumn FieldName="SLXuat" Caption="SL xuất" Width="110" DisplayFormat="#,0.##;-#,0.##;''" />
+            <DxGridDataColumn FieldName="DVT" Caption="ĐVT" Width="90" />
+            <DxGridDataColumn FieldName="TenNhom" Caption="Nhóm hàng" Width="70" GroupIndex="0" />
+            <DxGridDataColumn FieldName="ThanhTien" Caption="Thành tiền" Width="120" DisplayFormat="#,0.##;-#,0.##;''" />
+
+        </Columns>
+
+        <TotalSummary>
+          
+            <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+            FieldName="SLXuat"
+            Name="SLXuat"
+            DisplayText="{0}"
+            FooterColumnName="SLXuat" />
+            <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+            FieldName="ThanhTien"
+            Name="ThanhTien"
+            DisplayText="{0}"
+            FooterColumnName="@showfooterthanhtien" />
+
+
+        </TotalSummary>
+
+    </DxGrid>
+</DxLoadingPanel>
+@code {
+    [Inject] ToastService ToastService { get; set; } = default!;
+
+    [Parameter]
+    public string ArticleNumber { get; set; } = "";
+    [Parameter]
+    public Dieukiensearch dieukiensearch { get; set; }
+
+
+    NvlNhapXuatItemShow nvlNhapXuatItemShowcrr { get; set; }
+    List<NvlNhapXuatItemShow> lstdata { get; set; }
+    App_ClassDefine.ClassProcess prs = new App_ClassDefine.ClassProcess();
+    string heightgrid = "500px";
+    bool PanelVisible { get; set; } = false;
+    public DxGrid dxGrid { get; set; }
+    bool IsOpenfly { get; set; }
+
+    public string random { get; set; }
+    string showfooterthanhtien { get; set; } = "ThanhTien";
+    private string showtextdouble(decimal? d)
+    {
+        if (d == null)
+            return "";
+        if (d == 0)
+            return "";
+        return d.Value.ToString("#,0.####");
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Task.Delay(100);
+            await loaddinhmucchitietAsync();
+            StateHasChanged();
+        }
+        //base.OnAfterRender(firstRender);
+    }
+    public class NvlNhapXuatItemShow
+    {
+
+        public string MaHang { get; set; }
+        public string TenHang { get; set; }
+        public string TenNhom { get; set; }
+        public double SLXuat { get; set; }
+        public double ThanhTien{ get; set; }
+        public string DVT { get; set; }
+        public string ArticleNumber { get; set; }
+       
+
+    }
+    private async Task loaddinhmucchitietAsync()
+    {
+       
+        if (lstdata == null)
+            lstdata = new List<NvlNhapXuatItemShow>();
+        lstdata.Clear();
+      
+           
+            try
+            {
+                string sql = "";
+                #region Truy vấn mới có liên kết kiểm hàng
+                sql = string.Format(@"use NVLDB
+                 declare @DateBegin datetime='{0}'
+                        declare @DateEnd datetime='{1}'
+                        declare @ArticleNumber nvarchar(100)='{2}'
+                        select hh.MaHang,hh.TenHang,hh.DVT,nk.TenNhom,qry.* from
+                        (SELECT [MaHang],sum([SLXuat]) as SLXuat,sum(SLXuat*[DonGia]) as ThanhTien,[ArticleNumber]
+                          FROM dbo.NvlNhapXuat nx join
+                          [dbo].[NvlNhapXuatItem] item on nx.Serial=item.SerialCT
+                          where nx.Ngay>=@DateBegin and nx.Ngay<=@DateEnd and ArticleNumber=@ArticleNumber  and isnull(Barcode,'')<>''
+                          group by MaHang,ArticleNumber) as qry inner join dbo.NvlHangHoa hh on qry.MaHang=hh.MaHang
+                          inner join dbo.NvlNhomHang nk on hh.MaNhom=nk.MaNhom", dieukiensearch.dtpdatebegin.Value.ToString("MM/dd/yyyy 00:00"), dieukiensearch.dtpdateend.Value.ToString("MM/dd/yyyy 23:59"), ArticleNumber);
+                #endregion
+                CallAPI callAPI = new CallAPI();
+                PanelVisible = true;
+                string json = await callAPI.ExcuteQueryEncryptAsync(sql, new List<ParameterDefine>());
+                if (json != "")
+                {
+                    var query = JsonConvert.DeserializeObject<List<NvlNhapXuatItemShow>>(json);
+                    lstdata = query;
+                  
+                    // await GotoMainForm.InvokeAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                ToastService.Notify(new ToastMessage(ToastType.Success, $"Lỗi: " + ex.Message));
+            }
+            finally
+            {
+                PanelVisible = false;
+
+                StateHasChanged();
+
+            }
+
+       
+        return;
+    }
+}

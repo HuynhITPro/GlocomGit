@@ -1,0 +1,289 @@
+﻿using BlazorBootstrap;
+using DocumentFormat.OpenXml.Drawing;
+using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
+using Newtonsoft.Json;
+using NFCWebBlazor.App_ClassDefine;
+using NFCWebBlazor.App_KeHoach;
+using NFCWebBlazor.App_ModelClass;
+using NFCWebBlazor.Model;
+using System.Data;
+using static NFCWebBlazor.App_KeHoach.Page_KeHoachThang_Master;
+using static NFCWebBlazor.App_NguyenVatLieu.App_NhapXuat.Page_NhapXuat_Master;
+
+namespace NFCWebBlazor.App_NguyenVatLieu.App_KeHoachDeNghi
+{
+    public partial class Page_TaoDeNghiDongVi
+    {
+        private async Task loadAsync()
+        {
+            if (ShowView != null)
+            {
+                showtyle = true;
+            }
+            lstnguoiduyet = await Model.ModelData.Getlstusers();
+            if (keHoachSP_Showcrr.lstKeHoachChiTiet == null)
+            {
+
+                string sql = "";
+                if (ShowView == "viewchuahoanthanh")
+                {
+                    sql = string.Format(@"use NVLDB
+                      
+                        select khtitem.Serial,sp.TenSP,art.Type_Other,khtitem.MaSP,khtitem.ArticleNumber,khtitem.SLSP,isnull(nvlsp.SoLuongSP,0) as SLThucHien,khtitem.SLSP-isnull(nvlsp.SoLuongSP,0) as SLConLai,case when khtitem.SLSP=0 then 0 else cast(isnull(nvlsp.SoLuongSP,0) as float)/khtitem.SLSP end as TyLe
+                        ,mm.TenMau,mm.Color,mm.MaMau
+                        from (select * from KeHoachThangItem where Serial_KHThang=@Serial) khtitem 
+                        left join (select SerialKHThangItem,sum(SoLuongSP) as SoLuongSP from dbo.NvlKeHoachSP group by SerialKHThangItem) nvlsp  on khtitem.Serial=nvlsp.SerialKHThangItem
+                       left join dbo.GetArticleNumber() art
+                        on khtitem.ArticleNumber=art.ArticleNumber
+                        left join dbo.GetMaMau() mm on art.MaMau=mm.MaMau
+                        inner join dbo.GetSanPham() sp on khtitem.MaSP=sp.MaSP order by sp.TenSP", keHoachSP_Showcrr.Serial);
+
+
+                }
+                else
+                {
+                    sql = string.Format(@"
+                                use NVLDB
+                                SELECT  it.[Serial],[Serial_KHThang],it.[ArticleNumber],art.Type_Other ,it.[MaSP],sp.TenSP,[SLSP],cast(SLSP as float) as SLConLai,mm.TenMau,[MaDHMua],it.[NgayInsert],it.GhiChu,mm.Color,it.UserInsert,mm.MaMau
+								
+                                    FROM (select * from [KeHoachThangItem] where Serial_KHThang=@Serial) 
+									it inner join dbo.GetSanPham()  sp on it.MaSP=sp.MaSP 			
+                                    left join dbo.GetArticleNumber() art on art.ArticleNumber=it.ArticleNumber
+									left join dbo.GetMaMau() mm on art.MaMau=mm.MaMau", keHoachSP_Showcrr.Serial);
+                }
+                try
+                {
+                    PanelVisible = true;
+
+                    CallAPI callAPI = new CallAPI();
+                    List<ParameterDefine> parameterDefineList = new List<ParameterDefine>();
+                    parameterDefineList.Add(new ParameterDefine("@Serial", keHoachSP_Showcrr.Serial));
+                    string json = await callAPI.ExcuteQueryEncryptAsync(sql, parameterDefineList);
+                    if (json != "")
+                    {
+                        var query = JsonConvert.DeserializeObject<List<KeHoachThangItem_Show>>(json);
+                        if (query.Count > 0)
+                        {
+                            lstdata = new List<KeHoachThangItem_Show>();
+                            lstdata.AddRange(query);
+
+                            keHoachSP_Showcrr.lstKeHoachChiTiet = lstdata;
+                            //Grid.ExpandGroupRow(0);
+                            Grid.Reload();
+                            PanelVisible = false;
+
+                            //Grid.AutoFitColumnWidths();
+                        }
+                    }
+
+
+
+                }
+                catch (Exception ex)
+                {
+
+                    ToastService.Notify(new ToastMessage(ToastType.Warning, "Lỗi:" + ex.Message));
+                }
+                finally
+                {
+                    PanelVisible = false;
+                    StateHasChanged();
+                }
+
+
+            }
+            else
+            {
+                
+
+                //nguoiduyet = ModelAdmin.users.UsersName;
+                
+                lstdata = keHoachSP_Showcrr.lstKeHoachChiTiet;
+                Grid.Reload();
+                StateHasChanged();
+            }
+        }
+
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (firstRender)
+            {
+                await loadAsync();
+            }
+            //return base.OnAfterRenderAsync(firstRender);
+        }
+        bool enabledownload = true;
+        string pathfilemau = "FileMau/FileImportKeHoachThang.xlsx";
+        private async void Downloadfilemau()
+        {
+            FTPFile fTPFile = new FTPFile();
+            await fTPFile.DownloadFile(JSRuntime, System.IO.Path.Combine(ModelAdmin.pathhostdocumnet, pathfilemau), ModelAdmin.userhost, ModelAdmin.passwordhost, System.IO.Path.GetFileName(pathfilemau));
+            enabledownload = false;
+        }
+      
+        string[] arrcolumncheck = new string[] { "MaSP", "TenSP", "SLSP" };
+        int[] arrcolumnwidth = new int[] { 140, 220, 100, 110, 140, 140, 200, 100, 120, 100, 100, 100, 100, 100 };
+        public async Task ImportExcelAsync()
+        {
+            //CallAPI
+            renderFragment = builder =>
+            {
+                builder.OpenComponent<ButtonImportExcel>(0);
+                builder.AddAttribute(1, "arrcolumncheck", arrcolumncheck);
+                builder.AddAttribute(2, "getdatatble", EventCallback.Factory.Create<DataTable>(this, GetTable));
+                //builder.OpenComponent(0, componentType);
+                builder.CloseComponent();
+            };
+            //dxPopup.showpage("TẠO ĐỀ NGHỊ", renderFragment);
+            dxPopup.showAsync("Import hàng hóa từ excel");
+            dxPopup.ShowAsync();
+        }
+        List<string>lstcolumn = new List<string>();
+        private async void GetTable(DataTable dt)
+        {
+            lstcolumn.Clear();
+           // dt.Columns.Add("Serial", typeof(int));
+            //if (lstdata == null)
+            //    lstdata = new List<KeHoachThangItem_Show>();
+            //else
+            //    lstdata.Clear();
+          
+            //lstdata = dt;
+
+            //string stt = "STT";
+            foreach(DataRow row in dt.Rows)
+            {
+                foreach(var it in lstdata)
+                {
+                    if (it.MaSP == row.Field<string>("MaSP"))
+                    {
+                        if (row["SLSP"] != DBNull.Value && row["SLSP"]!=null)
+                        {
+                            if (double.TryParse(row["SLSP"].ToString(), out double sl))
+                            {
+                                it.SLTonMB =sl;
+                            }
+                        }
+                        //row.Delete();
+                    }
+                }
+            }
+            await dxPopup.CloseAsync();
+            dt.Dispose();
+            Grid.Reload();
+            //StateHasChanged();
+            Grid.AutoFitColumnWidths();
+            StateHasChanged();
+
+        }
+        private void setClass(KeHoachThangItem_Show keHoachThangItem_set, KeHoachThangItem_Show keHoachThangItem_get)
+        {
+            //keHoachThangItem_set.Serial = keHoachThangItem_get.Serial;
+            keHoachThangItem_set.ArticleNumber = keHoachThangItem_get.ArticleNumber;
+            keHoachThangItem_set.MaSP = keHoachThangItem_get.MaSP;
+            keHoachThangItem_set.SLSP = keHoachThangItem_get.SLSP;
+            keHoachThangItem_set.MaDHMua = keHoachThangItem_get.MaDHMua;
+            keHoachThangItem_set.UserInsert = keHoachThangItem_get.UserInsert;
+            keHoachThangItem_set.GhiChu = keHoachThangItem_get.GhiChu;
+
+        }
+        public void CheckedChangedAll(bool e)
+        {
+            lstdata.ForEach(p => p.chk = e);
+            //if (e)
+            //{
+               
+            //}
+        }
+        private async Task saveAsync()
+        {
+            if(string.IsNullOrEmpty(nguoiduyet))
+            {
+                ToastService.Notify(new ToastMessage(ToastType.Warning, "Chưa chọn người duyệt"));
+                return;
+            }
+            var querysave = lstdata.Where(p => p.chk.Equals(true)&&p.SLSP-p.SLTonMB>0).ToList();
+            if(!querysave.Any())
+            {
+                ToastService.Notify(new ToastMessage(ToastType.Warning, "Vui lòng tick chọn sản phẩm muốn tạo định mức đóng vỉ"));
+                return;
+            }
+            try
+            {
+               
+                DataTable dtsave = new DataTable();
+                CallAPI callAPI = new CallAPI();
+                string sql = "NVLDB.dbo.NvlKeHoachMuaHang_TaoDeNghiDongVi";
+                dtsave.Columns.Add("Index", typeof(int));
+                dtsave.Columns.Add("MaSP", typeof(string));
+                dtsave.Columns.Add("KeyGroup", typeof(string));
+                dtsave.Columns.Add("TenSP", typeof(string));
+                dtsave.Columns.Add("ArticleNumber", typeof(string));
+                dtsave.Columns.Add("MaMau", typeof(string));
+                dtsave.Columns.Add("SoLuongSP", typeof(int));
+               
+                int index = 0;
+                foreach (var item in querysave)
+                {
+                    DataRow row = dtsave.NewRow();
+                    row["Index"] = index;
+                    row["MaSP"] = item.MaSP;
+                    row["KeyGroup"] = StaticClass.Randomstring(10);
+                    row["TenSP"] = item.TenSP;
+                    row["ArticleNumber"] = item.ArticleNumber;
+                    row["MaMau"] = item.MaMau;
+                    row["SoLuongSP"] = item.SLSP-item.SLTonMB;
+                    if(item.SLSP-item.SLTonMB>0)
+                        dtsave.Rows.Add(row);
+                    index++;
+                }
+
+                
+                List<ParameterDefine> lstpara = new List<ParameterDefine>();
+                lstpara.Add(new ParameterDefine("@Type_NvlSanPhamDongVi", prs.ConvertDataTableToJson(dtsave), "DataTable"));
+                lstpara.Add(new ParameterDefine("@UserInsert", ModelAdmin.users.UsersName));
+                lstpara.Add(new ParameterDefine("@NguoiDN", ModelAdmin.users.TenUser));
+                lstpara.Add(new ParameterDefine("@UserDuyet", nguoiduyet));
+                lstpara.Add(new ParameterDefine("@NoiDung", string.Format("Tạo đề nghị đóng vỉ theo kế hoạch {0}",keHoachSP_Showcrr.TenKHThang)));
+                string json = await callAPI.ProcedureEncryptAsync(sql, lstpara);
+                if (json != "")
+                {
+                    var query = JsonConvert.DeserializeObject<List<Ketqua>>(json);
+                    if (query[0].ketqua == "OK")
+                    {
+                        ToastService.Notify(new ToastMessage(ToastType.Success, $"Lưu thành công"));
+                        lstdata.Clear();
+                        Grid.Reload();
+                    }
+                    else
+                    {
+                        ToastService.Notify(new ToastMessage(ToastType.Warning, "Lỗi: " + query[0].ketqua));
+
+
+                    }
+                    //Grid.Data = lstDonDatHangSearchShow;
+                }
+            }
+            catch (Exception ex)
+            {
+                ToastService.Notify(new ToastMessage(ToastType.Warning, "Lỗi: " + ex.Message));
+            }
+        }
+        public async void ShowFlyout()
+        {
+            try
+            {
+      
+                
+                await dxFlyoutchucnang.ShowAsync();
+            }
+            catch (Exception ex)
+            {
+                ToastService.Notify(new ToastMessage(ToastType.Danger, "Lỗi: " + ex.Message));
+                Console.WriteLine("Lỗi:" + ex.Message);
+            }
+
+        }
+    }
+}

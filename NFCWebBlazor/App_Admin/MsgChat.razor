@@ -1,0 +1,92 @@
+﻿@inject IJSRuntime JS
+<style>
+    .widthinput {
+    width: 100%;
+    }
+</style>
+<div class="chat-container border rounded shadow p-2">
+    <div class="chat-messages" id="chatBoxRef" @ref="chatBoxRef">
+        @foreach (var msg in Messages)
+        {
+            <div class="message-row @(msg.IsMine ? "mine" : "theirs")">
+                @if (!msg.IsMine)
+                {
+                    <img src="@msg.PathImg" class="avatar" />
+                    <div class="row">
+
+                        <div class="message-bubble row">
+                            <div>@msg.Msg</div>
+                            <div class="message-timestamp">
+                                @string.Format("bởi: {0}, {1}", msg.TenUser, msg.NgayInsert.ToString("HH:mm dd/MM/yyyy")))
+                            </div>
+                        </div>
+
+                    </div>
+                }
+                else
+                {
+                    <div class="row me-1">
+
+                        <div class="message-bubble">
+                            <div>@msg.Msg</div>
+                            <div class="message-timestamp text-white">
+                                @string.Format("bởi: {0}, {1}", msg.TenUser, msg.NgayInsert.ToString("HH:mm dd/MM/yyyy"))
+                            </div>
+                        </div>
+
+                    </div>
+                    <img src="@msg.PathImg" class="avatar me-1" />
+
+                }
+
+
+            </div>
+        }
+    </div>
+
+    <div class="chat-input row m-2 d-flex">
+        <div class="col-auto">
+            <button class="btn btn-primary me-2 bi bi-send" @onclick="saveAsync">Gửi</button>
+        </div>
+       <div class="col">
+            <DxMemo NullText="Để lại lời nhắn..." @bind-Text="@nvlMsg.Msg" CssClass="widthinput" />
+       </div>
+      
+       
+    </div>
+</div>
+
+@code {
+
+
+    [Parameter]
+    public NvlMsg nvlMsg { get; set; } = new NvlMsg();
+    private List<NvlMsg> Messages = new();
+    private string CurrentMessage = "";
+    private ElementReference chatBoxRef;
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            loadAsync();
+            // Messages.Add(new NvlMsg { Msg = "AAAAAA 212123", IsMine = true });
+            // Messages.Add(new NvlMsg { Msg = "🤖 Trả lời tự động", IsMine = false });
+            // Messages.Add(new NvlMsg { Msg = "🤖 BBB", IsMine = true });
+            // Messages.Add(new NvlMsg { Msg = "🤖 Trả lời tự động", IsMine = false });
+            // StateHasChanged();
+        }
+        return base.OnAfterRenderAsync(firstRender);
+    }
+    
+
+   
+
+    private async void ScrollToBottom()
+    {
+        await Task.Delay(100);
+
+        await JS.InvokeVoidAsync("scrollFunctions.scrollToBottom", "chatBoxRef");
+
+        // await JS.InvokeVoidAsync("scrollToBottom", chatBoxRef);
+    }
+}

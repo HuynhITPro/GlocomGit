@@ -1,0 +1,241 @@
+﻿@using BlazorBootstrap
+@using DevExpress.Blazor;
+@using NFCWebBlazor.App_ClassDefine;
+@using System.Data
+<style>
+    .my-grid {
+        height: @heightgrid;
+    }
+
+    .highRed {
+        color: red;
+        font-weight: bold
+    }
+
+    .highGreen {
+        color: Green;
+        font-weight: bold
+    }
+
+</style>
+<DxGridLayout CssClass="w-100 ch-480">
+
+    <Rows>
+        <DxGridLayoutRow Height="Auto" />
+        <DxGridLayoutRow Height="Auto" />
+        <DxGridLayoutRow />
+    </Rows>
+
+    <Items>
+
+        <DxGridLayoutItem Row="0">
+            <Template>
+                <div class="shadow-sm p-3 mb-2 bg-white border rounded-bottom-2">
+                    <DxTextBox NullText="Tìm kiếm chi tiết" onclick="@Showdivsearch">
+                        <Buttons>
+                            <DxEditorButton Position=EditorButtonPosition.Left IconCssClass="bi bi-search" Click="@Showdivsearch" />
+                        </Buttons>
+                    </DxTextBox>
+
+                    <div class="@divClass">
+
+                        <DxFormLayout CssClass="w-100 mt-3">
+
+
+
+                            <DxFormLayoutItem Caption="Sản phẩm" ColSpanLg="4" ColSpanMd="6">
+
+                                <DxComboBox Data=@lstsanpham ListRenderMode="ListRenderMode.Virtual"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                            TextFieldName="@nameof(SanPhamDropDown.TenSP)"
+                                            @bind-Value="@sanphamselected"
+                                            CssClass="cw-480" />
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem Caption="Tình trạng" ColSpanLg="4" ColSpanMd="6">
+                                <ComboboxFilteredTable @ref=txtloaibaocao ListRenderMode="ListRenderMode.Virtual"
+                                                       FilteringMode="DataGridFilteringMode.Contains"
+                                                       TypeName="NvlKyDuyet_TinhTrang"
+                                                       ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                                       TextFieldName="@nameof(DataDropDownList.FullName)"
+                                                       @bind-Value="@baocaoselected"
+                                                       CssClass="cw-480" />
+
+                            </DxFormLayoutItem>
+
+
+                            <DxFormLayoutItem ColSpanMd="12">
+                                <Template>
+                                    <div class="d-flex justify-content-center m-2">
+
+                                        <DxButton RenderStyle="ButtonRenderStyle.Primary" CssClass="bi bi-search m-1" Click=@search
+                                                  RenderStyleMode="ButtonRenderStyleMode.Outline" Text="XEM">
+
+                                        </DxButton>
+
+                                    </div>
+
+                                </Template>
+                            </DxFormLayoutItem>
+                        </DxFormLayout>
+
+                    </div>
+                </div>
+
+            </Template>
+        </DxGridLayoutItem>
+        <DxGridLayoutItem Row="1">
+
+        </DxGridLayoutItem>
+        <DxGridLayoutItem Row="2">
+            <Template>
+                <DxGrid @ref=dxGrid
+                        CssClass="my-grid"
+                        ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+                        PageSize="20"
+                        EditMode="GridEditMode.PopupEditForm"
+                        PopupEditFormHeaderText="Chỉnh sửa"
+                        
+                        PagerNavigationMode="PagerNavigationMode.InputBox"
+                        PageSizeSelectorVisible="true"
+                        PageSizeSelectorAllRowsItemVisible="true"
+                        PageSizeSelectorItems="@(new int[] { 20,30,50 })"
+                        EditFormButtonsVisible="false"
+                        VirtualScrollingEnabled="false"
+                        FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                        Data=@lstDinhMucShow
+                        AutoExpandAllGroupRows="true">
+                    <Columns>
+                        <DxGridDataColumn>
+                            <CellDisplayTemplate>
+                                @{
+                                    var dinhMuc_Show = (DinhMuc_Show)context.DataItem;
+
+                                }
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="row"><label class="text-primary" style="font-weight:bold;font-size:22px;">@dinhMuc_Show.TenSP</label></div>
+                                        <div class="row">
+                                            <div class="col-auto">
+                                                <label>Phiên bản:</label>
+                                                <label class="text-danger" style="margin-right:15px;">@dinhMuc_Show.Version.ToString()</label>
+                                                <label>Tạo bởi:@dinhMuc_Show.NguoiLap</label>
+
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-auto">
+                                                <label style="margin-right:20px;">Ngày ban hành:@showdate(dinhMuc_Show.NgayBanHanh)</label>
+                                                <label>Ngày áp dụng: @showdate(dinhMuc_Show.NgayApDung)</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="row">
+                                            <div class="col-auto">
+                                                <label>Tình trạng: </label>
+                                                <label class="text-primary" style="font-weight: bold; font-size: 22px;">@dinhMuc_Show.TinhTrang</label>
+                                                <img src=@dinhMuc_Show.PathIcon style="width: 32px; height: 32px; margin-right: 5px; border-radius: 50%;">
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <img src="@dinhMuc_Show.PathImgKiemTra" style="width: 32px; height: 32px; margin-right: 5px; border-radius: 50%;">
+                                                <label>@dinhMuc_Show.NameKiem</label>
+                                                <label class="text-danger" style="font-weight:bold">@dinhMuc_Show.CheckKiem</label>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <img src="@dinhMuc_Show.PathImgDuyet" style="width: 32px; height: 32px; margin-right: 5px; border-radius: 50%;">
+                                                <label>@dinhMuc_Show.NameDuyet</label>
+                                                <label class="text-primary" style="font-weight:bold">@dinhMuc_Show.CheckDuyet</label>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </CellDisplayTemplate>
+                        </DxGridDataColumn>
+
+                    </Columns>
+                    <DetailRowTemplate>
+                        @{
+                            var dinhMuc_Show = (DinhMuc_Show)context.DataItem;
+                            
+                        }
+                        <View_DuyetDinhMucItem dinhMuc_Show="@dinhMuc_Show" GotoMainForm="@GotoMainFormAsync"></View_DuyetDinhMucItem>
+                    </DetailRowTemplate>
+
+
+                </DxGrid>
+            </Template>
+        </DxGridLayoutItem>
+
+    </Items>
+</DxGridLayout>
+@code {
+    [Inject] PreloadService PreloadService { get; set; }
+    [Inject] IJSRuntime JS { get; set; }
+    string heightgrid = "500px";
+    string divClass = "expandable-content";
+    bool visiblechart = false;
+    public int widthtotal = 250;
+    string titlechart = "Đơn hàng chưa xuất";
+
+    List<DataDropDownList> lstloaibaocao { get; set; }
+    ComboboxFilteredTable txtloaibaocao { get; set; }
+    List<SanPhamDropDown> lstsanpham { get; set; }
+
+    SanPhamDropDown sanphamselected { get; set; }
+    DataDropDownList baocaoselected { get; set; }
+
+    public DxGrid dxGrid { get; set; }
+
+    DataTable dtresultfinal = new DataTable();
+
+
+    List<InitDxGridDataColumn> lstcolumn = new List<InitDxGridDataColumn>();
+    async Task ExportXlsx_Click()
+    {
+        await dxGrid.ExportToXlsxAsync("ExportResult");
+    }
+    async Task ExportCsv_Click()
+    {
+        await dxGrid.ExportToCsvAsync("ExportResult");
+    }
+    void OnCustomizeElement(GridCustomizeElementEventArgs e)
+    {
+       
+    }
+    private bool isExpanded = false;
+
+    // Hàm xử lý sự kiện click của nút
+    private void hidedivsearch()
+    {
+        isExpanded = false;
+        divClass = "expandable-content";
+    }
+    private void Showdivsearch()
+    {
+        isExpanded = !isExpanded;
+
+        if (isExpanded)
+        {
+
+            divClass = "expandable-content show";
+        }
+        else
+        {
+
+            divClass = "expandable-content";
+        }
+    }
+    private string showdate(DateTime? dt)
+    {
+        if (dt == null)
+            return "";
+        return dt.Value.ToString("dd-MM-yy");
+    }
+
+}

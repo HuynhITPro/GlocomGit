@@ -1,0 +1,135 @@
+﻿@using BlazorBootstrap
+@using NFCWebBlazor.App_ClassDefine
+@using NFCWebBlazor.Model
+@using DevExpress.Blazor.PdfViewer
+<style>
+    .pdfstyle {
+    width: min(95vw, 900px);
+    height: 90vh;
+    }
+</style>
+@if(Ismobile)
+{
+    <DxPdfViewer 
+                 DocumentContent="@DocumentContent" />
+}
+else
+{
+    <div class="pdfstyle" style="position: relative;justify-content: center; align-items: center;">
+        <div style="position: absolute;display: flex;width: 100%;">
+            <iframe id="pdfFrame" style="width:100%;height:90vh"></iframe>
+        </div>
+        <div style="position: absolute;display:@(PanelVisible ? "flex" : "none");width:100%;height:95vh;background-color: rgba(0, 0, 0, 0.3);justify-content: center; align-items: center;">
+            <CascadingValue Name="visibleTimer" Value="@PanelVisible">
+                <LoadingPanel></LoadingPanel>
+            </CascadingValue>
+        </div>
+    </div>
+
+}
+
+
+
+@code {
+    [Inject] IJSRuntime JSRuntime { get; set; }
+    [Inject] ToastService toastservice { get; set; }
+    [Parameter]
+    public GetDataFromSql getDataFromSql { get; set; }
+    [Inject] BrowserService browserService { get; set; }
+    byte[] DocumentContent { get; set; }
+    bool PanelVisible { get; set; } = false;
+    bool Ismobile{ get; set; }=false;
+    private async Task OpenPdf()
+    {
+        CallAPI callAPI = new CallAPI();
+        PanelVisible = true;
+        try
+        {
+            
+            var json = await callAPI.JsonFromSqlExportPdfEncrypt(getDataFromSql);
+            if (json != null)
+            {
+                DocumentContent = json;
+                var base64Pdf = Convert.ToBase64String(DocumentContent);
+
+                // Gọi JS để hiển thị PDF trong iframe
+                await JSRuntime.InvokeVoidAsync("loadPdfInIframe", base64Pdf);
+                 PanelVisible = false;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            toastservice.Notify(new ToastMessage(ToastType.Warning, "Lỗi: " + ex.Message));
+            Console.Error.WriteLine("Lỗi: " + ex.Message);
+            PanelVisible = false;
+        }
+        finally
+        {
+            PanelVisible = false;
+            //StateHasChanged();
+        }
+        // PdfUrl = Navigation.BaseUri + $"api/reports/export/pdf/{reportName}";
+        // var pdfBytes = await Http.GetByteArrayAsync(PdfUrl);
+        // var base64 = Convert.ToBase64String(pdfBytes);
+        // PdfUrl = $"data:application/pdf;base64,{base64}";
+        // CallAPI
+    }
+    protected override async Task OnInitializedAsync()
+    {
+
+        try
+        {
+          
+           
+            var dimension = await browserService.GetDimensions();
+            // var heighrow = await browserService.GetHeighWithID("divcontainer");
+            int height = dimension.Height - 70;
+            int width = dimension.Width;
+            if (width < 768)
+            {
+                Ismobile = true;
+                
+            }
+            else
+            {
+                Ismobile = false;
+              
+            }
+           
+        }
+        catch (Exception ex)
+        {
+            toastservice.Notify(new ToastMessage(ToastType.Warning, "Lỗi browserService :" + ex.Message));
+        }
+
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+
+
+            try
+            {
+                // Thread.Sleep(100);
+
+                await OpenPdf();
+                Console.WriteLine("Loadreport pdf Lần 1");
+
+                //StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Lỗi load report:" + ex.Message);
+            }
+            finally
+            {
+
+            }
+        }
+
+        //return base.OnAfterRenderAsync(firstRender);
+    }
+
+}

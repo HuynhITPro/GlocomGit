@@ -1,0 +1,100 @@
+﻿@using DevExpress.Blazor;
+@using NFCWebBlazor.Model
+@using Newtonsoft.Json
+@inject ThemeColor themeColor;
+<style>
+    .dxbl-menu-item {
+        padding: 3px;
+    }
+
+    .dxbl-image {
+        font-size: 20px;
+    }
+
+
+    .dxbl-menu .dxbl-menu-item-list > .dxbl-menu-list-item > .dxbl-menu-item > .dxbl-btn {
+        --dxbl-btn-border-radius: 0.4rem;
+        color: @themeColor.ColorPrimary;
+    }
+
+    .dxbl-menu-dropdown.dxbl-dropdown-dialog {
+        --dxbl-dropdown-border-radius: 0.4rem;
+    }
+
+
+    .dxbl-menu-dropdown {
+        --dxbl-menu-item-hover-color: @themeColor.ColorPrimary;
+        --dxbl-menu-item-selected-color: @themeColor.ColorPrimary;
+        --dxbl-menu-item-selected-hover-color: @themeColor.ColorPrimary;
+        --dxbl-menu-dropdown-border-radius: 0.4rem;
+    }
+
+        .dxbl-menu-dropdown.dxbl-dropdown-dialog > .dxbl-dropdown-body .dxbl-menu-item-list > .dxbl-menu-list-item > .dxbl-menu-item > .dxbl-btn {
+            --dxbl-btn-border-radius: 0.4rem;
+            color: #007300;
+        }
+
+    .dxbl-menu {
+        --dxbl-menu-item-hover-color: @themeColor.ColorPrimary;
+        --dxbl-menu-top-left-border-radius: 0.4rem;
+        --dxbl-menu-top-right-border-radius: 0.4rem;
+        --dxbl-menu-bottom-left-border-radius: 0.4rem;
+        --dxbl-menu-bottom-right-border-radius: 0.4rem;
+        --dxbl-menu-item-selected-hover-color: @themeColor.ColorPrimary;
+        --dxbl-menu-item-selected-color: @themeColor.ColorPrimary;
+    }
+</style>
+<div class="sidebar @StateCssClass">
+
+    <div class="p-1 bg-white rounded">
+        <CascadingValue Name="additemclick" Value="@GotoMainForm">
+            <DxMenu @ref="dxMenu" Orientation=Orientation.Vertical CollapseItemsToHamburgerMenu="true" DisplayMode="DisplayMode">
+                <Items>
+                    <Page_PhanQuyenMenucClick ListItems="menuItems" Nodeparent="@parentID" />
+                </Items>
+            </DxMenu>
+        </CascadingValue>
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    public EventCallback<MenuItem> GotoMainForm { get; set; }
+
+    // [CascadingParameter(Name = "addtab")]
+    // public EventCallback<MenuItem> cascadedValue { get; set; }
+
+    [Parameter] public string? StateCssClass { get; set; }
+    [Parameter]
+    public List<MenuItem> menuItems { get; set; }
+    [Parameter]
+    public string parentID { get; set; }
+
+    bool checkwidthscreen { get; set; }
+    DevExpress.Blazor.DxMenu dxMenu;
+    MenuDisplayMode DisplayMode { get; set; } = MenuDisplayMode.Auto;
+    string SelectedGroup = "none";
+    public void refreshmenu(List<MenuItem> _menuItems)
+    {
+        menuItems = _menuItems;
+        parentID = Model.ModelAdmin.users.TypeApp;
+        StateHasChanged();
+    }
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            //loadmenu();
+        }
+        if (!checkwidthscreen)
+            DisplayMode = MenuDisplayMode.Desktop;
+        else
+            DisplayMode = MenuDisplayMode.Mobile;
+        Console.WriteLine(DisplayMode);
+        base.OnAfterRender(firstRender);
+    }
+   
+
+
+}

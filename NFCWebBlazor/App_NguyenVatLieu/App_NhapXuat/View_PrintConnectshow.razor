@@ -1,0 +1,117 @@
+﻿@using NFCWebBlazor.Model
+
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+<div class="row pt-2 pb-2 mt-1 d-flex align-items-center rounded-2" style="background:#A7DEB0">
+    <div class="col-auto m-1">
+        <DxRadioGroup Items="@lstloaitem"
+        Layout="RadioGroupLayout.Horizontal"
+     
+        ValueChanged="@((string e)=>selectedradio(e))"
+        ValueFieldName="@nameof(DataDropDownList.Name)"
+        TextFieldName="@nameof(DataDropDownList.FullName)"
+        Value="@printbieumau"
+        CssClass="dx-demo-radio-group">
+
+        </DxRadioGroup>
+    </div>
+    <div class="col flex-grow-1">
+        @if (checkconnect && printername != "")
+        {
+            <button type="button" class="btn btn-primary" @onclick=@viewConnectPrint>
+                <div>
+                    <span class="bi bi-printer"></span>
+                    @*  <span>@printername</span> *@
+                </div>
+            </button>
+        }
+        else
+        {
+            <button type="button" class="btn btn-outline-danger" @onclick=@viewConnectPrint>
+                <div>
+                    <span class="bi bi-printer"></span>
+                    <span>Chưa kết nối máy in</span>
+                </div>
+            </button>
+        }
+    </div>
+</div>
+
+
+@code {
+    [Inject] public SignalRConnect signalRConnect { get; set; }
+    [Parameter]
+    public string printbieumau { get; set; }
+    IEnumerable<DataDropDownList>? lstloaitem { get; set; }
+
+    public bool checkconnect { get; set; } = false;
+    public string printername = "";
+    DialogWindow dxPopup{ get; set; }
+    RenderFragment renderFragment { get; set; }
+    private async void viewConnectPrint()
+    {
+        renderFragment = builder =>
+        {
+            builder.OpenComponent<View_ConnectPrinter>(0);
+            //builder.AddAttribute(1, "nvlNhapXuatKhoShowcrr", nvlNhapXuatKhoShowcrr.CopyClass());
+            //builder.AddAttribute(2, "LoaiNhapXuat", loaiNhapXuat);
+            builder.AddAttribute(3, "GetBarcode", EventCallback.Factory.Create<string>(this, getBarcode));
+            builder.CloseComponent();
+        };
+
+        await dxPopup.showAsync("KẾT NỐI MÁY IN");
+        await dxPopup.ShowAsync();
+
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            lstloaitem = await Model.ModelData.GetDataDropDownListsAsync("PhieuNhanDangNVL");
+            if (ModelAdmin.users.Mautemin!=null)
+            {
+
+                printbieumau = ModelAdmin.users.Mautemin;
+                
+            }
+            if (signalRConnect.IsConnected)
+            {
+                checkconnect = true;
+                printername = signalRConnect.PrinterID;
+
+            }
+            else
+            {
+                await ModelAdmin.mainLayout.ConnectSignalR();
+            }
+
+             StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Lỗi load form ke hoach master " + ex.Message);
+        }
+        finally
+        {
+        }
+    }
+    private void selectedradio(string value)
+    {
+        printbieumau= value;
+        ModelAdmin.users.Mautemin= value;
+        
+    }
+    private async void getBarcode(string barcode)
+    {
+        await dxPopup.CloseAsync();
+        if (signalRConnect.IsConnected)
+        {
+            checkconnect = true;
+            printername = signalRConnect.PrinterID;
+            StateHasChanged();
+        }
+    }
+}

@@ -1,0 +1,142 @@
+﻿@using DevExpress.Blazor;
+@using NFCWebBlazor.Model
+<div class="container" style="min-width:500px;">
+    <div class="row mb-2">
+        <DxMemo NullText="Nhập diễn giải" Text="@diengiai"></DxMemo>
+    </div>
+    <div class="row">
+        @for (int i = 0; i < numberOfInputFiles; i++)
+        {
+            <InputFile @key="i" class="form-control" OnChange="OnFileChanged" multiple style="@GetInputFileStyle(i)"></InputFile>
+        }
+        @*   <DxUpload @ref="dxUpload" AllowMultiFileUpload="true" MaxFileSize="10000000" SelectedFilesChanged="@SelectedFilesChanged"  /> *@
+    </div>
+   
+    <pre>@status</pre>
+
+</div>
+@code {
+    [Parameter]
+    public FileHoSoAPI fileHoSo { get; set; }
+    [Parameter]
+    public string pathfolder { get; set; }
+    [Parameter]
+    public EventCallback GotoMainForm { get; set; }
+
+    [Inject]
+    UserGlobal userGlobal { get; set; }
+    DxUpload dxUpload { get; set; }
+    string diengiai { get; set; } = "";
+    bool isclick { get; set; } = false;
+    List<UploadFileInfo> lstfile = new List<UploadFileInfo>();
+    protected void SelectedFilesChanged(IEnumerable<UploadFileInfo> files)
+    {
+        lstfile.Clear();
+        lstfile.AddRange(files);
+
+        Console.WriteLine(lstfile.Count);
+        foreach (var it in files)
+        {
+            Console.WriteLine(it.Guid);
+
+
+        }
+
+    }
+    App_ClassDefine.ClassProcess prs = new ClassProcess();
+    string status = "";
+    int numberOfInputFiles = 1;
+    private async Task UploadFileAsync(string apiUrl, string urlfile, IBrowserFile selectedFile)
+    {
+        using var httpClient = new HttpClient();
+        httpClient.BaseAddress = new Uri(ModelAdmin.urlAPI);
+
+        using var form = new MultipartFormDataContent();
+
+        var stream = selectedFile.OpenReadStream();
+        // Thêm nội dung tệp vào form data
+        var fileContent = new StreamContent(stream);
+
+
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(selectedFile.ContentType);
+
+        form.Add(fileContent, "file", selectedFile.Name);
+        // Thêm chuỗi string vào form data
+        form.Add(new StringContent(urlfile), "urlfolder");
+
+        fileHoSo.TenFile = selectedFile.Name;
+        fileHoSo.DungLuong = selectedFile.Size / (1024.0 * 1024.0); ;
+        fileHoSo.DienGiai = diengiai;
+        fileHoSo.UrlFile = urlfile;
+        fileHoSo.DienGiai = diengiai;
+        var json = System.Text.Json.JsonSerializer.Serialize(fileHoSo);
+        fileHoSo.Dvt = "MB";
+        form.Add(new StringContent(json), "filehosojson");
+
+        // Gửi yêu cầu POST
+        HttpResponseMessage response = await httpClient.PostAsync(apiUrl, form);
+
+        if (response.IsSuccessStatusCode)
+        {
+            string responseContent = await response.Content.ReadAsStringAsync();
+            if (responseContent.Contains("done"))
+            {
+                status += "\nFile được gửi thành công: " + selectedFile.Name;
+            }
+            else
+                status += $"\n{selectedFile.Name} bị lỗi:{responseContent}";
+            stream.Close();
+            stream.Dispose();
+
+        }
+        else
+        {
+
+            //Console.WriteLine("Upload failed. Status code: " + response.StatusCode);
+        }
+    }
+    string GetInputFileStyle(int index)
+    {
+        return index == numberOfInputFiles - 1 ? "" : "display: none";
+    }
+    async Task OnFileChanged(InputFileChangeEventArgs e)
+    {
+        numberOfInputFiles++;
+        // init();
+        // Handle selected files
+        //status += "\nĐã chọn";
+        try
+        {
+            var buffer = new byte[4096];
+            double d = 0;
+            isclick = true;
+            foreach (IBrowserFile file in e.GetMultipleFiles(e.FileCount))
+            {
+                status += $"\nĐang xử lý file {file.Name}.....";
+                string filenamehost = prs.RandomString(20) + Path.GetExtension(file.Name);
+                await UploadFileAsync("/api/Admin/Uploadfilewithgroup", "Document/NhapXuatKho/0/" + filenamehost, file);
+                await InvokeAsync(StateHasChanged);
+
+            }
+            if (GotoMainForm.HasDelegate)
+            {
+                GotoMainForm.InvokeAsync();
+            }
+
+        }
+        catch (Exception ex)
+        {
+
+            status += "\nError: " + ex.Message;
+            await InvokeAsync(StateHasChanged);
+        }
+        finally
+        {
+            isclick = false;
+        }
+    }
+    private void loadfile()
+    {
+        // dxUpload.FileUploaded
+    }
+}

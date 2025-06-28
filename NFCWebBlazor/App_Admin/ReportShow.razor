@@ -1,0 +1,89 @@
+﻿@using BlazorBootstrap
+@using DevExpress.Blazor.Reporting;
+@using DevExpress.XtraReports.UI;
+@using static System.Net.WebRequestMethods
+
+<style>
+
+
+    .dxbl-modal {
+    --dxbl-popup-margin: 0.2rem;
+    }
+
+
+    .dxbl-modal-body {
+    width:1100px;
+    max-width: 100%;
+    }
+</style>
+
+<DevExpress.Blazor.Reporting.DxReportViewer Zoom="-2.0" @ref=reportViewer ></DevExpress.Blazor.Reporting.DxReportViewer>
+
+
+@code {
+    [Inject] HttpClient? Http { get; set; }
+    [Inject] PreloadService PreloadService { get; set; }
+    // [Parameter]
+    // public NFCWebBlazor.App_NguyenVatLieu.Report.XtraRp_DuTruVatTu report{get;set;}
+    [Parameter]
+    public DevExpress.XtraReports.IReport report { get; set; }
+    [Parameter]
+    public bool IsMobile 
+    { get { return _isMobile; } 
+        set
+        {
+            _isMobile = value;
+            if(_isMobile)
+            {
+                zoom=-2.0;
+            }
+            else
+                zoom = -2.0;
+        }
+
+    }
+
+    bool _isMobile = false;
+    double zoom = 1.2;
+    DxReportViewer reportViewer { get; set; }
+    List<string> RequiredFonts = new() {
+        "TimesNewRoman.ttf"
+    };
+    protected override async Task OnInitializedAsync()
+    {
+        await FontLoader.LoadFonts(Http, RequiredFonts);
+       
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(firstRender)
+        {
+
+
+            try
+            {
+               // Thread.Sleep(100);
+             
+                await reportViewer.OpenReportAsync(report);
+                Console.WriteLine("Loadreport Lần 1");
+
+                //StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Lỗi load report:" + ex.Message);
+            }
+            finally
+            {
+
+            }
+        }
+       
+        //return base.OnAfterRenderAsync(firstRender);
+    }
+    
+
+
+
+}

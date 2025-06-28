@@ -1,0 +1,127 @@
+﻿@using DevExpress.Blazor;
+@using NFCWebBlazor.App_ClassDefine
+@using NFCWebBlazor.Model
+<style>
+
+</style>
+
+<EditForm EditContext="editContext" Context="formuser" style="max-width:600px;"   onkeydown="return handleEnterSubmit(event)" >
+    <DataAnnotationsValidator />
+    <DxFormLayout CssClass="w-100" @onkeydown=Onkeydown>
+
+        <DxFormLayoutItem ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+            <CaptionTemplate>
+                Tên đăng nhập <span class="text-danger">*</span>
+            </CaptionTemplate>
+            <Template>
+                <DxTextBox @ref=txtusername @bind-Text="@userscrr.UsersName" />
+                <div class="text-danger">
+                    <ValidationMessage For="@(() => userscrr.UsersName)" />
+                </div>
+            </Template>
+        </DxFormLayoutItem>
+
+        <DxFormLayoutItem ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+            <CaptionTemplate>
+                Mật khẩu <span class="text-danger">*</span>
+            </CaptionTemplate>
+            <Template>
+                <DxTextBox @bind-Text="@userscrr.Password" Password=true NullText="******" />
+                <div class="text-danger">
+                    <ValidationMessage For="@(() => userscrr.Password)" />
+                </div>
+            </Template>
+
+        </DxFormLayoutItem>
+
+        <DxFormLayoutItem ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+            <CaptionTemplate>
+                Tên thể hiện <span class="text-danger">*</span>
+            </CaptionTemplate>
+            <Template>
+                <DxTextBox @bind-Text="@userscrr.TenUser" />
+                <div class="text-danger">
+                    <ValidationMessage For="@(() => userscrr.TenUser)" />
+                </div>
+            </Template>
+        </DxFormLayoutItem>
+
+        <DxFormLayoutItem ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+            <CaptionTemplate>
+                Chọn phòng ban/Xưởng<span class="text-danger">*</span>
+            </CaptionTemplate>
+            <Template>
+
+                <DxTagBoxDefine @ref=dxtagkhuvuc TextFieldName="@nameof(DataDropDownList.FullName)"
+                                ValueFieldName="@nameof(DataDropDownList.Name)"
+                                CssClass="cw-480"
+                                ListRenderMode="ListRenderMode.Virtual"
+                                TypeName="User_KhuVuc"
+                               
+                                DropDownCssClass="dropdownheight"
+                                @bind-Values="@khuvucselected"
+                                ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto" />
+                <div class="text-danger">
+                    <ValidationMessage For="@(() => userscrr.KhuVuc)" />
+                </div>
+            </Template>
+        </DxFormLayoutItem>
+
+        <DxFormLayoutItem ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+            <CaptionTemplate>
+                Chọn nhóm quyền<span class="text-danger">*</span>
+            </CaptionTemplate>
+            <Template>
+                <DxTagBoxDefine @ref=dxtagnhomquyen TextFieldName="@nameof(DataDropDownList.FullName)"
+                                ValueFieldName="@nameof(DataDropDownList.Name)"
+                                CssClass="cw-480"
+                                TypeName="User_Group"
+                                
+                                DropDownCssClass="dropdownheight"
+                                ListRenderMode="ListRenderMode.Virtual"
+                                @bind-Values="@nhomquyenselected"
+                                ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto" />
+                <div class="text-danger">
+                    <ValidationMessage For="@(() => userscrr.GroupUser)" />
+                </div>
+            </Template>
+
+        </DxFormLayoutItem>
+
+        <DxFormLayoutItem Caption="Email" ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+
+            <DxTextBox @bind-Text="@userscrr.Email" NullText="Email" />
+
+        </DxFormLayoutItem>
+        <DxFormLayoutItem ColSpanMd="12" CaptionPosition="CaptionPosition.Vertical">
+            <Template>
+                <div class="d-flex justify-content-center mt-2">
+                    <DxButton RenderStyle="ButtonRenderStyle.Primary"  IconCssClass="bi bi-floppy" Text="Lưu (nhấn F11)" Visible=@(!visibleedit) Click="@saveAsync" />
+                    <DxButton RenderStyle="ButtonRenderStyle.Info"   IconCssClass="bi bi-pencil" CssClass="ms-2" Text="Sửa" Visible=@visibleedit Click="@updateAsync" />
+                </div>
+            </Template>
+
+        </DxFormLayoutItem>
+    </DxFormLayout>
+
+
+</EditForm>
+
+@code {
+
+    IEnumerable<DataDropDownList> nhomquyenselected { get; set; }
+    IEnumerable<DataDropDownList> khuvucselected { get; set; }
+   
+    DxTextBox txtusername;
+    DxTagBoxDefine dxtagkhuvuc { get; set; }
+    DxTagBoxDefine dxtagnhomquyen { get; set; }
+    bool visibleedit = false;
+    private async void Onkeydown(KeyboardEventArgs e)
+    {
+        if(e.Key=="F11")
+        {
+            await saveAsync();
+        }
+    }
+    
+}

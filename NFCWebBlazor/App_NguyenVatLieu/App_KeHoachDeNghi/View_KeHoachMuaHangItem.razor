@@ -1,0 +1,148 @@
+﻿
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <DxStackLayout Orientation="Orientation.Vertical">
+                <Items>
+                    <DxStackLayoutItem>
+                        <Template>
+                            <div class="container">
+                                <div class="flex row">
+                                    <div class="col-auto" style="max-width:40px;">
+                                        <img src="@img" style="width: auto; height: 32px; border-radius: 50%;">
+                                    </div>
+                                    <div class="col-auto">
+                                        Tạo bởi:@kehoachmuahangshow.NguoiDN
+                                    </div>
+                                    <div class="col-auto">
+                                        Ngày tạo:@kehoachmuahangshow.NgayInsert
+                                    </div>
+                                </div>
+                            </div>
+                        </Template>
+
+                    </DxStackLayoutItem>
+                    <DxStackLayoutItem>
+                        <Template>
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col-md-6" style="color:forestgreen">
+                                        Đơn đặt hàng số: @kehoachmuahangshow.Serial.ToString()
+                                    </div>
+                                    <div class="col-md-6">
+                                    </div>
+                                </div>
+                            </div>
+                        </Template>
+
+                    </DxStackLayoutItem>
+                    <DxStackLayoutItem>
+                        <Template>
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        Ngày đặt hàng:@((kehoachmuahangshow.NgayDN!=null)?kehoachmuahangshow.NgayDN.Value.ToShortDateString():"")
+                                    </div>
+                                    <div class="col-md-6">
+                                        Ngày trễ nhất: @((kehoachmuahangshow.NgayMax!=null)?kehoachmuahangshow.NgayMax.Value.ToShortDateString():"")
+                                    </div>
+                                </div>
+                            </div>
+                        </Template>
+                    </DxStackLayoutItem>
+
+                </Items>
+            </DxStackLayout>
+
+        </div>
+        <div class="col-md-6">
+            <DxStackLayout Orientation="Orientation.Vertical">
+                <Items>
+                    <DxStackLayoutItem>
+                        <Template>
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col-auto">
+                                        <img src="@kehoachmuahangshow.PathDuyet" style="width: auto; height: 32px; margin-right: 5px; border-radius: 50%;">
+                                    </div>
+                                    <div class="col-auto">
+                                        Tình trạng
+                                    </div>
+                                    <div class="col-auto" style="color:orangered">
+                                        @kehoachmuahangshow.TinhTrang
+                                    </div>
+                                </div>
+                            </div>
+                        </Template>
+
+                    </DxStackLayoutItem>
+                    <DxStackLayoutItem>
+                        <Template>
+                            <div class="row">
+                                
+                                <div class="col-md-6">
+                                    @nguoiduyet()
+                                   
+                                </div>
+                                <div class="col-md-6">
+                                    @kehoachmuahangshow.NguoiKiem
+
+                                </div>
+                            </div>
+
+                        </Template>
+
+                    </DxStackLayoutItem>
+                    <DxStackLayoutItem>
+                        <Template>
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                       @(String.IsNullOrEmpty(@kehoachmuahangshow.DaKiem)?"":("Kiểm bởi: "+@kehoachmuahangshow.DaKiem))
+                                    </div>
+                                    <div class="col-md-6">
+                                     @(String.IsNullOrEmpty(@kehoachmuahangshow.DaDuyet)?"":("Duyệt bởi: "+ @kehoachmuahangshow.DaDuyet))
+                                    </div>
+                                </div>
+                            </div>
+                        </Template>
+
+                    </DxStackLayoutItem>
+
+
+                </Items>
+            </DxStackLayout>
+            <!-- Nội dung cột thứ hai -->
+        </div>
+    </div>
+    <div class="row m-1">
+
+        <DxStackLayout Orientation="Orientation.Horizontal">
+            <Items>
+                <DxStackLayoutItem>
+                    <Template>
+                        <div>
+                         
+                            <DxButton Id=@("flychucnang"+kehoachmuahangshow.Serial.ToString()) Text="CHỨC NĂNG" Click="@ShowFlyout"></DxButton>
+                        </div>
+
+                    </Template>
+                </DxStackLayoutItem>
+            </Items>
+        </DxStackLayout>
+    </div>
+</div>
+<NFCWebBlazor.App_Admin.DialogMsg @ref="@dialogMsg"></NFCWebBlazor.App_Admin.DialogMsg>
+<NFCWebBlazor.App_Admin.MsgBox @ref=@msgBox></NFCWebBlazor.App_Admin.MsgBox>
+@code {
+    DialogMsg dialogMsg;
+    MsgBox msgBox;
+    string idflychucnang{ get; set; }
+    public string nguoiduyet()
+    {
+        if (string.IsNullOrEmpty(kehoachmuahangshow.NguoiDuyet))
+            return "";
+        return "Người duyệt :" + kehoachmuahangshow.NguoiDuyet;
+    }
+
+}

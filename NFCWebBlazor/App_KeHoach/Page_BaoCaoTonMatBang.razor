@@ -1,0 +1,191 @@
+﻿@using BlazorBootstrap
+@using DevExpress.Blazor;
+@using NFCWebBlazor.App_ClassDefine;
+@using System.Data
+<style>
+    .my-grid {
+        height: @heightgrid;
+    }
+
+    .highRed {
+        color: red;
+        font-weight: bold
+    }
+
+    .highGreen {
+        color: Green;
+        font-weight: bold
+    }
+
+    .highlighted-item > td {
+        background-color: lightgray;
+        color: #0070ff;
+        font-weight: bold;
+    }
+</style>
+<DxGridLayout CssClass="w-100 ch-480">
+
+    <Rows>
+        <DxGridLayoutRow Height="Auto" />
+        <DxGridLayoutRow Height="Auto" />
+        <DxGridLayoutRow />
+    </Rows>
+
+    <Items>
+
+        <DxGridLayoutItem Row="0">
+            <Template>
+                <div class="shadow-sm p-3 mb-2 bg-white border rounded-bottom-2">
+                    <DxTextBox NullText="Tìm kiếm chi tiết" onclick="@Showdivsearch">
+                        <Buttons>
+                            <DxEditorButton Position=EditorButtonPosition.Left IconCssClass="bi bi-search" Click="@Showdivsearch" />
+                        </Buttons>
+                    </DxTextBox>
+
+                    <div class="@divClass">
+
+                        <DxFormLayout CssClass="w-100 mt-3">
+
+                            <DxFormLayoutItem Caption="Chọn nhà máy" ColSpanLg="4" ColSpanMd="6">
+                                <ComboboxFilteredTable @ref=txtnhamay ListRenderMode="ListRenderMode.Virtual"
+                                                       FilteringMode="DataGridFilteringMode.Contains"
+                                                       TypeName="NhaMay_NVL"
+                                                       ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                                       TextFieldName="@nameof(DataDropDownList.FullName)"
+                                                       @bind-Value="@nhamayselected"
+                                                       CssClass="cw-480" />
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem Caption="Khách hàng" ColSpanLg="6" ColSpanMd="6">
+                                <DxComboBox Data=@lstkhachhang ListRenderMode="ListRenderMode.Virtual"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                            TextFieldName="@nameof(NvlKhachHang.TenKh)"
+                                            @bind-Value="@khachhangselected"
+                                            CssClass="cw-480" />
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem Caption="Sản phẩm" ColSpanLg="4" ColSpanMd="6">
+
+                                <DxComboBox Data=@lstsanpham ListRenderMode="ListRenderMode.Virtual"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                            TextFieldName="@nameof(SanPhamDropDown.TenSP)"
+                                            @bind-Value="@sanphamselected"
+                                            CssClass="cw-480" />
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem ColSpanMd="12">
+                                <DxRadioGroup Items=@DVTItems
+                                              @bind-Value="@DVT"
+                                              Layout=RadioGroupLayout.Horizontal
+                                              CssClass="dx-demo-radio">
+                                </DxRadioGroup>
+                            </DxFormLayoutItem>
+                            <DxFormLayoutItem ColSpanMd="12">
+                                <DxRadioGroup Items=@SanPhamType
+                                              @bind-Value="@sanphamtype"
+                                              Layout=RadioGroupLayout.Horizontal
+                                              CssClass="dx-demo-radio">
+                                </DxRadioGroup>
+                            </DxFormLayoutItem>
+
+
+                            <DxFormLayoutItem ColSpanMd="12">
+                                <Template>
+                                    <div class="d-flex justify-content-center m-2">
+                                        <DxButton RenderStyle="ButtonRenderStyle.Primary" CssClass="bi bi-search m-1" Click=@getTonMatBangAsync
+                                                  Text="XỬ LÝ">
+                                        </DxButton>
+                                    </div>
+                                </Template>
+                            </DxFormLayoutItem>
+                        </DxFormLayout>
+
+                    </div>
+                </div>
+
+            </Template>
+        </DxGridLayoutItem>
+        <DxGridLayoutItem Row="1">
+            <Template>
+                <div class="row">
+                    <label style="font-size:20px;color:forestgreen">@textxuly</label>
+                </div>
+                <div class="row">
+                    @if (linkfile != "")
+                    {
+                        <div class="col-auto">
+                        <img style="width:auto;height:32px;" src="images/xlsx.svg" onclick="@downloadfileAsync" />
+                        <a onclick="@downloadfileAsync" href="#">Tải file</a>
+                    </div>
+                    }
+                </div>
+            </Template>
+        </DxGridLayoutItem>
+
+
+    </Items>
+</DxGridLayout>
+@code {
+    [Inject] PreloadService PreloadService { get; set; }
+
+    string heightgrid = "500px";
+    string divClass = "expandable-content";
+    IEnumerable<string> DVTItems = new[] {
+        "ĐVT (bộ)",
+        "ĐVT (cái)"
+    };
+    IEnumerable<string> SanPhamType = new[] {
+        "Sản phẩm đang sản xuất",
+        "Tất cả sản phẩm"
+    };
+    string textxuly = "";
+    string DVT = "ĐVT (bộ)";
+    string sanphamtype = "Sản phẩm đang sản xuất";
+    List<NvlKhachHang> lstkhachhang { get; set; }
+    NvlKhachHang khachhangselected { get; set; }
+
+    ComboboxFilteredTable txtnhamay { get; set; }
+    DataDropDownList nhamayselected { get; set; }
+
+
+    List<SanPhamDropDown> lstsanpham { get; set; }
+
+    SanPhamDropDown sanphamselected { get; set; }
+
+
+
+
+
+
+
+
+    private bool isExpanded = false;
+
+    // Hàm xử lý sự kiện click của nút
+    private void hidedivsearch()
+    {
+        isExpanded = false;
+        divClass = "expandable-content";
+    }
+    private void Showdivsearch()
+    {
+        isExpanded = !isExpanded;
+
+        if (isExpanded)
+        {
+
+            divClass = "expandable-content show";
+        }
+        else
+        {
+
+            divClass = "expandable-content";
+        }
+    }
+    public double getdoubleofobject(object ob)
+    {
+        if (ob == null || ob == DBNull.Value)
+            return 0;
+        return double.Parse(ob.ToString());
+    }
+}
+

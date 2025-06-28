@@ -1,0 +1,78 @@
+﻿@using BlazorBootstrap
+@using NFCWebBlazor.Model
+@using Newtonsoft.Json
+<div class="container">
+    <div class="row" style="width:500px;">
+        <DxMemo @bind-Text=nvlMsgManage.MsgWait Rows="5"></DxMemo>
+
+    </div>
+    <div class="row m-1 justify-content-center">
+        <DxButton CssClass="bi bi-send" Text="Gửi" Click="@save"></DxButton>
+    </div>
+</div>
+
+@code {
+    [Inject]
+    ToastService toastService { get; set; }
+    [Parameter]
+    public NvlMsgManage nvlMsgManage { get; set; }
+    [Parameter]
+    public EventCallback<NvlMsgManage> GotoMainForm { get; set; }
+    [Parameter]
+    public string sqlprocedure{ get; set; }
+    private bool checklogic()
+    {
+        if (string.IsNullOrEmpty(nvlMsgManage.MsgWait))
+        {
+            toastService.Notify(new ToastMessage(ToastType.Danger, "Vui lòng nhập tin nhắn"));
+            return false;
+        }
+        return true;
+    }
+    private async void save()
+    {
+        string sql = "NVLDB.dbo.NvlMsgManage_Insert";
+        if(sqlprocedure!=null)
+        {
+            sql = sqlprocedure;
+        }
+        List<ParameterDefine> lstpara = new List<ParameterDefine>();
+        lstpara.Add(new ParameterDefine("@SerialLink", nvlMsgManage.SerialLink));
+        lstpara.Add(new ParameterDefine("@TableName", nvlMsgManage.TableName));
+        lstpara.Add(new ParameterDefine("@MsgWait", nvlMsgManage.MsgWait));
+        lstpara.Add(new ParameterDefine("@MsgReply", nvlMsgManage.MsgReply));
+        lstpara.Add(new ParameterDefine("@UserInsert", nvlMsgManage.UserInsert));
+        lstpara.Add(new ParameterDefine("@UserReply", nvlMsgManage.UserReply));
+        lstpara.Add(new ParameterDefine("@NgayReply", nvlMsgManage.NgayReply));
+        CallAPI callAPI = new CallAPI();
+        try
+        {
+            string json = await callAPI.ProcedureEncryptAsync(sql, lstpara);
+
+            if (json != "")
+            {
+                var query = JsonConvert.DeserializeObject<List<Ketqua>>(json);
+                if (query[0].ketqua == "OK")
+                {
+                    toastService.Notify(new ToastMessage(ToastType.Success, $"Lưu tin nhắn thành công"));
+                    if(GotoMainForm.HasDelegate)
+                    {
+                        GotoMainForm.InvokeAsync(nvlMsgManage);
+                    }
+
+                }
+                else
+                {
+                    toastService.Notify(new ToastMessage(ToastType.Warning, "Lỗi: " + query[0].ketqua));
+
+                }
+                //Grid.Data = lstDonDatHangSearchShow;
+            }
+        }
+        catch (Exception ex)
+        {
+            toastService.Notify(new ToastMessage(ToastType.Warning, "Lỗi: " + ex.Message));
+            Console.Error.WriteLine(ex.Message);
+        }
+    }
+}

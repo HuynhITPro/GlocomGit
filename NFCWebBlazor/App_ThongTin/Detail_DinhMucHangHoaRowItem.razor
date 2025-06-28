@@ -1,0 +1,162 @@
+﻿@using BlazorBootstrap
+@using DevExpress.Blazor;
+@using NFCWebBlazor.App_ClassDefine;
+@using System.Data
+@using System.Collections.ObjectModel
+@using static NFCWebBlazor.App_ThongTin.Page_DinhMucHangHoaMaster
+
+@inject Model.ThemeColor themcolor;
+<style>
+    #griddetaildmhanghoa .dxbl-grid-table {
+        background-color: #ffffcc;
+    }
+
+    #griddetaildmhanghoa .dxbl-grid-empty-cell {
+        background-color: white;
+    }
+</style>
+<NFCWebBlazor.App_Admin.DialogMsg @ref="@dialogMsg"></NFCWebBlazor.App_Admin.DialogMsg>
+<NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+    <BodyContentTemplate>
+        @renderFragment
+    </BodyContentTemplate>
+</NFCWebBlazor.App_ClassDefine.DialogWindow>
+<DxFlyout @ref=dxFlyoutchucnang
+          PositionTarget="@idflychucnang"
+          @bind-IsOpen=IsOpenfly
+          RestrictionTarget="#Navigation-Flyout-Customization"
+          AnimationType=FlyoutAnimationType.Fade
+          PreventCloseOnPositionTargetClick="true"
+          Width="320px"
+          Position=@(FlyoutPosition.BottomStart | FlyoutPosition.TopStart)>
+    <BodyTextTemplate>
+
+        <div class="container">
+            <div class="row gap-1">
+                <DxButton Visible=@Visilechinhsua Text="CHỈNH SỬA" IconCssClass="bi bi-pencil" RenderStyle="ButtonRenderStyle.Warning" RenderStyleMode="ButtonRenderStyleMode.Outline" Click="@EditItemAsync">
+                </DxButton>
+                <DxButton Visible=@Visiledelete Text="XÓA" IconCssClass="bi bi-trash3" RenderStyle="ButtonRenderStyle.Danger" RenderStyleMode="ButtonRenderStyleMode.Outline" Click="@deleteAsync">
+                </DxButton>
+            </div>
+        </div>
+    </BodyTextTemplate>
+
+</DxFlyout>
+<div>
+    <DxLoadingPanel @bind-Visible="@PanelVisible"
+                    IsContentBlocked="true"
+                    ApplyBackgroundShading="true"
+                    IndicatorAreaVisible="false"
+                    Text="Đang xử lý...">
+       
+        <DxGrid @ref="Grid" Data="@lstdata"
+                TextWrapEnabled="true"
+                AutoExpandAllGroupRows="true"
+                FocusedRowEnabled="false"
+                id="griddetaildmhanghoa"
+                ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+                FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                VirtualScrollingEnabled=true>
+            <ToolbarTemplate>
+                <DxToolbar ItemRenderStyleMode="ToolbarRenderStyleMode.Plain">
+                    <DxToolbarItem Text="Tải lại" IconCssClass="bi bi-arrow-clockwise" RenderStyle="ButtonRenderStyle.Primary" Click="@searchAsync">
+                    </DxToolbarItem>
+                    <DxToolbarItem Text="Xuất Excel" IconCssClass="bi bi-filetype-xlsx" RenderStyle="ButtonRenderStyle.Secondary" Click="@(()=> Grid.ExportToXlsxAsync("ExportHangHoa"))">
+                    </DxToolbarItem>
+                </DxToolbar>
+            </ToolbarTemplate>
+            <Columns>
+                <DxGridDataColumn FieldName="@nameof(HangHoaItem.Serial)" Caption=" " Width="120">
+                    <CellDisplayTemplate>
+                        @{
+                            HangHoaItem sanPhamShow;
+                            if (context.DataItem != null)
+                                sanPhamShow = (HangHoaItem)context.DataItem;
+                            else
+                                sanPhamShow = new HangHoaItem();
+                        }
+                        <span>
+                            <a href="#" class="link-success link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"
+                               id="@idelement(sanPhamShow.Serial)" @onclick="@(()=>ShowFlyout(sanPhamShow))"><i class="bi bi-list-stars me-1"></i>CHỨC NĂNG</a>
+                        </span>
+                    </CellDisplayTemplate>
+                </DxGridDataColumn>
+                <DxGridDataColumn FieldName="@nameof(HangHoaItem.MaHang)" Caption="Mã hàng" Width="120" />
+                <DxGridDataColumn FieldName="@nameof(HangHoaItem.TenHang)" Caption="Tên hàng" Width="240" />
+                <DxGridDataColumn FieldName="@nameof(HangHoaItem.SLQuyDoi)" Caption="SL/cụm" Width="100" DisplayFormat="#,0.####" />
+                <DxGridDataColumn FieldName="@nameof(HangHoaItem.ChatLuong)" Caption="Chất lượng" Width="100" Visible=false />
+                <DxGridDataColumn FieldName="@nameof(HangHoaItem.GhiChu)" Caption="Ghi chú" Visible=false />
+                <DxGridDataColumn FieldName="@nameof(HangHoaItem.UserInsert)" Caption="Người tạo" Width="120"></DxGridDataColumn>
+                <DxGridDataColumn FieldName="@nameof(HangHoaItem.NgayInsert)" Caption="Ngày tạo" Width="140" DisplayFormat="dd-MM-yy HH:mm">
+                </DxGridDataColumn>
+            </Columns>
+
+        </DxGrid>
+    </DxLoadingPanel>
+</div>
+
+
+@code {
+    [Parameter]
+    public HangHoaItem? hanghoaitemcrrmaster { get; set; }
+    [Parameter]
+    public List<HangHoaItem> lstdata { get; set; }
+
+    HangHoaItem? hanghoaitemcrrlocal { get; set; }
+    DialogWindow? dxPopup { get; set; }
+    RenderFragment? renderFragment { get; set; }
+    DialogMsg? dialogMsg { get; set; }
+    public string? random { get; set; }
+    bool Visilethemchitiet = true, Visilechinhsua = true, Visiledelete = true, Visilethemfile = true;
+
+    IGrid? Grid { get; set; }
+    DxFlyout? dxFlyoutchucnang { get; set; }
+    public string? idflychucnang { get; set; }
+    bool IsOpenfly { get; set; } = false;
+    App_ClassDefine.ClassProcess prs = new ClassProcess();
+    bool PanelVisible { get; set; } = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await loadAsync();
+        // return base.OnInitializedAsync();
+    }
+    public string idelement(int? serial)
+    {
+        if (serial == null)
+            string.Format("flychucnang_{0}_{1}", random, serial);
+        if (random == null)
+        {
+            random = prs.RandomString(9);
+        }
+        return string.Format("flychucnang_{0}_{1}", random, serial);
+    }
+    private async Task loadAsync()
+    {
+        CheckQuyen = await phanQuyenAccess.CreateDinhMucVatTu(Model.ModelAdmin.users);
+      
+            if (lstdata == null)
+            {
+                searchAsync();
+            }
+            else
+            {
+                //lstdata = sanPhamShowcrr.lsthanghoaitem;
+                //Grid.Reload();
+
+                StateHasChanged();
+            }
+        
+    }
+    bool expand = true;
+    private void expandall()
+    {
+        Grid.BeginUpdate();
+        Grid.AutoExpandAllGroupRows = expand;
+        Grid.EndUpdate();
+        expand = !expand;
+    }
+
+
+
+}

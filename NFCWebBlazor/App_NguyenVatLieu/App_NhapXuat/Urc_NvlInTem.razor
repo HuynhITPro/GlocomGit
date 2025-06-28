@@ -1,0 +1,259 @@
+﻿@using static NFCWebBlazor.App_NguyenVatLieu.App_NhapXuat.Page_NhapXuat_Master
+@using NFCWebBlazor.App_ClassDefine;
+
+<div id="idyd">
+    <style>
+
+        .dxbl-modal {
+            --dxbl-popup-margin: 0.2rem;
+        }
+
+
+        .dxbl-scroll-viewer-content {
+            white-space: normal;
+        }
+
+
+        .dxbl-list-box-render-container {
+            max-height: 300px;
+        }
+
+    </style>
+    <NFCWebBlazor.App_ClassDefine.DialogWindow @ref=@dxPopup>
+        <BodyContentTemplate>
+            @renderFragment
+        </BodyContentTemplate>
+    </NFCWebBlazor.App_ClassDefine.DialogWindow>
+    <View_PrintConnectshow @ref="view_PrintConnectshow"></View_PrintConnectshow>
+
+    <div class="d-flex justify-content-center m-2 gap-2">
+        @if (view_PrintConnectshow != null)
+        {
+            @if (view_PrintConnectshow.checkconnect && view_PrintConnectshow.printername != "")
+            {
+                <DxButton RenderStyle="ButtonRenderStyle.Primary" IconCssClass="bi bi-printer" Text="LƯU và IN TEM" Visible=@(!EnableEdit) Click="@(()=>saveAsync(true))" />
+            }
+        }
+
+        <DxButton RenderStyle="ButtonRenderStyle.Success" IconCssClass="bi bi-floppy" Text="LƯU" Visible=@(!EnableEdit) Click="@(()=>saveAsync(false))" />
+        <DxButton RenderStyle="ButtonRenderStyle.Secondary" IconCssClass="bi bi-file-earmark m-1" Text="Làm lại" Visible=@(!EnableEdit) Click="@reset" />
+    </div>
+    <div>
+        <EditForm EditContext="@editContext" Context="EditFormContext" style="max-width:700px;padding:0.2rem;" onkeydown="return handleEnterSubmit(event)">
+            <DataAnnotationsValidator />
+            <DxFormLayout CssClass="w-100" @onkeydown=Onkeydown>
+
+
+                <DxFormLayoutItem Caption="Nơi giao hàng" ColSpanSm="12" ColSpanMd="12" ColSpanLg="12" CaptionPosition="CaptionPosition.Vertical">
+                    <CaptionTemplate>
+                        <span>Nơi giao hàng</span>
+                        <a href="#" class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"
+                           @onclick="@(()=>ChangeNhomGiaoNhan())"><i class="bi bi-list-stars me-1"></i>Lọc theo nhóm</a>
+                    </CaptionTemplate>
+                    <Template>
+                        <NFCWebBlazor.App_ClassDefine.ComboboxFilteredString CssClass="cw-480"
+                                                                             SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                                                             ListRenderMode=ListRenderMode.Virtual
+                                                                             SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                                                             SearchMode="ListSearchMode.AutoSearch"
+                                                                             TextFieldName="@nameof(DataDropDownList.FullName)"
+                                                                             ValueFieldName="@nameof(DataDropDownList.Name)"
+                                                                             Data="@lstnoigiaonhan"
+                                                                             id="@idcomboxnoigiaonhan"
+                                                                             ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                                                             @bind-Value="@nvlInTemShowcrr.MaGN"
+                                                                             @onfocus="@(()=>onfocuscomboxbox(idcomboxnoigiaonhan))" />
+                        @*   <div class="text-danger">
+                    <ValidationMessage For="@(() => nvlInTemShowcrr.MaGN)" />
+                </div> *@
+                    </Template>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem Caption="Tên vật tư" ColSpanSm="12" ColSpanMd="12" ColSpanLg="12" CaptionPosition="CaptionPosition.Vertical">
+                    <CaptionTemplate>
+                        <span>Tên Vật tư</span>
+                        <a href="#" class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"
+                           @onclick="@(()=>ChangeKho())"><i class="bi bi-funnel me-1"></i>Lọc theo kho</a>
+                    </CaptionTemplate>
+                    <Template>
+                        <DxComboBox TextFieldName="@nameof(NvlHangHoaDropDown.TenHang)"
+                                    ValueFieldName="@nameof(NvlHangHoaDropDown.MaHang)"
+                                    CssClass="cw-480"
+                                    Data="@lstmahang"
+                                    @ref=txtMaHang
+                                    @bind-Value="@nvlInTemShowcrr.MaHang"
+                                    SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                    ListRenderMode=ListRenderMode.Virtual
+                                    SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                    SearchMode="ListSearchMode.AutoSearch"
+                                    SelectedItemChanged="@((NvlHangHoaDropDown e)=>SelectedItemChanged_((NvlHangHoaDropDown)e))"
+                                    id="@idcomboxmahang"
+                                    @onfocus="@(()=>onfocuscomboxbox(idcomboxmahang))"
+                                    ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto />
+                        <div class="text-danger">
+                            <ValidationMessage For="@(() => nvlInTemShowcrr.MaHang)" />
+                        </div>
+                    </Template>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem Caption="Số lượng nhập" ColSpanXs="6" ColSpanMd="6" ColSpanLg="6" CaptionPosition="CaptionPosition.Vertical">
+                    <Template>
+                        <NFCWebBlazor.App_ClassDefine.TextBoxWithCaculator valuenumber="@nvlInTemShowcrr.SoLuong" ValueNumberChanged="@setSoLuong">
+
+                        </NFCWebBlazor.App_ClassDefine.TextBoxWithCaculator>
+                        <div class="text-danger">
+                            <ValidationMessage For="@(() => @nvlInTemShowcrr.SoLuong)" />
+                        </div>
+
+                    </Template>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanXs="3" ColSpanMd="3" ColSpanLg="3" CaptionPosition="CaptionPosition.Vertical">
+                    <span style="color:forestgreen;font-size:0.7rem;">@nvlInTemShowcrr.DVT</span>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem Caption="Bản in" ColSpanXs="3" ColSpanMd="3" ColSpanLg="3" CaptionPosition="CaptionPosition.Vertical">
+                    <Template>
+                        <DxSpinEdit @bind-Value="@nvlInTemShowcrr.BanIn" ShowSpinButtons="false" MinValue="1"></DxSpinEdit>
+                        <div class="text-danger">
+                            <ValidationMessage For="@(() => @nvlInTemShowcrr.BanIn)" />
+                        </div>
+                    </Template>
+                </DxFormLayoutItem>
+
+                <DxFormLayoutItem Caption="Ngày sản xuất" ColSpanXs="6" ColSpanMd="6" ColSpanLg="4" CaptionPosition="CaptionPosition.Vertical">
+
+                    <DxDateEdit @bind-Date="@nvlInTemShowcrr.NgaySanXuat" Mask="@DateTimeMask.ShortDate" DisplayFormat="dd-MM-yy" ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto />
+
+                </DxFormLayoutItem>
+                <DxFormLayoutItem Caption="Ngày hết hạn" ColSpanXs="6" ColSpanMd="6" ColSpanLg="4" CaptionPosition="CaptionPosition.Vertical">
+
+                    <DxDateEdit @bind-Date="@nvlInTemShowcrr.NgayHetHan" Mask="@DateTimeMask.ShortDate" DisplayFormat="dd-MM-yy" ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto />
+
+                </DxFormLayoutItem>
+                <DxFormLayoutItem Caption="Dấu tuần" ColSpanXs="12" ColSpanMd="6" ColSpanLg="4" CaptionPosition="CaptionPosition.Vertical">
+
+                    <NFCWebBlazor.App_ClassDefine.DxTagBoxDefine Data="@lstdautuan" @ref="txtDauTuan" TextFieldName="@nameof(DataDropDownList.FullName)"
+                                                                 ValueFieldName="@nameof(DataDropDownList.Name)"
+                                                                 CssClass="cw-480"
+                                                                 SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                                                 ListRenderMode=ListRenderMode.Virtual
+                                                                 SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                                                 SearchMode="ListSearchMode.AutoSearch"
+                                                                 ClearButtonDisplayMode=DataEditorClearButtonDisplayMode.Auto
+                                                                 @bind-Values=@dautuanselected />
+                    <div class="text-danger">
+                        <ValidationMessage For="@(() => @nvlInTemShowcrr.DauTuan)" />
+                    </div>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem Caption="Số lô" ColSpanXs="6" ColSpanMd="6" ColSpanLg="4" CaptionPosition="CaptionPosition.Vertical">
+
+                    <DxTextBox @bind-Text=@nvlInTemShowcrr.SoLo />
+                    <div class="text-danger">
+                        <ValidationMessage For="@(() => @nvlInTemShowcrr.SoLo)" />
+                    </div>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem Caption="Xuất xứ" ColSpanXs="6" ColSpanMd="6" ColSpanLg="4" CaptionPosition="CaptionPosition.Vertical">
+
+                    <DxTextBox @bind-Text=@nvlInTemShowcrr.KhachHangXuatXu />
+
+                </DxFormLayoutItem>
+                <DxFormLayoutItem Caption="Mã kiện" ColSpanXs="6" ColSpanMd="6" ColSpanLg="4" CaptionPosition="CaptionPosition.Vertical">
+
+                    <DxTextBox @bind-Text=@nvlInTemShowcrr.MaKien />
+
+                </DxFormLayoutItem>
+                <DxFormLayoutItem Caption="Chất lượng" ColSpanXs="6" ColSpanMd="6" ColSpanLg="6" CaptionPosition="CaptionPosition.Vertical">
+                    <DxComboBox SearchFilterCondition="ListSearchFilterCondition.Contains"
+                                ListRenderMode=ListRenderMode.Virtual
+                                Data="@lstchatluong"
+                                SearchTextParseMode=ListSearchTextParseMode.GroupWordsByAnd
+                                ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                SearchMode="ListSearchMode.AutoSearch"
+                                TextFieldName="@nameof(DataDropDownList.FullName)"
+                                AllowUserInput="true"
+                                @bind-Text=@nvlInTemShowcrr.ChatLuong
+                                @bind-Value=@ValueChatLuong
+                                CssClass="cw-480">
+                    </DxComboBox>
+
+
+                </DxFormLayoutItem>
+                <DxFormLayoutItem Caption=@ghichutitle ColSpanXs="12" ColSpanMd="6" ColSpanLg="6" CaptionPosition="CaptionPosition.Vertical">
+                    <DxMemo @bind-Text=@nvlInTemShowcrr.GhiChu NullText="Ghi chú" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanXs="12" ColSpanMd="12">
+                    <div class="d-flex justify-content-center m-2 gap-2">
+                        <DxButton RenderStyle="ButtonRenderStyle.Success" IconCssClass="bi bi-floppy" Text="LƯU" Visible=@(!EnableEdit) Click="@(()=>saveAsync(false))" />
+                    </div>
+                </DxFormLayoutItem>
+
+
+            </DxFormLayout>
+            <ValidationSummary />
+        </EditForm>
+    </div>
+
+</div>
+
+@code {
+
+    [Inject] IJSRuntime JSRuntime { get; set; }
+
+    [Parameter]
+    public EventCallback<NvlNhapXuatKhoShow> AfterSave { get; set; }
+    [Parameter]
+    public EventCallback<NvlNhapXuatKhoShow> AfterEdit { get; set; }
+
+    [Parameter]
+    public NvlInTemShow nvlInTemShowcrr { get; set; }
+
+    List<DataDropDownList> lstchatluong { get; set; }
+    List<NvlHangHoaDropDown> lstmahang { get; set; }
+    NvlHangHoaDropDown mahangselected { get; set; }
+    string idcomboxnoigiaonhan { get; set; } = string.Format("id{0}", StaticClass.Randomstring(10));
+    string idcomboxmahang { get; set; } = string.Format("id{0}", StaticClass.Randomstring(10));
+    DxTagBoxDefine txtDauTuan { get; set; }
+    IEnumerable<DataDropDownList> dautuanselected { get; set; }
+    DxComboBox<NvlHangHoaDropDown, string?> txtMaHang { get; set; }
+    View_PrintConnectshow view_PrintConnectshow { get; set; }
+    private EditContext? editContext;
+    RenderFragment renderFragment;
+    string ghichutitle { get; set; } = "Ghi chú";
+    string ValueChatLuong { get; set; }
+    List<DataDropDownList> lstdautuan { get; set; }
+    bool EnableEdit { get; set; } = false;
+    DialogWindow dxPopup;
+    DxFlyout dxFlyoutchucnang { get; set; }
+    List<DataDropDownList> lstnoigiaonhan { get; set; }
+    private string keymahang = Guid.NewGuid().ToString();
+
+
+
+    private void SelectedItemChanged_(NvlHangHoaDropDown selectedValue)
+    {
+        //var query=
+        if (selectedValue != null)
+        {
+            //nvlInTemShowcrr.MaHang = selectedValue.MaHang;
+            nvlInTemShowcrr.DVT = selectedValue.DVT;
+            if (selectedValue.MaNhom == "NVLP_DM" || selectedValue.MaNhom == "NVLP_KEO")
+            {
+                ghichutitle = "Nhiệt độ";
+            }
+            else
+            {
+                ghichutitle = "Ghi chú";
+            }
+
+        }
+    }
+    private async void onfocuscomboxbox(string id)
+    {
+
+        await JSRuntime.InvokeVoidAsync("scrollToElement", id);
+
+    }
+
+    private void setSoLuong(double? d)
+    {
+        nvlInTemShowcrr.SoLuong = d;
+    }
+
+}

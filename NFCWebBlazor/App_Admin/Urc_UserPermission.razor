@@ -1,0 +1,113 @@
+﻿@using BlazorBootstrap
+@using NFCWebBlazor.Model
+@using Newtonsoft.Json
+@using static NFCWebBlazor.App_Admin.Page_PhanQuyenMaster
+
+<style>
+    #customGrid .dxbl-grid-header-row {
+        display: none;
+    }
+</style>
+
+<NFCWebBlazor.App_Admin.DialogMsg @ref="@dialogMsg"></NFCWebBlazor.App_Admin.DialogMsg>
+<DxGrid id="customGrid" @ref="Grid" Data="@lstdata" VirtualScrollingEnabled=true
+           
+            FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always" AutoCollapseDetailRow="true">
+
+        <Columns>
+            <DxGridDataColumn FieldName="UsersName">
+                <CellDisplayTemplate>
+                    @{
+                        var users = (Users)context.DataItem;
+                    }
+                    <div class="container mt-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex flex-column">
+                                <!-- Username and avatar box -->
+                                <div class="profile-box">
+                                    <img src="@users.PathImg" alt="Profile Picture" class="rounded-circle me-3" style="width: 40px; height: 40px;">
+                                    <span>@users.UsersName</span>
+                                </div>
+                                <!-- Full name -->
+                                <span style="color:red">@users.TenUser</span>
+                            </div>
+                            <!-- Delete button -->
+                            <div>
+                                <DxButton Text="XÓA" IconCssClass="bi bi-trash3-fill" RenderStyle="ButtonRenderStyle.Danger" Click="@(()=>delete(users))" RenderStyleMode="ButtonRenderStyleMode.Outline">
+                                </DxButton>
+                            </div>
+                        </div>
+                    </div>
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+
+        </Columns>
+
+    </DxGrid>
+
+
+@code {
+    DxGrid Grid { get; set; }
+    [Parameter]
+    public List<Users> lstdata{ get; set; }
+    [Parameter]
+    public User_PhanQuyenShow user_PhanQuyenShow {get;set;}
+    [Inject]
+    PhanQuyenAccess phanQuyenAccess{ get; set; }
+    [Inject]
+    ToastService ToastService { get; set; }
+    DialogMsg dialogMsg{ get; set; }
+    private  async void delete(Users users)
+    {
+        if (!await phanQuyenAccess.CreatePhanquyen(Model.ModelAdmin.users))
+        {
+            ToastService.Notify(new ToastMessage(ToastType.Warning, $"Bạn không có quyền xóa"));
+            return;
+        }
+
+        bool ketqua = await dialogMsg.Show($"XÓA USER {users.UsersName}???", $"Bạn có chắc muốn bỏ quyền của users {users.UsersName} ??");
+        if (ketqua)
+        {
+            CallAPI callAPI = new CallAPI();
+            string sql = "User_PhanQuyen_Delete";
+            List<ParameterDefine> lstpara = new List<ParameterDefine>();
+
+            lstpara.Add(new ParameterDefine("@UserName", users.UsersName));
+            lstpara.Add(new ParameterDefine("@TableName",user_PhanQuyenShow.TableID ));
+            try
+            {
+                string json = await callAPI.ProcedureEncryptAsync(sql, lstpara);
+
+                if (json != "")
+                {
+                    try
+                    {
+                        var query = JsonConvert.DeserializeObject<List<Ketqua>>(json);
+                        if (query[0].ketqua == "OK")
+                        {
+                            ToastService.Notify(new ToastMessage(ToastType.Success, $"Xóa thành công"));
+                            lstdata.Remove(users);
+                            Grid.Reload();
+
+                            //reset();
+                        }
+                        else
+                        {
+                            ToastService.Notify(new ToastMessage(ToastType.Warning, "Lỗi: " + query[0].ketqua));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        ToastService.Notify(new ToastMessage(ToastType.Warning, "Lỗi: " + ex.Message));
+                    }
+                    //Grid.Data = lstDonDatHangSearchShow;
+                }
+            }
+            catch (Exception ex)
+            {
+                ToastService.Notify(new ToastMessage(ToastType.Warning, "Lỗi: " + ex.Message));
+            }
+        }
+    }
+
+}
