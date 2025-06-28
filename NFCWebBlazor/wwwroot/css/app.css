@@ -62,12 +62,11 @@ button, .btn {
 }
 
 :root {
-    --colorprimary: #37B24A;
+    --colorprimary: #008000;
     --colorbackgroundgrid: #FFFFFF;
-    --bs-primary: #37B24A; /* Ghi đè màu primary của boostrap */
+    --bs-primary: #008000; /* Ghi đè màu primary của boostrap */
     --bs-primary-rgb: 0, 116, 189;
     --button-border-radius: 8px;
-
     /*font-size: 16px;*/ /* Hoặc kích thước mong muốn */
 }
 
